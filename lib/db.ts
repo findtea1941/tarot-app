@@ -14,15 +14,17 @@ export type SpreadType =
   | "时间流"
   | "无牌阵";
 
-/** 中国省市区地点（code + name + label，必填精确到区县） */
+/** 中国省市地点（code + name + label；区县字段仅兼容旧数据） */
 export interface Location {
   provinceCode: string;
   provinceName: string;
   cityCode: string;
   cityName: string;
+  /** 兼容旧数据，现阶段固定为空字符串 */
   districtCode: string;
+  /** 兼容旧数据，现阶段固定为空字符串 */
   districtName: string;
-  /** 展示用，如 "上海市·上海市·浦东新区" */
+  /** 展示用，如 "上海市-上海市" */
   label: string;
 }
 
@@ -38,7 +40,7 @@ export interface Case {
   category?: CaseCategory;
   drawTime?: string; // datetime-local 值，如 "2025-03-06T14:30"
   spreadType?: SpreadType;
-  /** 地点（中国省市区三级，必填到区县） */
+  /** 地点（中国省市两级；区县字段仅兼容旧数据） */
   location?: Location;
   /** 展示用，与 location.label 一致，兼容旧数据 */
   locationLabel?: string;
@@ -57,6 +59,8 @@ export interface Case {
     planetByCardKey?: Record<string, string>;
     planetBySlotId?: Record<string, string>;
     signifierTitle?: string;
+    /** 指示牌列标题，与列一一对应；未设置则默认 指示牌1、指示牌2… */
+    signifierTitles?: string[];
     signifierCards?: unknown;
   };
   /** Step5 保存结构：用户解读与表格状态 */

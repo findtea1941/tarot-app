@@ -11,10 +11,8 @@ import type { Case, Location, SpreadType } from "@/lib/db";
 import {
   getProvinces,
   getCities,
-  getDistricts,
   DEFAULT_PROVINCE_CODE,
   DEFAULT_CITY_CODE,
-  DEFAULT_DISTRICT_CODE,
 } from "@/lib/region";
 
 const CATEGORIES = ["情感", "事业", "学业", "其他"] as const;
@@ -42,37 +40,31 @@ export default function TarotNewPage() {
   const [loading, setLoading] = useState(false);
   const [loadingDraft, setLoadingDraft] = useState(!!caseId);
 
-  // 地点（中国省市区）：默认 上海市 / 上海市(市辖区) / 浦东新区
+  // 地点（中国省市）：默认 上海市 / 上海市(市辖区)
   const [provinceCode, setProvinceCode] = useState(DEFAULT_PROVINCE_CODE);
   const [cityCode, setCityCode] = useState(DEFAULT_CITY_CODE);
-  const [districtCode, setDistrictCode] = useState(DEFAULT_DISTRICT_CODE);
 
-  const provinces = useMemo(() => getProvinces(), []);
-  const cities = useMemo(() => getCities(provinceCode), [provinceCode]);
-  const districts = useMemo(
-    () => getDistricts(provinceCode, cityCode),
-    [provinceCode, cityCode]
+  // 省市数据仅在客户端加载，避免 SSR 报 window 未定义；挂载后再取数以保持一致
+  const [regionReady, setRegionReady] = useState(false);
+  useEffect(() => setRegionReady(true), []);
+  const provinces = useMemo(() => (regionReady ? getProvinces() : []), [regionReady]);
+  const cities = useMemo(
+    () => (regionReady ? getCities(provinceCode) : []),
+    [regionReady, provinceCode]
   );
 
-  // 改省：市保留同 code 或取第一个，区保留或取第一个
+  // 改省：市保留同 code 或取第一个
   const handleProvinceChange = useCallback((newProvinceCode: string) => {
     setProvinceCode(newProvinceCode);
     const nextCities = getCities(newProvinceCode);
     const keepCity = nextCities.some((c) => c.code === cityCode);
     const nextCityCode = keepCity ? cityCode : nextCities[0]?.code ?? "";
     setCityCode(nextCityCode);
-    const nextDistricts = getDistricts(newProvinceCode, nextCityCode);
-    const keepDistrict = nextDistricts.some((d) => d.code === districtCode);
-    setDistrictCode(keepDistrict ? districtCode : nextDistricts[0]?.code ?? "");
-  }, [cityCode, districtCode]);
+  }, [cityCode]);
 
-  // 改市：区保留或取第一个
   const handleCityChange = useCallback((newCityCode: string) => {
     setCityCode(newCityCode);
-    const nextDistricts = getDistricts(provinceCode, newCityCode);
-    const keepDistrict = nextDistricts.some((d) => d.code === districtCode);
-    setDistrictCode(keepDistrict ? districtCode : nextDistricts[0]?.code ?? "");
-  }, [provinceCode, districtCode]);
+  }, []);
 
   const loadDraft = useCallback(async (id: string) => {
     setLoadingDraft(true);
@@ -87,11 +79,9 @@ export default function TarotNewPage() {
         if (c.location) {
           setProvinceCode(c.location.provinceCode);
           setCityCode(c.location.cityCode);
-          setDistrictCode(c.location.districtCode);
         } else {
           setProvinceCode(DEFAULT_PROVINCE_CODE);
           setCityCode(DEFAULT_CITY_CODE);
-          setDistrictCode(DEFAULT_DISTRICT_CODE);
         }
       }
     } finally {
@@ -115,6 +105,16 @@ export default function TarotNewPage() {
     return `${y}-${m}-${day}T${h}:${min}`;
   }
 
+  function normalizeDatetimeLocalInput(raw: string): string {
+    if (!raw) return "";
+    const [datePart, timePart] = raw.split("T");
+    const [year = "", month, day] = datePart.split("-");
+    const normalizedDate = [year.slice(0, 4), month, day]
+      .filter((part) => part != null)
+      .join("-");
+    return timePart == null ? normalizedDate : `${normalizedDate}T${timePart}`;
+  }
+
   function toISODrawTime(local: string): string {
     if (!local) return "";
     const d = new Date(local);
@@ -127,7 +127,6 @@ export default function TarotNewPage() {
     if (!drawAt.trim()) return "请选择抽牌时间";
     if (!provinceCode) return "请选择省/直辖市";
     if (!cityCode) return "请选择市";
-    if (!districtCode) return "请选择区/县";
     if (!spreadType) return "请选择牌阵类型";
     return "";
   }
@@ -135,20 +134,19 @@ export default function TarotNewPage() {
   function buildLocation(): Location {
     const provinceName = provinces.find((p) => p.code === provinceCode)?.name ?? "";
     const cityName = cities.find((c) => c.code === cityCode)?.name ?? "";
-    const districtName = districts.find((d) => d.code === districtCode)?.name ?? "";
-    // 直辖市：市辖区 展示为 省名（如 上海市·上海市·浦东新区）
+    // 直辖市：市辖区 展示为省名，以省-市格式展示
     const cityDisplay =
-      provinceCode === DEFAULT_PROVINCE_CODE && cityName === "市辖区"
+      cityName === "市辖区"
         ? provinceName
         : cityName;
-    const label = [provinceName, cityDisplay, districtName].filter(Boolean).join("·");
+    const label = [provinceName, cityDisplay].filter(Boolean).join("-");
     return {
       provinceCode,
       provinceName,
       cityCode,
       cityName,
-      districtCode,
-      districtName,
+      districtCode: "",
+      districtName: "",
       label,
     };
   }
@@ -245,13 +243,16 @@ export default function TarotNewPage() {
           type="datetime-local"
           className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
           value={drawAt}
-          onChange={(e) => setDrawAt(e.target.value)}
+          min="1900-01-01T00:00"
+          max="2099-12-31T23:59"
+          step={60}
+          onChange={(e) => setDrawAt(normalizeDatetimeLocalInput(e.target.value))}
         />
       </div>
 
-      {/* 地点（中国省市区）：在抽牌时间之后、牌阵类型之前 */}
+      {/* 地点（省-市）：在抽牌时间之后、牌阵类型之前 */}
       <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4 space-y-4">
-        <h2 className="text-sm font-medium text-slate-300">地点（中国省市区） <span className="text-red-400">*</span></h2>
+        <h2 className="text-sm font-medium text-slate-300">地点（省-市） <span className="text-red-400">*</span></h2>
         <div className="space-y-2">
           <label className="block text-sm text-slate-400">省/直辖市</label>
           <select
@@ -275,19 +276,6 @@ export default function TarotNewPage() {
             <option value="">请选择</option>
             {cities.map((c) => (
               <option key={c.code} value={c.code}>{c.name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="space-y-2">
-          <label className="block text-sm text-slate-400">区/县</label>
-          <select
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
-            value={districtCode}
-            onChange={(e) => setDistrictCode(e.target.value)}
-          >
-            <option value="">请选择</option>
-            {districts.map((d) => (
-              <option key={d.code} value={d.code}>{d.name}</option>
             ))}
           </select>
         </div>

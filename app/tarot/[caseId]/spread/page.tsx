@@ -146,6 +146,16 @@ export default function SpreadPage() {
         minute: "2-digit",
       })
     : "—";
+  const locationDisplay = caseData.location
+    ? [
+        caseData.location.provinceName,
+        caseData.location.cityName === "市辖区"
+          ? caseData.location.provinceName
+          : caseData.location.cityName,
+      ]
+        .filter(Boolean)
+        .join("-")
+    : "—";
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -170,6 +180,10 @@ export default function SpreadPage() {
           <div>
             <dt className="text-slate-500">抽牌时间</dt>
             <dd className="text-slate-100">{drawAtDisplay}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">抽牌地点</dt>
+            <dd className="text-slate-100">{locationDisplay}</dd>
           </div>
           <div>
             <dt className="text-slate-500">牌阵类型</dt>

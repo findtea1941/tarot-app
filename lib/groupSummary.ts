@@ -143,7 +143,7 @@ export function buildGroupSummary(cards: ResolvedCard[]): GroupSummary {
   const diff = yang - yin;
   const yinYang = diff === 0 ? "平衡" : diff > 0 ? "阳" : "阴";
 
-  // 4) 阶段：开创/固定/变动/转化，可并列
+  // 4) 阶段：仅当唯一第一名存在时返回该值；并列第一或全不同均返回“无”
   const stageCounts: Record<string, number> = {};
   ["开创", "固定", "变动", "转化"].forEach((s) => (stageCounts[s] = 0));
   cards.forEach(({ card }) => {
@@ -151,12 +151,13 @@ export function buildGroupSummary(cards: ResolvedCard[]): GroupSummary {
     if (s && stageCounts[s] !== undefined) stageCounts[s]++;
   });
   const maxStageCount = Math.max(0, ...Object.values(stageCounts));
+  const topStages = (["开创", "固定", "变动", "转化"] as const).filter(
+    (s) => stageCounts[s] === maxStageCount
+  );
   const stage =
-    maxStageCount === 0
+    maxStageCount === 0 || topStages.length !== 1
       ? "无"
-      : (["开创", "固定", "变动", "转化"] as const)
-          .filter((s) => stageCounts[s] === maxStageCount)
-          .join("/");
+      : topStages[0];
 
   // 5) 性状：角/续/果/蛋，fruit2 = fruit + horn + link
   const horn = cards.filter(({ card }) => card.trait === "角").length;

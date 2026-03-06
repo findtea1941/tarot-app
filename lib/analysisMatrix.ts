@@ -39,20 +39,33 @@ export interface MatrixContext {
     space: SlotCardEntry[];
     all: SlotCardEntry[];
   };
-  signifierCards: SlotCardEntry[];
+  /** 与指示牌列一一对应；解析失败或未录入则为 null */
+  signifierCards: (SlotCardEntry | null)[];
 }
 
-/** 解析指示牌输入（英文分号分隔，每条同 Step3 规则） */
-function parseSignifierInput(raw: string, deck: Deck): SlotCardEntry[] {
-  const list: SlotCardEntry[] = [];
-  const parts = raw.split(";").map((s) => s.trim()).filter(Boolean);
-  for (const part of parts) {
+/** 按分号（; 或 ；）分割指示牌输入，得到每张牌的原始字符串 */
+export function getSignifierParts(raw: string): string[] {
+  if (!raw?.trim()) return [];
+  return raw
+    .split(/[;\uFF1B]/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+/** 解析指示牌输入：每条同 Step3 规则；返回与 parts 等长数组，解析失败为 null */
+function parseSignifierInputs(parts: string[], deck: Deck): (SlotCardEntry | null)[] {
+  return parts.map((part) => {
     const parsed = parseSlotInput(part);
-    if (!parsed.ok) continue;
+    if (!parsed.ok) return null;
     const card = matchCardByDisplayName(deck, parsed.cardKey);
-    if (card) list.push({ card, reversed: parsed.reversed });
-  }
-  return list;
+    return card ? { card, reversed: parsed.reversed } : null;
+  });
+}
+
+/** 指示牌列标题：优先 supplements.signifierTitles，否则默认 指示牌1、指示牌2… */
+export function getSignifierTitles(caseData: Case, count: number): string[] {
+  const fromSupp = caseData.supplements?.signifierTitles ?? [];
+  return Array.from({ length: count }, (_, i) => fromSupp[i] ?? `指示牌${i + 1}`);
 }
 
 /** 应用用户补录的行星（优先按 cardKey，其次按 slotId）；返回新的 card 引用以避免污染原牌库 */
@@ -89,15 +102,15 @@ export function buildColumns(
   const slots = layout.slots;
 
   if (layoutId === "hexagram-7" && slots.length >= 7) {
-    // 过去、现在、未来、时间线统筹、阻碍、环境、策略、空间线统筹、更好的结果、整体统筹
+    // 过去、现在、未来、时间统筹、阻碍、环境、策略、空间统筹、更好的结果、整体统筹
     const order: (string | "summary-time" | "summary-space" | "summary-all")[] = [
       "1", "2", "3", "summary-time",
       "4", "5", "6", "summary-space",
       "7", "summary-all",
     ];
     const summaryTitles: Record<string, string> = {
-      "summary-time": "时间线统筹",
-      "summary-space": "空间线统筹",
+      "summary-time": "时间统筹",
+      "summary-space": "空间统筹",
       "summary-all": "整体统筹",
     };
     for (const key of order) {
@@ -121,9 +134,15 @@ export function buildColumns(
     columns.push({ id: "summary-all", title: "整体统筹", kind: "summary", summaryGroup: "all" });
   }
 
-  const signifiers = parseSignifierInput(caseData.significatorInput ?? "", deckData);
-  signifiers.forEach((_, i) => {
-    columns.push({ id: `signifier-${i}`, title: `指示牌${i + 1}`, kind: "signifier", signifierIndex: i });
+  const signifierParts = getSignifierParts(caseData.significatorInput ?? "");
+  const signifierTitles = getSignifierTitles(caseData, signifierParts.length);
+  signifierParts.forEach((_, i) => {
+    columns.push({
+      id: `signifier-${i}`,
+      title: signifierTitles[i] ?? `指示牌${i + 1}`,
+      kind: "signifier",
+      signifierIndex: i,
+    });
   });
 
   return columns;
@@ -159,11 +178,16 @@ export function getMatrixContext(
       : Array.from(slotCards.values()),
   };
 
-  const signifierCardsRaw = parseSignifierInput(caseData.significatorInput ?? "", deckData);
-  const signifierCards = signifierCardsRaw.map((entry) => ({
-    card: applyPlanetSupplement(entry.card, caseData),
-    reversed: entry.reversed,
-  }));
+  const signifierParts = getSignifierParts(caseData.significatorInput ?? "");
+  const signifierCardsRaw = parseSignifierInputs(signifierParts, deckData);
+  const signifierCards = signifierCardsRaw.map((entry) =>
+    entry
+      ? {
+          card: applyPlanetSupplement(entry.card, caseData),
+          reversed: entry.reversed,
+        }
+      : null
+  );
 
   return { slotCards, summaryGroups, signifierCards };
 }
@@ -276,7 +300,7 @@ export function getCellValue(
     return list.length ? row.getSummary(list) : "";
   }
   if (col.kind === "signifier" && col.signifierIndex != null) {
-    const entry = ctx.signifierCards[col.signifierIndex];
+    const entry = ctx.signifierCards[col.signifierIndex] ?? null;
     return entry ? row.getValue(entry.card) : "";
   }
   return "";
@@ -290,7 +314,7 @@ export function getColumnCardText(col: AnalysisColumn, ctx: MatrixContext): stri
     return entry.reversed ? `${entry.card.name}-` : entry.card.name;
   }
   if (col.kind === "signifier" && col.signifierIndex != null) {
-    const entry = ctx.signifierCards[col.signifierIndex];
+    const entry = ctx.signifierCards[col.signifierIndex] ?? null;
     if (!entry) return "";
     return entry.reversed ? `${entry.card.name}-` : entry.card.name;
   }

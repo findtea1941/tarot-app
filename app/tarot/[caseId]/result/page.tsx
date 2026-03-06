@@ -12,6 +12,7 @@ import { buildAnalysisTable } from "@/lib/buildAnalysisTable";
 import {
   buildColumns,
   getMatrixContext,
+  getSignifierTitles,
   DIMENSION_ROWS,
   getCellValue,
   getColumnCardText,
@@ -35,8 +36,9 @@ export default function ResultPage() {
   const [notFound, setNotFound] = useState(false);
   const [userInterpretation, setUserInterpretation] = useState("");
   const [toast, setToast] = useState<string | null>(null);
-  const [signifierTitleEditing, setSignifierTitleEditing] = useState(false);
-  const [signifierTitleInput, setSignifierTitleInput] = useState("");
+  /** 指示牌列标题，与列一一对应；可点击表头编辑 */
+  const [signifierTitleInputs, setSignifierTitleInputs] = useState<string[]>([]);
+  const [editingSignifierTitleIndex, setEditingSignifierTitleIndex] = useState<number | null>(null);
   const [manualNumberNote, setManualNumberNote] = useState("");
 
   useEffect(() => {
@@ -52,7 +54,6 @@ export default function ResultPage() {
               ? (c.analysis as { userNotes: string }).userNotes
               : "");
           setUserInterpretation(notes ?? "");
-          setSignifierTitleInput(c.supplements?.signifierTitle ?? "指示牌");
           setManualNumberNote(
             (c.analysis && typeof c.analysis === "object" && "manualNumberNote" in c.analysis
               ? (c.analysis as { manualNumberNote?: string }).manualNumberNote
@@ -112,6 +113,24 @@ export default function ResultPage() {
     if (!caseData || !layout) return null;
     return getMatrixContext(caseData, layout, getDeck());
   }, [caseData, layout]);
+
+  /** 指示牌列标题与 caseData / 列数同步（不覆盖正在编辑的那一列） */
+  const signifierColumnCount = useMemo(
+    () => matrixColumns.filter((c) => c.kind === "signifier").length,
+    [matrixColumns]
+  );
+  useEffect(() => {
+    if (!caseData || signifierColumnCount === 0) {
+      setSignifierTitleInputs([]);
+      return;
+    }
+    const titles = getSignifierTitles(caseData, signifierColumnCount);
+    setSignifierTitleInputs((prev) => {
+      if (prev.length !== titles.length) return titles;
+      if (editingSignifierTitleIndex == null) return titles;
+      return prev.map((p, i) => (i === editingSignifierTitleIndex ? p : titles[i]));
+    });
+  }, [caseData, signifierColumnCount, editingSignifierTitleIndex]);
 
   /** 六芒星三组统筹结果（时间线/空间线/整体），用于统筹列与数字加和区 */
   const groupSummaries = useMemo(() => {
@@ -187,12 +206,14 @@ export default function ResultPage() {
     };
     const planetByCardKeyOrUndefined =
       Object.keys(planetByCardKey).length > 0 ? planetByCardKey : undefined;
-    const signifierTitle =
-      c.supplements?.signifierTitle ?? (c.significatorInput?.trim() || undefined);
+    const signifierTitles =
+      c.supplements?.signifierTitles && c.supplements.signifierTitles.length > 0
+        ? c.supplements.signifierTitles
+        : undefined;
     return {
       ...(planetBySlotId && { planetBySlotId }),
       ...(planetByCardKeyOrUndefined && { planetByCardKey: planetByCardKeyOrUndefined }),
-      ...(signifierTitle !== undefined && { signifierTitle }),
+      ...(signifierTitles !== undefined && { signifierTitles }),
     };
   }, []);
 
@@ -230,16 +251,22 @@ export default function ResultPage() {
     setToast("保存成功");
   }, [caseId, caseData, userInterpretation, manualNumberNote, buildTitle, buildSlotCards, buildSupplements, buildAnalysis]);
 
-  /** 指示牌标题失焦保存 */
-  const handleSignifierTitleBlur = useCallback(async () => {
-    if (!caseId || !caseData) return;
-    setSignifierTitleEditing(false);
-    const value = signifierTitleInput.trim() || "指示牌";
-    const updated = await updateCaseStep5Partial(caseId, {
-      supplements: { ...caseData.supplements, signifierTitle: value },
-    });
-    if (updated) setCaseData(updated);
-  }, [caseId, caseData, signifierTitleInput]);
+  /** 指示牌列标题失焦保存（按列索引写入 signifierTitles） */
+  const handleSignifierTitleBlur = useCallback(
+    async (index: number) => {
+      if (!caseId || !caseData) return;
+      setEditingSignifierTitleIndex(null);
+      const value = (signifierTitleInputs[index] ?? "").trim() || `指示牌${index + 1}`;
+      const nextTitles = [...(caseData.supplements?.signifierTitles ?? [])];
+      while (nextTitles.length <= index) nextTitles.push(`指示牌${nextTitles.length + 1}`);
+      nextTitles[index] = value;
+      const updated = await updateCaseStep5Partial(caseId, {
+        supplements: { ...caseData.supplements, signifierTitles: nextTitles },
+      });
+      if (updated) setCaseData(updated);
+    },
+    [caseId, caseData, signifierTitleInputs]
+  );
 
   /** 指示牌行星补录失焦保存（按 cardKey 存 planetByCardKey） */
   const handleSignifierPlanetBlur = useCallback(
@@ -297,9 +324,9 @@ export default function ResultPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="grid flex-1 gap-6 lg:grid-cols-2">
+      <div className="grid flex-1 gap-6 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
         {/* 左侧：案例基础信息 + 牌阵可视化 */}
-        <div className="flex flex-col gap-6 overflow-auto">
+        <div className="flex min-w-0 flex-col gap-6 overflow-auto">
           <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 space-y-3">
             <h2 className="text-sm font-medium text-slate-400">案例基础信息</h2>
             <dl className="grid gap-2 text-sm">
@@ -345,45 +372,47 @@ export default function ResultPage() {
         </div>
 
         {/* 右侧：统筹表格占位 + 用户解读 */}
-        <div className="flex flex-col gap-6 overflow-auto">
-          <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-6">
+        <div className="flex min-w-0 flex-col gap-6 overflow-visible">
+          <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
             <h2 className="text-sm font-medium text-slate-400 mb-2">统筹分析表格</h2>
             {matrixColumns.length > 0 && matrixContext ? (
-              <div className="overflow-auto">
-                <table className="w-full border-collapse text-left text-sm">
+              <div className="w-full overflow-visible">
+                <table className="mx-auto w-auto border-collapse text-center text-sm" style={{ tableLayout: "auto" }}>
                   <thead>
                     <tr className="border-b border-slate-600">
-                      <th className="border border-slate-600 bg-slate-800/80 px-2 py-1.5 text-slate-400 font-medium w-20">
+                      <th className="border border-slate-600 bg-slate-800/80 px-2 py-1.5 text-slate-400 font-medium whitespace-nowrap text-center align-middle">
                         维度
                       </th>
                       {matrixColumns.map((col) => (
                         <th
                           key={col.id}
-                          className="border border-slate-600 bg-slate-800/80 px-2 py-1.5 text-slate-300 font-medium whitespace-nowrap"
+                          className="border border-slate-600 bg-slate-800/80 px-1.5 py-1.5 text-slate-300 font-medium whitespace-nowrap text-center align-middle"
                         >
-                          {col.kind === "signifier" && col.signifierIndex === 0 ? (
-                            signifierTitleEditing ? (
+                          {col.kind === "signifier" && col.signifierIndex != null ? (
+                            editingSignifierTitleIndex === col.signifierIndex ? (
                               <input
                                 type="text"
-                                className="w-24 rounded border border-slate-600 bg-slate-900 px-1 py-0.5 text-xs text-slate-100"
-                                value={signifierTitleInput}
-                                onChange={(e) => setSignifierTitleInput(e.target.value)}
-                                onBlur={handleSignifierTitleBlur}
+                                className="min-w-[5.5rem] rounded border border-slate-600 bg-slate-900 px-1 py-0.5 text-center text-xs text-slate-100"
+                                value={signifierTitleInputs[col.signifierIndex] ?? col.title}
+                                onChange={(e) => {
+                                  const next = [...signifierTitleInputs];
+                                  next[col.signifierIndex!] = e.target.value;
+                                  setSignifierTitleInputs(next);
+                                }}
+                                onBlur={() => handleSignifierTitleBlur(col.signifierIndex!)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") e.currentTarget.blur();
+                                }}
                                 autoFocus
-                                aria-label="指示牌标题"
+                                aria-label={`指示牌${col.signifierIndex! + 1} 标题`}
                               />
                             ) : (
                               <button
                                 type="button"
-                                className="text-left text-xs text-slate-300 hover:text-slate-100"
-                                onClick={() => {
-                                  setSignifierTitleInput(
-                                    caseData.supplements?.signifierTitle ?? "指示牌"
-                                  );
-                                  setSignifierTitleEditing(true);
-                                }}
+                                className="w-full whitespace-nowrap px-0.5 text-center text-xs text-slate-300 hover:text-slate-100"
+                                onClick={() => setEditingSignifierTitleIndex(col.signifierIndex!)}
                               >
-                                {caseData.supplements?.signifierTitle || "指示牌"}
+                                {signifierTitleInputs[col.signifierIndex] ?? col.title}
                               </button>
                             )
                           ) : (
@@ -395,13 +424,13 @@ export default function ResultPage() {
                   </thead>
                   <tbody>
                     <tr className="border-b border-slate-600">
-                      <td className="border border-slate-600 bg-slate-800/50 px-2 py-1 text-slate-500">
+                      <td className="border border-slate-600 bg-slate-800/50 px-2 py-1 text-slate-500 whitespace-nowrap text-center align-middle">
                         牌名
                       </td>
                       {matrixColumns.map((col) => (
                         <td
                           key={col.id}
-                          className="border border-slate-600 px-2 py-1 text-slate-200"
+                          className="border border-slate-600 px-1.5 py-1 text-slate-200 whitespace-nowrap text-center align-middle"
                         >
                           {getColumnCardText(col, matrixContext)}
                         </td>
@@ -409,13 +438,13 @@ export default function ResultPage() {
                     </tr>
                     {DIMENSION_ROWS.map((row) => (
                       <tr key={row.id} className="border-b border-slate-600">
-                        <td className="border border-slate-600 bg-slate-800/50 px-2 py-1 text-slate-500">
+                        <td className="border border-slate-600 bg-slate-800/50 px-2 py-1 text-slate-500 whitespace-nowrap text-center align-middle">
                           {row.label}
                         </td>
                         {matrixColumns.map((col) => (
                           <td
                             key={col.id}
-                            className="border border-slate-600 px-2 py-1 text-slate-200"
+                            className="border border-slate-600 px-1.5 py-1 text-slate-200 whitespace-nowrap text-center align-middle"
                           >
                             {col.kind === "signifier" &&
                             col.signifierIndex != null &&
@@ -430,7 +459,7 @@ export default function ResultPage() {
                                   caseData.supplements?.planetByCardKey?.[entry.card.name] ?? "";
                                 return needsPlanet ? (
                                   <select
-                                    className="w-full rounded border border-slate-600 bg-slate-800 px-1 py-0.5 text-xs text-slate-200"
+                                    className="min-w-[5.5rem] rounded border border-slate-600 bg-slate-800 px-1 py-0.5 text-center text-xs text-slate-200"
                                     value={currentPlanet}
                                     onChange={(e) =>
                                       handleSignifierPlanetBlur(entry.card.name, e.target.value)
