@@ -195,115 +195,134 @@ export default function TarotNewPage() {
   }
 
   if (loadingDraft) {
-    return <div className="text-slate-400 text-sm">加载中…</div>;
+    return <div className="text-sm text-slate-500">加载中…</div>;
   }
 
   return (
-    <div className="space-y-4 max-w-xl">
-      <h1 className="text-2xl font-semibold">新建塔罗案例 · 基础信息</h1>
-
-      <div className="space-y-2">
-        <label className="block text-sm text-slate-300">问题 <span className="text-red-400">*</span></label>
-        <input
-          type="text"
-          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="例如：这段关系会怎么发展？"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm text-slate-300">问题背景（可选）</label>
-        <textarea
-          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 min-h-24"
-          value={background}
-          onChange={(e) => setBackground(e.target.value)}
-          placeholder="补充背景信息…"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm text-slate-300">分类 <span className="text-red-400">*</span></label>
-        <select
-          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
-          value={category}
-          onChange={(e) => setCategory(e.target.value as typeof category)}
-        >
-          <option value="">请选择</option>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
-          ))}
-        </select>
-      </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm text-slate-300">抽牌时间 <span className="text-red-400">*</span></label>
-        <input
-          type="datetime-local"
-          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
-          value={drawAt}
-          min="1900-01-01T00:00"
-          max="2099-12-31T23:59"
-          step={60}
-          onChange={(e) => setDrawAt(normalizeDatetimeLocalInput(e.target.value))}
-        />
-      </div>
-
-      {/* 地点（省-市）：在抽牌时间之后、牌阵类型之前 */}
-      <div className="rounded-lg border border-slate-700 bg-slate-950/50 p-4 space-y-4">
-        <h2 className="text-sm font-medium text-slate-300">地点（省-市） <span className="text-red-400">*</span></h2>
-        <div className="space-y-2">
-          <label className="block text-sm text-slate-400">省/直辖市</label>
-          <select
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
-            value={provinceCode}
-            onChange={(e) => handleProvinceChange(e.target.value)}
-          >
-            <option value="">请选择</option>
-            {provinces.map((p) => (
-              <option key={p.code} value={p.code}>{p.name}</option>
-            ))}
-          </select>
+    <div className="min-h-[calc(100vh-96px)] bg-white">
+      <div className="mx-auto max-w-4xl px-4 py-10">
+        <div className="mb-10 flex flex-col items-center text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#e7f8f0] shadow-inner">
+            <span className="text-3xl font-semibold leading-none text-tarot-green">+</span>
+          </div>
+          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-900">新建塔罗案例 · 基础信息</h1>
         </div>
-        <div className="space-y-2">
-          <label className="block text-sm text-slate-400">市</label>
-          <select
-            className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
-            value={cityCode}
-            onChange={(e) => handleCityChange(e.target.value)}
-          >
-            <option value="">请选择</option>
-            {cities.map((c) => (
-              <option key={c.code} value={c.code}>{c.name}</option>
-            ))}
-          </select>
+
+        <div className="mx-auto max-w-3xl overflow-hidden rounded-[30px] border border-[#dceee6] bg-white shadow-[0_24px_60px_rgba(15,23,42,0.07)]">
+          <div className="flex items-center justify-between border-b border-[#ebf4f0] px-7 py-5">
+            <h2 className="text-base font-semibold text-slate-900">基本信息登记</h2>
+            <p className="text-xs font-medium tracking-[0.2em] text-slate-400">STEP 1 OF 2</p>
+          </div>
+          <div className="space-y-6 px-7 py-7">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">问题 <span className="text-red-400">*</span></label>
+              <input
+                type="text"
+                className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder="例如：这段关系会怎么发展？"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">问题背景（可选）</label>
+              <textarea
+                className="min-h-32 w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                value={background}
+                onChange={(e) => setBackground(e.target.value)}
+                placeholder="补充背景信息…"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">分类 <span className="text-red-400">*</span></label>
+              <div className="flex flex-wrap gap-2">
+                {CATEGORIES.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setCategory(c)}
+                    className={`rounded-full border px-5 py-2.5 text-sm font-medium transition-colors ${
+                      category === c
+                        ? "border-tarot-green bg-tarot-green text-white shadow-[0_8px_18px_rgba(5,150,105,0.18)]"
+                        : "border-[#e2ebe7] bg-white text-slate-600 hover:border-[#bedfce] hover:text-slate-800"
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">抽牌时间 <span className="text-red-400">*</span></label>
+                <input
+                  type="datetime-local"
+                  className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                  value={drawAt}
+                  min="1900-01-01T00:00"
+                  max="2099-12-31T23:59"
+                  step={60}
+                  onChange={(e) => setDrawAt(normalizeDatetimeLocalInput(e.target.value))}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">牌阵类型 <span className="text-red-400">*</span></label>
+                <select
+                  className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                  value={spreadType}
+                  onChange={(e) => setSpreadType(e.target.value as typeof spreadType)}
+                >
+                  <option value="">请选择</option>
+                  {SPREAD_TYPES.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            <div className="space-y-3 rounded-[24px] border border-[#e1ece8] bg-[#fbfdfc] p-5">
+              <h3 className="text-sm font-medium text-slate-700">地点（省-市） <span className="text-red-400">*</span></h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="block text-xs text-slate-500">省/直辖市</label>
+                  <select
+                    className="mt-1 w-full rounded-2xl border border-[#dfebe5] bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                    value={provinceCode}
+                    onChange={(e) => handleProvinceChange(e.target.value)}
+                  >
+                    <option value="">请选择</option>
+                    {provinces.map((p) => (
+                      <option key={p.code} value={p.code}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-500">市</label>
+                  <select
+                    className="mt-1 w-full rounded-2xl border border-[#dfebe5] bg-white px-4 py-3 text-slate-800 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                    value={cityCode}
+                    onChange={(e) => handleCityChange(e.target.value)}
+                  >
+                    <option value="">请选择</option>
+                    {cities.map((c) => (
+                      <option key={c.code} value={c.code}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+            {error && <p className="text-sm text-red-500">{error}</p>}
+          </div>
+          <div className="border-t border-[#ebf4f0] bg-[#fbfdfc] px-7 py-7">
+            <button
+              className="mx-auto block rounded-full bg-tarot-green px-10 py-3 text-sm font-medium text-white shadow-[0_14px_28px_rgba(5,150,105,0.22)] transition hover:bg-emerald-700 disabled:opacity-60"
+              disabled={loading}
+              onClick={handleNext}
+            >
+              {loading ? "处理中…" : "下一步：进入牌阵 →"}
+            </button>
+          </div>
         </div>
       </div>
-
-      <div className="space-y-2">
-        <label className="block text-sm text-slate-300">牌阵类型 <span className="text-red-400">*</span></label>
-        <select
-          className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2"
-          value={spreadType}
-          onChange={(e) => setSpreadType(e.target.value as typeof spreadType)}
-        >
-          <option value="">请选择</option>
-          {SPREAD_TYPES.map((s) => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-      </div>
-
-      {error && <p className="text-red-400 text-sm">{error}</p>}
-
-      <button
-        className="px-4 py-2 rounded-md bg-tarot-card border border-slate-700 disabled:opacity-60"
-        disabled={loading}
-        onClick={handleNext}
-      >
-        {loading ? "处理中…" : "下一步：进入牌阵"}
-      </button>
     </div>
   );
 }

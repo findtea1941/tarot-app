@@ -71,15 +71,15 @@ export function SpreadBoard({
         </ul>
         {drawerSlotId && (
           <div
-            className="fixed inset-y-0 right-0 z-20 w-64 border-l border-slate-700 bg-slate-900 p-4 shadow-xl"
+            className="fixed inset-y-0 right-0 z-20 w-64 border-l border-[#d8ebe3] bg-white p-4 shadow-xl"
             role="dialog"
             aria-label="卡位详情"
           >
-            <p className="text-sm text-slate-400">选择牌 / 填写该位置解读（占位）</p>
+            <p className="text-sm text-slate-500">选择牌 / 填写该位置解读（占位）</p>
             <p className="mt-2 text-xs text-slate-500">卡位 ID: {drawerSlotId}</p>
             <button
               type="button"
-              className="mt-4 text-sm text-tarot-accent hover:underline"
+              className="mt-4 text-sm text-tarot-green hover:underline"
               onClick={() => setDrawerSlotId(null)}
             >
               关闭
@@ -122,15 +122,15 @@ export function SpreadBoard({
       </div>
       {!isEntryMode && drawerSlotId && (
         <div
-          className="fixed inset-y-0 right-0 z-20 w-64 border-l border-slate-700 bg-slate-900 p-4 shadow-xl"
+          className="fixed inset-y-0 right-0 z-20 w-64 border-l border-[#d8ebe3] bg-white p-4 shadow-xl"
           role="dialog"
           aria-label="卡位详情"
         >
-          <p className="text-sm text-slate-400">选择牌 / 填写该位置解读（占位）</p>
+          <p className="text-sm text-slate-500">选择牌 / 填写该位置解读（占位）</p>
           <p className="mt-2 text-xs text-slate-500">卡位 ID: {drawerSlotId}</p>
           <button
             type="button"
-            className="mt-4 text-sm text-tarot-accent hover:underline"
+            className="mt-4 text-sm text-tarot-green hover:underline"
             onClick={() => setDrawerSlotId(null)}
           >
             关闭

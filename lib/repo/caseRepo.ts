@@ -35,6 +35,7 @@ export async function createTarotDraft(input: {
   const item: Case = {
     id: crypto.randomUUID(),
     type: "tarot",
+    status: "draft",
     title,
     question: input.question.trim(),
     background: input.background?.trim() || undefined,
@@ -129,6 +130,9 @@ export async function saveCaseStep5(
   const merged: Case = {
     ...existing,
     ...updates,
+    ...(existing.type === "tarot" && existing.status !== "completed"
+      ? { status: "completed" as const }
+      : {}),
     updatedAt: now,
   };
   await db.cases.put(merged);
@@ -162,7 +166,9 @@ export async function updateCaseStep5Partial(
 }
 
 export async function listCases() {
-  return db.cases.orderBy("createdAt").reverse().toArray();
+  const all = await db.cases.orderBy("createdAt").reverse().toArray();
+  // 仅展示：非塔罗案例，或塔罗且不是 draft（即已确认保存）
+  return all.filter((c) => c.type !== "tarot" || c.status !== "draft");
 }
 
 export async function deleteCase(id: string) {

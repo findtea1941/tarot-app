@@ -8,7 +8,7 @@ body {
 }
 
 body {
-  @apply bg-tarot-bg text-slate-100 antialiased;
+  @apply bg-white text-slate-800 antialiased;
 }
 
 input,

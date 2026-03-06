@@ -25,31 +25,31 @@ export default function CasesPage() {
         <h1 className="text-2xl font-semibold">案例库</h1>
         <Link
           href="/tarot"
-          className="px-3 py-1.5 rounded-md bg-tarot-card border border-slate-700 text-slate-100"
+          className="rounded-full border border-[#cce7d9] bg-[#ecf8f2] px-4 py-2 text-sm font-medium text-tarot-green transition hover:bg-[#e4f5ed]"
         >
           新建案例
         </Link>
       </div>
 
       {loading ? (
-        <p className="text-slate-300 text-sm">加载中…</p>
+        <p className="text-sm text-slate-500">加载中…</p>
       ) : items.length === 0 ? (
-        <p className="text-slate-300 text-sm">还没有案例，先新建一个。</p>
+        <p className="text-sm text-slate-500">还没有案例，先新建一个。</p>
       ) : (
         <ul className="space-y-2">
           {items.map((c) => (
             <li
               key={c.id}
-              className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/60 p-3"
+              className="flex items-center justify-between rounded-2xl border border-[#d8ebe3] bg-white p-4 shadow-sm"
             >
               <div>
                 <div className="font-medium">{c.title}</div>
-                <div className="text-xs text-slate-400">
+                <div className="text-xs text-slate-500">
                   {new Date(c.createdAt).toLocaleString()}
                 </div>
               </div>
               <button
-                className="text-sm text-red-300 hover:text-red-200"
+                className="text-sm text-red-500 hover:text-red-600"
                 onClick={async () => {
                   await deleteCase(c.id);
                   await refresh();

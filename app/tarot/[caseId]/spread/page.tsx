@@ -14,6 +14,7 @@ import { getLayout } from "@/layouts";
 import { getDeck } from "@/lib/deck";
 import { validateSlotInputs } from "@/lib/slotInputParse";
 import { SpreadBoard } from "@/components/SpreadBoard";
+import { HexagramEntryBoard } from "@/components/HexagramEntryBoard";
 import { Step4Modal } from "@/components/Step4Modal";
 import { getSlotInputId } from "@/components/SlotStack";
 
@@ -123,14 +124,14 @@ export default function SpreadPage() {
   }, [caseId, router]);
 
   if (loading) {
-    return <div className="text-slate-300 text-sm">加载中…</div>;
+    return <div className="text-sm text-slate-500">加载中…</div>;
   }
 
   if (notFound || !caseData) {
     return (
       <div className="space-y-4">
-        <p className="text-red-300">未找到该案例，可能已被删除。</p>
-        <Link href="/tarot" className="text-tarot-accent hover:underline">
+        <p className="text-sm text-red-500">未找到该案例，可能已被删除。</p>
+        <Link href="/tarot" className="text-tarot-green hover:underline">
           返回新建案例
         </Link>
       </div>
@@ -154,74 +155,119 @@ export default function SpreadPage() {
           : caseData.location.cityName,
       ]
         .filter(Boolean)
-        .join("-")
+        .join(" · ")
     : "—";
 
   return (
-    <div className="space-y-8 max-w-2xl">
-      <h1 className="text-2xl font-semibold">牌阵录入</h1>
-
-      {/* A. 顶部信息区（只读）：问题 / 背景 / 分类 / 抽牌时间 / 牌阵类型 */}
-      <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 space-y-3">
-        <h2 className="text-sm font-medium text-slate-400">案例基础信息（只读）</h2>
-        <dl className="grid gap-2 text-sm">
-          <div>
-            <dt className="text-slate-500">问题</dt>
-            <dd className="text-slate-100">{caseData.question || "—"}</dd>
+    <div className="mx-auto max-w-6xl space-y-8">
+      {/* 案例基本信息摘要：与参考图一致 */}
+      <section className="rounded-2xl border border-[#dcefe6] bg-white p-6 shadow-[0_8px_24px_rgba(15,23,42,0.06)]">
+        <h2 className="flex items-center gap-2 pl-4 text-base font-semibold text-tarot-green sm:pl-16">
+          <span
+            className="flex h-5 w-5 items-center justify-center rounded bg-tarot-green/15 text-tarot-green"
+            aria-hidden
+          >
+            <svg
+              className="h-3.5 w-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </span>
+          案例基本信息摘要
+        </h2>
+        <div className="mt-5 grid gap-6 sm:grid-cols-[minmax(0,1.4fr)_1px_minmax(0,0.9fr)] sm:items-stretch">
+          {/* 左侧：问题 + 问题背景，问题背景框下沿与右侧抽牌地点下沿对齐 */}
+          <div className="flex flex-col gap-4 pl-4 sm:pl-16">
+            <div className="shrink-0">
+              <dt className="text-xs font-semibold text-tarot-green">问题</dt>
+              <dd className="mt-1 text-base font-semibold leading-snug text-slate-900">
+                {caseData.question || "—"}
+              </dd>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col">
+              <dt className="shrink-0 text-xs font-semibold text-tarot-green">问题背景</dt>
+              <dd className="mt-1 min-h-0 flex-1">
+                <div className="h-full min-h-[100px] rounded-xl bg-[#ecf8f2] px-4 py-3 text-sm leading-relaxed text-slate-800 whitespace-pre-wrap">
+                  {caseData.background || "—"}
+                </div>
+              </dd>
+            </div>
           </div>
-          <div>
-            <dt className="text-slate-500">背景</dt>
-            <dd className="text-slate-100 whitespace-pre-wrap">{caseData.background || "—"}</dd>
+          {/* 中间细分割线：仅桌面展示，轻盈的绿色细线 */}
+          <div className="hidden h-full w-px items-stretch justify-center sm:flex">
+            <div className="mx-auto h-full w-px rounded-full bg-[#d8ede4]" aria-hidden />
           </div>
-          <div>
-            <dt className="text-slate-500">分类</dt>
-            <dd className="text-slate-100">{caseData.category || "—"}</dd>
+          {/* 右侧：分类 + 抽牌时间/地点，与左侧视觉连贯 */}
+          <div className="mt-4 flex flex-col justify-center gap-3 text-sm sm:mt-0">
+            <div>
+              <dt className="text-xs font-semibold text-tarot-green">分类</dt>
+              <dd className="mt-1">
+                <span className="inline-block rounded-lg bg-[#d4f0e3] px-3 py-1 text-sm font-medium text-tarot-green">
+                  {caseData.category || "—"}
+                </span>
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold text-tarot-green">抽牌时间</dt>
+              <dd className="mt-1 text-sm font-medium text-slate-900">{drawAtDisplay}</dd>
+            </div>
+            <div>
+              <dt className="text-xs font-semibold text-tarot-green">抽牌地点</dt>
+              <dd className="mt-1 text-sm font-medium text-slate-900">{locationDisplay}</dd>
+            </div>
           </div>
-          <div>
-            <dt className="text-slate-500">抽牌时间</dt>
-            <dd className="text-slate-100">{drawAtDisplay}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">抽牌地点</dt>
-            <dd className="text-slate-100">{locationDisplay}</dd>
-          </div>
-          <div>
-            <dt className="text-slate-500">牌阵类型</dt>
-            <dd className="text-slate-100">{caseData.spreadType || "—"}</dd>
-          </div>
-        </dl>
+        </div>
       </section>
 
-      {/* B. 牌阵布局区：SpreadBoard 按 (col,row) 展示，每格为 SlotStack（牌背+输入框） */}
-      <section className="space-y-4">
-        <h2 className="text-sm font-medium text-slate-400">牌阵录入</h2>
+      <section className="rounded-[32px] border border-[#d5ece2] bg-[#edf8f2] px-4 py-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:px-8">
+        <div className="pt-2 text-center">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-900">牌阵录入</h2>
+        </div>
         {layout ? (
-          <SpreadBoard
-            layout={layout}
-            slotInputs={slotInputs}
-            onSlotInputChange={setSlotValue}
-            slotErrors={slotErrors}
-          />
+          <div className="mt-1">
+            {layout.id === "hexagram-7" ? (
+              <HexagramEntryBoard
+                layout={layout}
+                slotInputs={slotInputs}
+                onSlotInputChange={setSlotValue}
+                slotErrors={slotErrors}
+              />
+            ) : (
+              <SpreadBoard
+                layout={layout}
+                slotInputs={slotInputs}
+                onSlotInputChange={setSlotValue}
+                slotErrors={slotErrors}
+              />
+            )}
+          </div>
         ) : (
-          <p className="text-slate-500 text-sm">该牌阵布局尚未接入，请选择「六芒星」。</p>
+          <p className="mt-6 text-center text-sm text-slate-500">该牌阵布局尚未接入，请选择「六芒星」。</p>
         )}
       </section>
 
-      {/* C. 底部按钮区：左 返回修改案例信息 / 右 确定 */}
-      <section className="flex items-center justify-between gap-4 pt-2">
+      <section className="flex flex-col gap-4 border-t border-[#d7ebe2] pt-6 sm:flex-row sm:items-center sm:justify-between">
         <button
           type="button"
           onClick={handleReturn}
-          className="px-3 py-2 rounded-md border border-slate-600 text-slate-200 hover:bg-slate-800"
+          className="text-sm text-slate-500 transition hover:text-tarot-green"
         >
-          返回修改案例信息
+          ← 返回修改案例信息
         </button>
         <button
           type="button"
           onClick={handleConfirm}
-          className="px-4 py-2 rounded-md bg-tarot-card border border-slate-600 text-slate-100 hover:border-slate-500"
+          className="rounded-full bg-tarot-green px-8 py-3 text-sm font-medium text-white shadow-[0_10px_24px_rgba(5,150,105,0.22)] transition hover:bg-emerald-700"
         >
-          确定
+          确定录入
         </button>
       </section>
 

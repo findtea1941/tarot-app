@@ -20,10 +20,10 @@ export function SlotBadge({
       aria-label={`位置${index} ${name}`}
       role="img"
     >
-      <span className="flex h-6 w-6 items-center justify-center rounded-full border border-slate-500 bg-slate-800/90 text-xs font-medium text-slate-200">
+      <span className="flex h-6 w-6 items-center justify-center rounded-full border border-[#c8e9d8] bg-tarot-green text-xs font-medium text-white">
         {index}
       </span>
-      <span className="mt-0.5 max-w-[4rem] truncate text-center text-[10px] leading-tight text-slate-300">
+      <span className="mt-0.5 max-w-[4rem] truncate text-center text-[10px] leading-tight text-tarot-green">
         {name}
       </span>
     </div>

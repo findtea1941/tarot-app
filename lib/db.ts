@@ -36,6 +36,8 @@ export interface Case {
   updatedAt: number;
   /** 塔罗草稿专用字段 */
   type?: "tarot";
+  /** 状态：未完成草稿 / 已确认保存；仅塔罗案例使用 */
+  status?: "draft" | "completed";
   background?: string;
   category?: CaseCategory;
   drawTime?: string; // datetime-local 值，如 "2025-03-06T14:30"

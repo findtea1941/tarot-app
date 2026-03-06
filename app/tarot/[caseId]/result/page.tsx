@@ -22,7 +22,7 @@ import {
   getResolvedCardsByGroup,
 } from "@/lib/groupSummary";
 import { PlanetOptions } from "@/lib/planetOptions";
-import { SpreadBoard } from "@/components/SpreadBoard";
+import { HexagramReviewBoard } from "@/components/HexagramReviewBoard";
 
 /**
  * Step5 分析页骨架：左右分栏，左侧案例信息+牌阵可视化，右侧统筹占位+用户解读
@@ -308,91 +308,112 @@ export default function ResultPage() {
   }, [caseId, caseData, userInterpretation, manualNumberNote, router, buildTitle, buildSlotCards, buildSupplements, buildAnalysis]);
 
   if (loading) {
-    return <div className="text-slate-300 text-sm">加载中…</div>;
+    return <div className="text-sm text-slate-500">加载中…</div>;
   }
 
   if (notFound || !caseData) {
     return (
       <div className="space-y-4">
-        <p className="text-red-300">未找到该案例。</p>
-        <Link href="/tarot" className="text-tarot-accent hover:underline">
+        <p className="text-sm text-red-500">未找到该案例。</p>
+        <Link href="/tarot" className="text-tarot-green hover:underline">
           返回塔罗
         </Link>
       </div>
     );
   }
 
+  const locationDisplay = caseData.location
+    ? [caseData.location.provinceName, caseData.location.cityName === "市辖区" ? caseData.location.provinceName : caseData.location.cityName].filter(Boolean).join(" · ") || "—"
+    : "—";
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="grid flex-1 gap-6 xl:grid-cols-[minmax(320px,420px)_minmax(0,1fr)]">
-        {/* 左侧：案例基础信息 + 牌阵可视化 */}
-        <div className="flex min-w-0 flex-col gap-6 overflow-auto">
-          <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4 space-y-3">
-            <h2 className="text-sm font-medium text-slate-400">案例基础信息</h2>
-            <dl className="grid gap-2 text-sm">
+    <div className="flex min-h-0 flex-1 flex-col bg-white">
+      <div className="mx-auto grid w-full max-w-[1560px] flex-1 gap-5 px-2 py-2 xl:grid-cols-[540px_minmax(0,1fr)]">
+        <div className="flex min-w-0 flex-col gap-5">
+          <section className="rounded-[22px] border border-[#e3efea] bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <p className="text-xs font-semibold tracking-wide text-tarot-green">案例基本信息</p>
+            <h2 className="mt-2 text-[29px] font-semibold leading-tight text-slate-900">塔罗案例分析工作台</h2>
+            <dl className="mt-5 space-y-4 text-sm">
               <div>
-                <dt className="text-slate-500">标题</dt>
-                <dd className="text-slate-100">{caseData.title || "—"}</dd>
+                <dt className="text-xs font-medium text-slate-500">当前问题</dt>
+                <dd className="mt-1 text-[19px] font-semibold leading-7 text-slate-900">
+                  {caseData.question || "—"}
+                </dd>
               </div>
               <div>
-                <dt className="text-slate-500">问题</dt>
-                <dd className="text-slate-100">{caseData.question || "—"}</dd>
+                <dt className="text-xs font-medium text-slate-500">问题描述</dt>
+                <dd className="mt-1 whitespace-pre-wrap leading-7 text-slate-700">
+                  {caseData.background || "—"}
+                </dd>
               </div>
-              <div>
-                <dt className="text-slate-500">背景</dt>
-                <dd className="text-slate-100 whitespace-pre-wrap">{caseData.background || "—"}</dd>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <span className="rounded-full bg-[#ecf8f2] px-3 py-1 text-xs font-medium text-tarot-green">
+                  {caseData.category || "—"}
+                </span>
+                <span className="rounded-full bg-[#ecf8f2] px-3 py-1 text-xs font-medium text-tarot-green">
+                  {caseData.spreadType || "—"}
+                </span>
               </div>
-              <div>
-                <dt className="text-slate-500">分类</dt>
-                <dd className="text-slate-100">{caseData.category || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">抽牌时间</dt>
-                <dd className="text-slate-100">{drawAtDisplay || "—"}</dd>
-              </div>
-              <div>
-                <dt className="text-slate-500">牌阵类型</dt>
-                <dd className="text-slate-100">{caseData.spreadType || "—"}</dd>
+              <div className="grid gap-3 pt-1 sm:grid-cols-2">
+                <div className="rounded-2xl border border-[#e2eee8] bg-white px-4 py-3">
+                  <dt className="text-xs font-medium text-slate-500">时间</dt>
+                  <dd className="mt-1 text-sm text-slate-800">{drawAtDisplay || "—"}</dd>
+                </div>
+                <div className="rounded-2xl border border-[#e2eee8] bg-white px-4 py-3">
+                  <dt className="text-xs font-medium text-slate-500">地点</dt>
+                  <dd className="mt-1 text-sm text-slate-800">{locationDisplay}</dd>
+                </div>
               </div>
             </dl>
           </section>
 
-          <section className="flex flex-col gap-2">
-            <h2 className="text-sm font-medium text-slate-400">牌阵</h2>
+          <section className="rounded-[22px] border border-[#e3efea] bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <h2 className="text-[22px] font-semibold text-tarot-green">牌阵回顾</h2>
             {layout ? (
-              <SpreadBoard
-                layout={layout}
-                slotStates={slotStates}
-                onSlotClick={() => {}}
-              />
+              layout.id === "hexagram-7" ? (
+                <HexagramReviewBoard layout={layout} slotStates={slotStates} />
+              ) : (
+                <div className="mt-5 grid gap-3 text-sm">
+                  {layout.slots.map((slot) => {
+                    const state = slotStates[slot.id];
+                    const name = state?.cardName ? (state.reversed ? `${state.cardName}-` : state.cardName) : "—";
+                    return (
+                      <div key={slot.id} className="flex items-center gap-2 rounded-2xl border border-tarot-green-light bg-tarot-panel px-3 py-2">
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tarot-green text-xs font-medium text-white">{slot.id}</span>
+                        <span className="text-tarot-green">{slot.name}</span>
+                        <span className="text-slate-700">{name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
             ) : (
-              <p className="text-slate-500 text-sm">该牌阵布局未接入</p>
+              <p className="mt-4 text-sm text-slate-500">该牌阵布局未接入</p>
             )}
           </section>
         </div>
 
-        {/* 右侧：统筹表格占位 + 用户解读 */}
-        <div className="flex min-w-0 flex-col gap-6 overflow-visible">
-          <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-            <h2 className="text-sm font-medium text-slate-400 mb-2">统筹分析表格</h2>
+        <div className="flex min-w-0 flex-col gap-5 overflow-visible">
+          <section className="rounded-[22px] border border-[#e3efea] bg-white pl-4 pt-4 pb-4 pr-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <h2 className="mb-3 text-[20px] font-semibold text-tarot-green">统筹分析表格</h2>
             {matrixColumns.length > 0 && matrixContext ? (
-              <div className="w-full overflow-visible">
+              <div className="mt-4 w-full overflow-visible">
                 <table className="mx-auto w-auto border-collapse text-center text-sm" style={{ tableLayout: "auto" }}>
                   <thead>
-                    <tr className="border-b border-slate-600">
-                      <th className="border border-slate-600 bg-slate-800/80 px-2 py-1.5 text-slate-400 font-medium whitespace-nowrap text-center align-middle">
+                    <tr className="border-b border-slate-200">
+                      <th className="border border-slate-200 bg-tarot-panel px-2 py-1.5 text-slate-600 font-medium whitespace-nowrap text-center align-middle">
                         维度
                       </th>
                       {matrixColumns.map((col) => (
                         <th
                           key={col.id}
-                          className="border border-slate-600 bg-slate-800/80 px-1.5 py-1.5 text-slate-300 font-medium whitespace-nowrap text-center align-middle"
+                          className="border border-slate-200 bg-tarot-panel px-1.5 py-1.5 text-slate-700 font-medium whitespace-nowrap text-center align-middle"
                         >
                           {col.kind === "signifier" && col.signifierIndex != null ? (
                             editingSignifierTitleIndex === col.signifierIndex ? (
                               <input
                                 type="text"
-                                className="min-w-[5.5rem] rounded border border-slate-600 bg-slate-900 px-1 py-0.5 text-center text-xs text-slate-100"
+                                className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-xs text-slate-800"
                                 value={signifierTitleInputs[col.signifierIndex] ?? col.title}
                                 onChange={(e) => {
                                   const next = [...signifierTitleInputs];
@@ -409,7 +430,7 @@ export default function ResultPage() {
                             ) : (
                               <button
                                 type="button"
-                                className="w-full whitespace-nowrap px-0.5 text-center text-xs text-slate-300 hover:text-slate-100"
+                                className="w-full whitespace-nowrap px-0.5 text-center text-xs text-slate-700 hover:text-tarot-green"
                                 onClick={() => setEditingSignifierTitleIndex(col.signifierIndex!)}
                               >
                                 {signifierTitleInputs[col.signifierIndex] ?? col.title}
@@ -423,28 +444,28 @@ export default function ResultPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr className="border-b border-slate-600">
-                      <td className="border border-slate-600 bg-slate-800/50 px-2 py-1 text-slate-500 whitespace-nowrap text-center align-middle">
+                    <tr className="border-b border-slate-200">
+                      <td className="border border-slate-200 bg-slate-50 px-2 py-1 text-slate-600 whitespace-nowrap text-center align-middle">
                         牌名
                       </td>
                       {matrixColumns.map((col) => (
                         <td
                           key={col.id}
-                          className="border border-slate-600 px-1.5 py-1 text-slate-200 whitespace-nowrap text-center align-middle"
+                          className="border border-slate-200 px-1.5 py-1 text-slate-800 whitespace-nowrap text-center align-middle"
                         >
                           {getColumnCardText(col, matrixContext)}
                         </td>
                       ))}
                     </tr>
                     {DIMENSION_ROWS.map((row) => (
-                      <tr key={row.id} className="border-b border-slate-600">
-                        <td className="border border-slate-600 bg-slate-800/50 px-2 py-1 text-slate-500 whitespace-nowrap text-center align-middle">
+                      <tr key={row.id} className="border-b border-slate-200">
+                        <td className="border border-slate-200 bg-slate-50 px-2 py-1 text-slate-600 whitespace-nowrap text-center align-middle">
                           {row.label}
                         </td>
                         {matrixColumns.map((col) => (
                           <td
                             key={col.id}
-                            className="border border-slate-600 px-1.5 py-1 text-slate-200 whitespace-nowrap text-center align-middle"
+                            className="border border-slate-200 px-1.5 py-1 text-slate-800 whitespace-nowrap text-center align-middle"
                           >
                             {col.kind === "signifier" &&
                             col.signifierIndex != null &&
@@ -459,7 +480,7 @@ export default function ResultPage() {
                                   caseData.supplements?.planetByCardKey?.[entry.card.name] ?? "";
                                 return needsPlanet ? (
                                   <select
-                                    className="min-w-[5.5rem] rounded border border-slate-600 bg-slate-800 px-1 py-0.5 text-center text-xs text-slate-200"
+                                    className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-xs text-slate-800"
                                     value={currentPlanet}
                                     onChange={(e) =>
                                       handleSignifierPlanetBlur(entry.card.name, e.target.value)
@@ -493,52 +514,50 @@ export default function ResultPage() {
                 </table>
               </div>
             ) : (
-              <p className="text-slate-500 text-sm">无牌阵数据或布局未接入</p>
+              <p className="mt-4 text-sm text-slate-500">无牌阵数据或布局未接入</p>
             )}
           </section>
 
-          {/* 数字计算和备注（可选） */}
-          <section className="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
-            <h2 className="text-sm font-medium text-slate-400 mb-2">数字计算和备注（可选）</h2>
-            {groupSummaries ? (
-              <div className="space-y-1 text-sm text-slate-200 mb-3">
-                <p className="font-mono">
-                  整体：绝对值加和 ={" "}
-                  {groupSummaries.all.numbers.sumAbs % 22}
-                  ，直接加和 = {groupSummaries.all.numbers.sumSigned % 22}
-                </p>
-                {layout?.id === "hexagram-7" && (
-                  <>
-                    <p className="font-mono text-slate-400">
-                      时间线：绝对值加和 = {groupSummaries.time.numbers.sumAbs % 22}
-                      ，直接加和 = {groupSummaries.time.numbers.sumSigned % 22}
-                    </p>
-                  </>
-                )}
+          <section className="rounded-[22px] border border-[#e3efea] bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <h2 className="mb-4 text-[20px] font-semibold text-tarot-green">数字计算</h2>
+            <div className="space-y-3 text-sm">
+              <div className="flex items-center justify-between rounded-xl bg-[#f7f9fa] px-4 py-3">
+                <span className="text-slate-500">整体加和</span>
+                <span className="font-semibold text-tarot-green">
+                  {groupSummaries
+                    ? `绝对值加和：${groupSummaries.all.numbers.sumAbs % 22} / 直接加和：${groupSummaries.all.numbers.sumSigned % 22}`
+                    : "—"}
+                </span>
               </div>
-            ) : (
-              <p className="text-slate-500 text-sm">—</p>
-            )}
-            <label className="mb-1 mt-1 block text-sm font-medium text-slate-400">
-              手动备注
-            </label>
-            <input
-              type="text"
-              className="w-full rounded border border-slate-600 bg-slate-800 px-2 py-1.5 text-sm text-slate-100 placeholder-slate-500"
-              value={manualNumberNote}
-              onChange={(e) => setManualNumberNote(e.target.value)}
-              onBlur={handleManualNumberNoteBlur}
-              placeholder="例如：某些牌不计入数字、特殊换算说明等"
-            />
+              {layout?.id === "hexagram-7" && (
+                <div className="flex items-center justify-between rounded-xl bg-[#eef4f2] px-4 py-3">
+                  <span className="text-slate-500">时间线加和</span>
+                  <span className="font-semibold text-slate-700">
+                    {groupSummaries
+                      ? `绝对值加和：${groupSummaries.time.numbers.sumAbs % 22} / 直接加和：${groupSummaries.time.numbers.sumSigned % 22}`
+                      : "—"}
+                  </span>
+                </div>
+              )}
+              <div>
+                <label className="mb-2 block text-sm text-slate-500">手动备注</label>
+                <input
+                  type="text"
+                  className="w-full rounded-2xl border border-[#e3ece8] bg-white px-4 py-3 text-sm text-slate-800 placeholder-slate-400"
+                  value={manualNumberNote}
+                  onChange={(e) => setManualNumberNote(e.target.value)}
+                  onBlur={handleManualNumberNoteBlur}
+                  placeholder="例如：某些牌不计入数字、特殊换算说明等"
+                />
+              </div>
+            </div>
           </section>
 
-          <section className="flex flex-col gap-2 flex-1 min-h-0">
-            <label htmlFor="result-user-interpretation" className="text-sm font-medium text-slate-400">
-              用户解读
-            </label>
+          <section className="flex min-h-[340px] flex-1 flex-col rounded-[22px] border border-[#e3efea] bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <h2 className="mb-3 text-[20px] font-semibold text-tarot-green">案例解读</h2>
             <textarea
               id="result-user-interpretation"
-              className="min-h-[120px] w-full flex-1 rounded-lg border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500 resize-y"
+              className="min-h-[260px] w-full flex-1 resize-y rounded-[22px] border border-[#e3ece8] bg-[#fbfcfc] px-4 py-4 text-slate-800 placeholder-slate-400"
               value={userInterpretation}
               onChange={(e) => setUserInterpretation(e.target.value)}
               placeholder="输入你的解读…"
@@ -547,28 +566,26 @@ export default function ResultPage() {
         </div>
       </div>
 
-      {/* 右下按钮 */}
-      <div className="mt-4 flex justify-end gap-3 border-t border-slate-800 pt-4">
+      <div className="mt-4 flex justify-end gap-3 border-t border-[#e7efeb] pt-4">
         <button
           type="button"
           onClick={handleSave}
-          className="rounded-md border border-slate-600 bg-slate-800 px-4 py-2 text-slate-200 hover:bg-slate-700"
+          className="rounded-xl border border-[#dfe7e3] bg-white px-4 py-2 text-slate-700 shadow-sm hover:bg-slate-50"
         >
           保存
         </button>
         <button
           type="button"
           onClick={handleSaveAndBack}
-          className="rounded-md border border-slate-600 bg-tarot-card px-4 py-2 text-slate-100 hover:border-slate-500"
+          className="rounded-xl bg-tarot-green px-5 py-2 text-white shadow-sm hover:bg-emerald-700"
         >
           保存并返回案例库
         </button>
       </div>
 
-      {/* Toast */}
       {toast && (
         <div
-          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-slate-600 bg-slate-800 px-4 py-2 text-sm text-slate-100 shadow-lg"
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-tarot-green-light bg-white px-4 py-2 text-sm text-slate-800 shadow-lg"
           role="status"
           aria-live="polite"
         >

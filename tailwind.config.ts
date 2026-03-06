@@ -8,9 +8,13 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        "tarot-bg": "#050816",
-        "tarot-card": "#0f172a",
-        "tarot-accent": "#fbbf24"
+        "tarot-bg": "#ffffff",
+        "tarot-card": "#ffffff",
+        "tarot-accent": "#059669",
+        /** 案例分析页等浅色主题：面板绿、标题绿 */
+        "tarot-panel": "#f0fdf4",
+        "tarot-green": "#059669",
+        "tarot-green-light": "#d1fae5"
       }
     }
   },

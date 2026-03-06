@@ -94,38 +94,46 @@ export function Step4Modal({
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-4"
+      className="fixed inset-0 z-30 flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px]"
       role="dialog"
       aria-labelledby="step4-title"
       aria-modal="true"
     >
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-lg border border-slate-600 bg-slate-900 shadow-xl">
-        <div className="sticky top-0 border-b border-slate-700 bg-slate-900 px-4 py-3">
-          <h2 id="step4-title" className="text-lg font-medium text-slate-100">
-            补充信息（可跳过）
+      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[28px] border border-[#d7ebe2] bg-[#fbfefd] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+        <div className="sticky top-0 flex items-center justify-between border-b border-[#e7f3ee] bg-[#fbfefd]/95 px-5 py-4 backdrop-blur">
+          <h2 id="step4-title" className="text-xl font-semibold text-tarot-green">
+            补充信息
           </h2>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="rounded-full p-1 text-slate-400 transition hover:bg-[#edf7f3] hover:text-slate-700"
+            aria-label="关闭"
+          >
+            <span className="text-lg leading-none">×</span>
+          </button>
         </div>
-        <div className="space-y-4 p-4">
+        <div className="space-y-6 p-5">
           {cardsToSupplement.length > 0 && (
             <section>
-              <h3 className="mb-2 text-sm font-medium text-slate-400">
-                需补充行星的牌（ACE / 宫廷牌）
+              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-tarot-green">
+                <span className="text-base">✦</span> 对应行星（ACE/宫廷牌）
               </h3>
               <ul className="space-y-3">
                 {cardsToSupplement.map((item) => (
                   <li
                     key={item.slotId}
-                    className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/60 p-3"
+                    className="flex flex-wrap items-center gap-2 rounded-2xl border border-[#d9ece4] bg-[#f5fbf8] p-4"
                   >
-                    <span className="text-slate-300">
+                    <span className="text-slate-500">
                       [{item.slotId}] {item.slotName}
                     </span>
-                    <span className="text-slate-100">{item.cardName}</span>
+                    <span className="font-medium text-slate-900">{item.cardName}</span>
                     <span className="text-xs text-slate-500">
                       {item.reversed ? "逆位" : "正位"}
                     </span>
                     <select
-                      className="ml-auto rounded border border-slate-600 bg-slate-800 px-2 py-1 text-sm text-slate-200"
+                      className="ml-auto rounded-xl border border-[#d8ebe3] bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
                       value={planetSupplements[item.slotId] ?? ""}
                       onChange={(e) => handlePlanetChange(item.slotId, e.target.value)}
                       aria-label={`${item.slotName} ${item.cardName} 行星`}
@@ -143,37 +151,40 @@ export function Step4Modal({
           )}
 
           <section>
-            <label htmlFor="step4-significator" className="mb-1 block text-sm font-medium text-slate-400">
-              指示牌（可选，多张用英文分号 ; 分隔，逆位以 - 结尾）
+            <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-tarot-green">
+              <span className="text-base">▤</span> 指示牌
+            </h3>
+            <label htmlFor="step4-significator" className="mb-2 block text-xs leading-5 text-slate-500">
+              可选输入，若有多张请用分号 ; 分隔，逆位请在牌名末尾添加减号
             </label>
             <input
               id="step4-significator"
               type="text"
-              className="w-full rounded border border-slate-600 bg-slate-800 px-3 py-2 text-slate-100 placeholder-slate-500"
+              className="w-full rounded-2xl border border-[#d8ebe3] bg-white px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
               value={significatorInput}
               onChange={(e) => setSignificatorInput(e.target.value)}
               placeholder="例：愚者; 女祭司-"
             />
           </section>
         </div>
-        <div className="flex gap-3 border-t border-slate-700 p-4">
+        <div className="flex gap-3 border-t border-[#e7f3ee] p-5">
           <button
             type="button"
-            className="rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-slate-200 hover:bg-slate-700"
+            className="rounded-2xl border border-[#d8ebe3] bg-white px-5 py-2.5 text-slate-600 transition hover:bg-[#f5fbf8]"
             onClick={onCancel}
           >
             取消
           </button>
           <button
             type="button"
-            className="flex-1 rounded-md border border-slate-600 bg-slate-800 px-3 py-2 text-slate-200 hover:bg-slate-700"
+            className="flex-1 rounded-2xl border border-[#d8ebe3] bg-white px-5 py-2.5 text-slate-600 transition hover:bg-[#f5fbf8]"
             onClick={onSkip}
           >
             跳过
           </button>
           <button
             type="button"
-            className="flex-1 rounded-md border border-slate-600 bg-tarot-card px-3 py-2 text-slate-100 hover:border-slate-500"
+            className="flex-1 rounded-2xl bg-tarot-green px-5 py-2.5 text-white shadow-[0_10px_24px_rgba(5,150,105,0.22)] transition hover:bg-emerald-700"
             onClick={handleConfirm}
           >
             确定
