@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Case } from "@/lib/db";
-import { getCaseById, saveCaseStep5, updateCaseStep5Partial } from "@/lib/repo/caseRepo";
+import { getCaseById, saveCaseStep5, updateCaseStep5Partial, updateCaseReviewFeedback, updateCaseUserInterpretation } from "@/lib/repo/caseRepo";
 import { getLayout } from "@/layouts";
 import { getDeck } from "@/lib/deck";
 import type { SpreadSlotState } from "@/lib/spreadTypes";
@@ -30,7 +30,9 @@ import { HexagramReviewBoard } from "@/components/HexagramReviewBoard";
 export default function ResultPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const caseId = params.caseId as string;
+  const fromLibrary = searchParams.get("from") === "library";
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -40,6 +42,7 @@ export default function ResultPage() {
   const [signifierTitleInputs, setSignifierTitleInputs] = useState<string[]>([]);
   const [editingSignifierTitleIndex, setEditingSignifierTitleIndex] = useState<number | null>(null);
   const [manualNumberNote, setManualNumberNote] = useState("");
+  const [reviewFeedback, setReviewFeedback] = useState("");
 
   useEffect(() => {
     if (!caseId) return;
@@ -59,6 +62,7 @@ export default function ResultPage() {
               ? (c.analysis as { manualNumberNote?: string }).manualNumberNote
               : "") ?? ""
           );
+          setReviewFeedback(c.reviewFeedback ?? "");
         }
       })
       .catch(() => setNotFound(true))
@@ -246,10 +250,11 @@ export default function ResultPage() {
       supplements,
       analysis,
       userInterpretation,
+      ...(fromLibrary && { reviewFeedback }),
     });
     if (updated) setCaseData(updated);
     setToast("保存成功");
-  }, [caseId, caseData, userInterpretation, manualNumberNote, buildTitle, buildSlotCards, buildSupplements, buildAnalysis]);
+  }, [caseId, caseData, userInterpretation, manualNumberNote, reviewFeedback, fromLibrary, buildTitle, buildSlotCards, buildSupplements, buildAnalysis]);
 
   /** 指示牌列标题失焦保存（按列索引写入 signifierTitles） */
   const handleSignifierTitleBlur = useCallback(
@@ -290,6 +295,20 @@ export default function ResultPage() {
     if (updated) setCaseData(updated);
   }, [caseId, caseData, manualNumberNote]);
 
+  /** 用户解读失焦保存到草稿 */
+  const handleUserInterpretationBlur = useCallback(async () => {
+    if (!caseId) return;
+    await updateCaseUserInterpretation(caseId, userInterpretation);
+    setCaseData((c) => (c ? { ...c, userInterpretation } : null));
+  }, [caseId, userInterpretation]);
+
+  /** 复盘与反馈失焦保存 */
+  const handleReviewFeedbackBlur = useCallback(async () => {
+    if (!caseId) return;
+    await updateCaseReviewFeedback(caseId, reviewFeedback);
+    setCaseData((c) => (c ? { ...c, reviewFeedback } : null));
+  }, [caseId, reviewFeedback]);
+
   /** 保存并返回案例库 */
   const handleSaveAndBack = useCallback(async () => {
     if (!caseId || !caseData) return;
@@ -303,9 +322,10 @@ export default function ResultPage() {
       supplements,
       analysis,
       userInterpretation,
+      ...(fromLibrary && { reviewFeedback }),
     });
     router.push("/cases");
-  }, [caseId, caseData, userInterpretation, manualNumberNote, router, buildTitle, buildSlotCards, buildSupplements, buildAnalysis]);
+  }, [caseId, caseData, userInterpretation, manualNumberNote, reviewFeedback, fromLibrary, router, buildTitle, buildSlotCards, buildSupplements, buildAnalysis]);
 
   if (loading) {
     return <div className="text-sm text-slate-500">加载中…</div>;
@@ -348,7 +368,7 @@ export default function ResultPage() {
               </div>
               <div className="flex flex-wrap gap-2 pt-1">
                 <span className="rounded-full bg-[#ecf8f2] px-3 py-1 text-xs font-medium text-tarot-green">
-                  {caseData.category || "—"}
+                  {(caseData.tarotCategories?.length ? caseData.tarotCategories.join("、") : caseData.category) || "—"}
                 </span>
                 <span className="rounded-full bg-[#ecf8f2] px-3 py-1 text-xs font-medium text-tarot-green">
                   {caseData.spreadType || "—"}
@@ -560,8 +580,23 @@ export default function ResultPage() {
               className="min-h-[260px] w-full flex-1 resize-y rounded-[22px] border border-[#e3ece8] bg-[#fbfcfc] px-4 py-4 text-slate-800 placeholder-slate-400"
               value={userInterpretation}
               onChange={(e) => setUserInterpretation(e.target.value)}
+              onBlur={handleUserInterpretationBlur}
               placeholder="输入你的解读…"
             />
+            {fromLibrary && (
+              <div className="mt-5">
+                <label className="mb-2 block text-sm font-medium text-slate-700">
+                  复盘与反馈
+                </label>
+                <textarea
+                  className="min-h-24 w-full rounded-2xl border border-[#e3ece8] bg-[#fbfcfc] px-4 py-3 text-sm text-slate-800 placeholder-slate-400"
+                  value={reviewFeedback}
+                  onChange={(e) => setReviewFeedback(e.target.value)}
+                  onBlur={handleReviewFeedbackBlur}
+                  placeholder="填写复盘与反馈…"
+                />
+              </div>
+            )}
           </section>
         </div>
       </div>

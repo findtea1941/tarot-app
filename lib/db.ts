@@ -1,8 +1,16 @@
 import Dexie, { Table } from "dexie";
 import type { SpreadSlotState } from "@/lib/spreadTypes";
 
-/** 分类：情感/事业/学业/其他 */
-export type CaseCategory = "情感" | "事业" | "学业" | "其他";
+/** 分类 */
+export type CaseCategory =
+  | "情感"
+  | "事业"
+  | "学业"
+  | "健康"
+  | "灵性"
+  | "其他"
+  | "开放式问题"
+  | "封闭式问题";
 
 /** 牌阵类型 */
 export type SpreadType =
@@ -34,12 +42,34 @@ export interface Case {
   question?: string;
   createdAt: number;
   updatedAt: number;
-  /** 塔罗草稿专用字段 */
-  type?: "tarot";
-  /** 状态：未完成草稿 / 已确认保存；仅塔罗案例使用 */
+  /** 案例类型 */
+  type?: "tarot" | "lenormand";
+  /** 状态：未完成草稿 / 已确认保存；塔罗与雷诺曼共用 */
   status?: "draft" | "completed";
+  /** 雷诺曼专用：牌阵类型 */
+  lenormandSpreadType?: "linear-3" | "linear-5" | "nine-grid";
+  /** 雷诺曼专用：是否二择一 */
+  lenormandIsChoice?: boolean;
+  /** 雷诺曼专用：类型标签（多选） */
+  lenormandCategories?: string[];
+  /** 雷诺曼专用：主牌阵牌名数组（按顺序） */
+  lenormandCards?: string[];
+  /** 雷诺曼专用：二择一选项A牌名 */
+  lenormandOptionACards?: string[];
+  /** 雷诺曼专用：二择一选项B牌名 */
+  lenormandOptionBCards?: string[];
+  /** 雷诺曼专用：二择一选项A名称 */
+  lenormandOptionALabel?: string;
+  /** 雷诺曼专用：二择一选项B名称 */
+  lenormandOptionBLabel?: string;
+  /** 雷诺曼专用：录入日期 YYYY-MM-DD */
+  lenormandDrawDate?: string;
+  /** 雷诺曼专用：步骤3分析内容，entryId -> 用户填写文本 */
+  lenormandAnalysis?: Record<string, string>;
   background?: string;
   category?: CaseCategory;
+  /** 塔罗分类（多选），与 category 兼容旧数据 */
+  tarotCategories?: string[];
   drawTime?: string; // datetime-local 值，如 "2025-03-06T14:30"
   spreadType?: SpreadType;
   /** 地点（中国省市两级；区县字段仅兼容旧数据） */
@@ -70,6 +100,8 @@ export interface Case {
   extra?: unknown;
   /** 兼容：用户解读，与 analysis.userNotes 同步 */
   userInterpretation?: string;
+  /** 案例库复盘与反馈（从案例库进入时填写） */
+  reviewFeedback?: string;
 }
 
 export type DeckKind = "tarot" | "lenormand";

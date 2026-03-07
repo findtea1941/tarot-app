@@ -2,7 +2,15 @@ export type Arcana = "major" | "minor";
 
 export type SuitZh = "权杖" | "星币" | "宝剑" | "圣杯";
 
-export type CaseCategory = "情感" | "事业" | "学业" | "其他";
+export type CaseCategory =
+  | "情感"
+  | "事业"
+  | "学业"
+  | "健康"
+  | "灵性"
+  | "其他"
+  | "开放式问题"
+  | "封闭式问题";
 
 export type SpreadType =
   | "六芒星"
@@ -102,7 +110,15 @@ export interface Case {
 
 export type DivinationType = "tarot" | "lenormand";
 
-export type Category = "情感" | "事业" | "学业" | "其他";
+export type Category =
+  | "情感"
+  | "事业"
+  | "学业"
+  | "健康"
+  | "灵性"
+  | "其他"
+  | "开放式问题"
+  | "封闭式问题";
 
 export type SpreadType =
   | "六芒星牌阵"

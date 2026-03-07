@@ -24,14 +24,15 @@ export async function createCase(input: { title: string; question?: string }) {
 export async function createTarotDraft(input: {
   question: string;
   background?: string;
-  category: CaseCategory;
+  categories: string[];
   drawTime: string;
   spreadType: SpreadType;
   location: Location;
 }): Promise<Case> {
   const now = Date.now();
   const dateStr = input.drawTime.slice(0, 10); // YYYY-MM-DD
-  const title = `${dateStr} | ${input.category} | ${input.question.trim().slice(0, 30)}${input.question.length > 30 ? "…" : ""}`;
+  const catLabel = input.categories.length > 0 ? input.categories.join("、") : "";
+  const title = `${dateStr} | ${catLabel} | ${input.question.trim().slice(0, 30)}${input.question.length > 30 ? "…" : ""}`;
   const item: Case = {
     id: crypto.randomUUID(),
     type: "tarot",
@@ -39,7 +40,8 @@ export async function createTarotDraft(input: {
     title,
     question: input.question.trim(),
     background: input.background?.trim() || undefined,
-    category: input.category,
+    category: (input.categories[0] as CaseCategory) || undefined,
+    tarotCategories: input.categories,
     drawTime: input.drawTime,
     spreadType: input.spreadType,
     location: input.location,
@@ -61,7 +63,7 @@ export async function updateTarotDraft(
   input: Partial<{
     question: string;
     background: string;
-    category: CaseCategory;
+    categories: string[];
     drawTime: string;
     spreadType: SpreadType;
     location: Location;
@@ -71,9 +73,15 @@ export async function updateTarotDraft(
   const existing = await db.cases.get(id);
   if (!existing) return;
   const merged = { ...existing, ...input, updatedAt: now };
-  if (input.question !== undefined || input.category !== undefined || input.drawTime !== undefined) {
+  if (input.categories !== undefined) {
+    merged.tarotCategories = input.categories;
+    merged.category = (input.categories[0] as CaseCategory) || undefined;
+  }
+  if (input.question !== undefined || input.categories !== undefined || input.drawTime !== undefined) {
     const dateStr = (merged.drawTime || "").slice(0, 10);
-    merged.title = `${dateStr} | ${merged.category || ""} | ${(merged.question || "").trim().slice(0, 30)}`;
+    const cats = merged.tarotCategories ?? (merged.category ? [merged.category] : []);
+    const catLabel = cats.join("、");
+    merged.title = `${dateStr} | ${catLabel} | ${(merged.question || "").trim().slice(0, 30)}`;
   }
   if (input.location !== undefined) {
     merged.locationLabel = input.location.label;
@@ -119,10 +127,10 @@ export async function updateCaseUserInterpretation(
   await db.cases.update(id, { userInterpretation, updatedAt: Date.now() });
 }
 
-/** Step5 保存：合并 title / slotCards / supplements / analysis / userInterpretation，保留案例其余字段 */
+/** Step5 保存：合并 title / slotCards / supplements / analysis / userInterpretation / reviewFeedback，保留案例其余字段 */
 export async function saveCaseStep5(
   id: string,
-  updates: Partial<Pick<Case, "title" | "slotCards" | "supplements" | "analysis" | "userInterpretation">>
+  updates: Partial<Pick<Case, "title" | "slotCards" | "supplements" | "analysis" | "userInterpretation" | "reviewFeedback">>
 ): Promise<Case | undefined> {
   const existing = await db.cases.get(id);
   if (!existing) return undefined;
@@ -167,8 +175,81 @@ export async function updateCaseStep5Partial(
 
 export async function listCases() {
   const all = await db.cases.orderBy("createdAt").reverse().toArray();
-  // 仅展示：非塔罗案例，或塔罗且不是 draft（即已确认保存）
-  return all.filter((c) => c.type !== "tarot" || c.status !== "draft");
+  return all.filter((c) => {
+    if (c.type === "tarot" || c.type === "lenormand") {
+      return c.status === "completed";
+    }
+    return true;
+  });
+}
+
+/** 草稿列表（塔罗 + 雷诺曼混合，按更新时间倒序；未点击保存的均为草稿） */
+export async function listDrafts(): Promise<Case[]> {
+  const all = await db.cases.toArray();
+  return all
+    .filter(
+      (c) =>
+        (c.type === "tarot" || c.type === "lenormand") &&
+        c.status !== "completed"
+    )
+    .sort((a, b) => (b.updatedAt ?? 0) - (a.updatedAt ?? 0));
+}
+
+/** 按类型筛选案例（塔罗 / 雷诺曼） */
+export async function listCasesByType(
+  type: "tarot" | "lenormand"
+): Promise<Case[]> {
+  const all = await listCases();
+  return all.filter((c) => c.type === type);
+}
+
+const CATEGORIES = [
+  "情感",
+  "事业",
+  "学业",
+  "健康",
+  "灵性",
+  "其他",
+  "开放式问题",
+  "封闭式问题",
+] as const;
+
+/** 按分类和牌名搜索案例（混合塔罗与雷诺曼） */
+export async function searchCases(query: string): Promise<Case[]> {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  const all = await listCases();
+  return all.filter((c) => {
+    const catMatch = CATEGORIES.some(
+      (cat) =>
+        cat === q &&
+        (c.category === cat ||
+          c.tarotCategories?.includes(cat) ||
+          c.lenormandCategories?.includes(cat))
+    );
+    if (catMatch) return true;
+    const tarotCardNames = [
+      ...Object.values(c.slotCards ?? {}).map((s) => s.cardKey ?? ""),
+      ...(c.cards ?? []).map((s) => s.cardName ?? ""),
+    ].filter(Boolean);
+    const cardMatch =
+      (c.type === "tarot" && tarotCardNames.some((n) => n.toLowerCase().includes(q))) ||
+      (c.type === "lenormand" &&
+        [
+          ...(c.lenormandCards ?? []),
+          ...(c.lenormandOptionACards ?? []),
+          ...(c.lenormandOptionBCards ?? []),
+        ].some((name) => name?.toLowerCase().includes(q)));
+    return cardMatch;
+  });
+}
+
+/** 更新案例复盘与反馈 */
+export async function updateCaseReviewFeedback(
+  id: string,
+  reviewFeedback: string
+): Promise<void> {
+  await db.cases.update(id, { reviewFeedback, updatedAt: Date.now() });
 }
 
 export async function deleteCase(id: string) {

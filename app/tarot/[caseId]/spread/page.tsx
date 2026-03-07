@@ -211,7 +211,7 @@ export default function SpreadPage() {
               <dt className="text-xs font-semibold text-tarot-green">分类</dt>
               <dd className="mt-1">
                 <span className="inline-block rounded-lg bg-[#d4f0e3] px-3 py-1 text-sm font-medium text-tarot-green">
-                  {caseData.category || "—"}
+                  {(caseData.tarotCategories?.length ? caseData.tarotCategories.join("、") : caseData.category) || "—"}
                 </span>
               </dd>
             </div>

@@ -43,6 +43,7 @@ const ERROR_MESSAGES = {
   empty: "该位置缺牌",
   format: "格式错误：逆位用牌名-",
   not_found: "牌名不存在/不唯一",
+  duplicate: "该牌重复",
 } as const;
 
 /**
@@ -76,6 +77,27 @@ export function validateSlotInputs(
 
   if (firstSlotId != null) {
     return { ok: false, firstSlotId, errors };
+  }
+
+  // 检查重复牌
+  const cardIdToSlots = new Map<string, string[]>();
+  for (const slot of layout.slots) {
+    const p = parsed[slot.id];
+    if (!p) continue;
+    const list = cardIdToSlots.get(p.cardId) ?? [];
+    list.push(slot.id);
+    cardIdToSlots.set(p.cardId, list);
+  }
+  for (const [, slotIds] of cardIdToSlots) {
+    if (slotIds.length > 1) {
+      for (const sid of slotIds) {
+        errors[sid] = ERROR_MESSAGES.duplicate;
+      }
+      if (firstSlotId == null) firstSlotId = slotIds[0];
+    }
+  }
+  if (Object.keys(errors).length > 0) {
+    return { ok: false, firstSlotId: firstSlotId!, errors };
   }
   return { ok: true, parsed };
 }

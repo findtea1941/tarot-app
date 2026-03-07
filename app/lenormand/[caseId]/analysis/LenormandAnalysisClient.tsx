@@ -1,0 +1,557 @@
+"use client";
+
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getCaseById, updateCaseReviewFeedback } from "@/lib/repo/caseRepo";
+import {
+  updateLenormandAnalysis,
+  saveLenormandCase,
+  updateLenormandDraft,
+} from "@/lib/repo/lenormandRepo";
+import {
+  clearLenormandDraftStorage,
+  loadLenormandDraftFromStorage,
+} from "@/lib/lenormandStorage";
+import { getLenormandCardDisplay, parseLenormandCards } from "@/lib/lenormandDeck";
+import {
+  NINE_GRID_ENTRIES,
+  LINEAR_3_ENTRIES,
+  LINEAR_5_ENTRIES,
+} from "@/lib/lenormandAnalysis";
+import type { LenormandSpreadType } from "@/lib/lenormandTypes";
+
+type AnalysisEntryConfig = {
+  id: string;
+  label: string;
+  getLabel: (cards: string[]) => string;
+};
+
+function CardBox({
+  name,
+  index,
+  spreadType,
+}: {
+  name: string;
+  index?: number;
+  spreadType?: LenormandSpreadType;
+}) {
+  const [numPart, namePart] = getLenormandCardDisplay(name).split(" ", 2);
+  const isLinear = spreadType === "linear-3" || spreadType === "linear-5";
+  const useWhiteBg =
+    isLinear && spreadType === "linear-3"
+      ? index === 0 || index === 2
+      : isLinear && spreadType === "linear-5"
+        ? index === 1 || index === 3
+        : false;
+  const bgClass = useWhiteBg ? "bg-white" : "bg-tarot-panel";
+  return (
+    <div
+      className={`flex h-[5.5rem] w-[4.5rem] flex-shrink-0 flex-col items-center overflow-hidden rounded-xl border border-tarot-green-light ${bgClass} px-1 pt-1 pb-2 shadow-sm`}
+    >
+      <span className="mt-2 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-tarot-green text-[10px] font-medium text-white">
+        {numPart || "?"}
+      </span>
+      <div className="-mt-2 flex flex-1 min-h-0 items-center justify-center">
+        <span className="max-w-full truncate text-center text-xs font-semibold text-slate-800">
+          {namePart || name}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function AnalysisSection({
+  title,
+  cards,
+  config,
+  prefix,
+  analysisEntries,
+  updateEntry,
+}: {
+  title: string;
+  cards: string[];
+  config: AnalysisEntryConfig[];
+  prefix: string;
+  analysisEntries: Record<string, string>;
+  updateEntry: (id: string, val: string) => void;
+}) {
+  return (
+    <div className="space-y-5">
+      <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
+      {config.map((entry) => {
+        const cardLabel = entry.getLabel(cards);
+        const displayLabel =
+          entry.id === "overall"
+            ? "整体分析"
+            : entry.label
+              ? `${entry.label}：${cardLabel}`
+              : cardLabel;
+        const entryId = `${prefix}_${entry.id}`;
+        return (
+          <div key={entryId} className="space-y-1.5">
+            <label className="block text-sm font-medium text-slate-700 whitespace-nowrap overflow-x-auto">
+              {displayLabel}
+            </label>
+            <textarea
+              className="min-h-20 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+              value={analysisEntries[entryId] ?? ""}
+              onChange={(e) => updateEntry(entryId, e.target.value)}
+              placeholder="填写分析内容…"
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export function LenormandAnalysisClient() {
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const caseId = params.caseId as string;
+
+  const [question, setQuestion] = useState("");
+  const [background, setBackground] = useState("");
+  const [drawDate, setDrawDate] = useState("");
+  const [cards, setCards] = useState<string[]>([]);
+  const [cardsA, setCardsA] = useState<string[]>([]);
+  const [cardsB, setCardsB] = useState<string[]>([]);
+  const [optionALabel, setOptionALabel] = useState("");
+  const [optionBLabel, setOptionBLabel] = useState("");
+  const [isChoice, setIsChoice] = useState(false);
+  const [spreadType, setSpreadType] = useState<LenormandSpreadType>("nine-grid");
+  const [analysisEntries, setAnalysisEntries] = useState<Record<string, string>>(
+    {}
+  );
+  const [loading, setLoading] = useState(false);
+  const [loadingCase, setLoadingCase] = useState(true);
+  const [reviewFeedback, setReviewFeedback] = useState("");
+  const reviewFeedbackRef = useRef(reviewFeedback);
+  reviewFeedbackRef.current = reviewFeedback;
+  const fromLibrary = searchParams.get("from") === "library";
+
+  const loadCase = useCallback(async (id: string) => {
+    setLoadingCase(true);
+    try {
+      const spreadFromUrl = searchParams.get("spread") as LenormandSpreadType | null;
+      const choiceFromUrl = searchParams.get("choice") === "1";
+      const qFromUrl = searchParams.get("q");
+      const bgFromUrl = searchParams.get("bg");
+
+      // 1. 二择一：从 URL 读取两组牌
+      if (choiceFromUrl) {
+        const cardsAStr = searchParams.get("cardsA");
+        const cardsBStr = searchParams.get("cardsB");
+        if (cardsAStr && cardsBStr) {
+          try {
+            const parsedA = JSON.parse(cardsAStr) as string[];
+            const parsedB = JSON.parse(cardsBStr) as string[];
+            const needCount =
+              (spreadFromUrl ?? "nine-grid") === "linear-3"
+                ? 3
+                : (spreadFromUrl ?? "nine-grid") === "linear-5"
+                  ? 5
+                  : 9;
+            if (
+              Array.isArray(parsedA) &&
+              Array.isArray(parsedB) &&
+              parsedA.length === needCount &&
+              parsedB.length === needCount
+            ) {
+              setCardsA(parsedA);
+              setCardsB(parsedB);
+              setOptionALabel(searchParams.get("labelA") ?? "");
+              setOptionBLabel(searchParams.get("labelB") ?? "");
+              setIsChoice(true);
+              setSpreadType(spreadFromUrl ?? "nine-grid");
+              setQuestion(qFromUrl ?? "");
+              setBackground(bgFromUrl ?? "");
+              const c = await getCaseById(id);
+              if (c && c.type === "lenormand") {
+                if (!qFromUrl) setQuestion(c.question ?? "");
+                if (!bgFromUrl) setBackground(c.background ?? "");
+                setDrawDate(c.lenormandDrawDate ?? "");
+                setAnalysisEntries(c.lenormandAnalysis ?? {});
+                setReviewFeedback(c.reviewFeedback ?? "");
+              }
+              setLoadingCase(false);
+              return;
+            }
+          } catch {
+            // 解析失败则继续从 DB 加载
+          }
+        }
+      }
+
+      // 2. 单牌阵：从 URL 读取
+      const cardsFromUrl = searchParams.get("cards");
+      if (cardsFromUrl && !choiceFromUrl) {
+        try {
+          const parsed = JSON.parse(cardsFromUrl) as string[];
+          const inferredSpread: LenormandSpreadType =
+            parsed.length === 3 ? "linear-3" : parsed.length === 5 ? "linear-5" : "nine-grid";
+          if (Array.isArray(parsed) && (parsed.length === 3 || parsed.length === 5 || parsed.length === 9)) {
+            setCards(parsed);
+            setSpreadType(spreadFromUrl ?? inferredSpread);
+            setIsChoice(false);
+            setQuestion(qFromUrl ?? "");
+            setBackground(bgFromUrl ?? "");
+            const c = await getCaseById(id);
+            if (c && c.type === "lenormand") {
+              if (!qFromUrl) setQuestion(c.question ?? "");
+              if (!bgFromUrl) setBackground(c.background ?? "");
+              setDrawDate(c.lenormandDrawDate ?? "");
+              setAnalysisEntries(c.lenormandAnalysis ?? {});
+              setReviewFeedback(c.reviewFeedback ?? "");
+              updateLenormandDraft(id, { lenormandCards: parsed }).catch(() => {});
+            }
+            setLoadingCase(false);
+            return;
+          }
+        } catch {
+          // 解析失败则继续从 DB 加载
+        }
+      }
+
+      // 3. 从 DB 加载
+      const c = await getCaseById(id);
+      if (c && c.type === "lenormand") {
+        setSpreadType((c.lenormandSpreadType ?? "nine-grid") as LenormandSpreadType);
+        setIsChoice(c.lenormandIsChoice ?? false);
+        setQuestion(c.question ?? "");
+        setBackground(c.background ?? "");
+        setDrawDate(c.lenormandDrawDate ?? "");
+        setOptionALabel(c.lenormandOptionALabel ?? "");
+        setOptionBLabel(c.lenormandOptionBLabel ?? "");
+        setReviewFeedback(c.reviewFeedback ?? "");
+        const needCount =
+          (c.lenormandSpreadType ?? "nine-grid") === "linear-3"
+            ? 3
+            : (c.lenormandSpreadType ?? "nine-grid") === "linear-5"
+              ? 5
+              : 9;
+        if (c.lenormandIsChoice) {
+          const a = c.lenormandOptionACards ?? [];
+          const b = c.lenormandOptionBCards ?? [];
+          if (a.length === needCount && b.length === needCount) {
+            setCardsA(a);
+            setCardsB(b);
+          }
+        } else {
+          let cardsToUse = c.lenormandCards ?? [];
+          if (cardsToUse.length !== needCount) {
+            cardsToUse = (c.lenormandOptionACards ?? []).length === needCount
+              ? (c.lenormandOptionACards ?? [])
+              : cardsToUse;
+          }
+          if (cardsToUse.length !== needCount) {
+            const stored = loadLenormandDraftFromStorage(id);
+            if (stored) {
+              const fromMain = parseLenormandCards(stored.cardsInput).valid;
+              const fromA = parseLenormandCards(stored.optionAInput).valid;
+              if (fromMain.length === needCount) {
+                cardsToUse = fromMain;
+                updateLenormandDraft(id, { lenormandCards: fromMain }).catch(() => {});
+              } else if (fromA.length === needCount) {
+                cardsToUse = fromA;
+                updateLenormandDraft(id, {
+                  lenormandCards: fromA,
+                  lenormandOptionACards: fromA,
+                }).catch(() => {});
+              }
+            }
+          }
+          setCards(cardsToUse);
+        }
+        setAnalysisEntries(c.lenormandAnalysis ?? {});
+      }
+    } finally {
+      setLoadingCase(false);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (caseId) loadCase(caseId);
+  }, [caseId, loadCase]);
+
+  const updateEntry = (entryId: string, value: string) => {
+    setAnalysisEntries((prev) => ({ ...prev, [entryId]: value }));
+  };
+
+  /** 分析内容自动保存到草稿 */
+  const analysisEntriesRef = useRef(analysisEntries);
+  analysisEntriesRef.current = analysisEntries;
+  useEffect(() => {
+    if (!caseId || loadingCase) return;
+    const t = setTimeout(() => {
+      updateLenormandAnalysis(caseId, analysisEntriesRef.current).catch(() => {});
+    }, 600);
+    return () => clearTimeout(t);
+  }, [caseId, analysisEntries, loadingCase]);
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      await updateLenormandAnalysis(caseId, analysisEntries);
+      if (fromLibrary) await updateCaseReviewFeedback(caseId, reviewFeedback);
+      await saveLenormandCase(caseId);
+      clearLenormandDraftStorage(caseId);
+      router.push("/cases");
+    } catch {
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleReturnEdit = async () => {
+    setLoading(true);
+    try {
+      await updateLenormandAnalysis(caseId, analysisEntries);
+      if (fromLibrary) await updateCaseReviewFeedback(caseId, reviewFeedback);
+      router.push(`/lenormand/${caseId}/entry`);
+    } catch {
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loadingCase) {
+    return (
+      <div className="flex min-h-[calc(100vh-96px)] items-center justify-center bg-white">
+        <p className="text-sm text-slate-500">加载中…</p>
+      </div>
+    );
+  }
+
+  const expectedCount =
+    spreadType === "linear-3" ? 3 : spreadType === "linear-5" ? 5 : 9;
+  const analysisEntriesConfig =
+    spreadType === "linear-3"
+      ? LINEAR_3_ENTRIES
+      : spreadType === "linear-5"
+        ? LINEAR_5_ENTRIES
+        : NINE_GRID_ENTRIES;
+  const isLinear = spreadType === "linear-3" || spreadType === "linear-5";
+
+  const choiceValid =
+    isChoice && cardsA.length === expectedCount && cardsB.length === expectedCount;
+  const singleValid = !isChoice && cards.length === expectedCount;
+
+  if (!choiceValid && !singleValid) {
+    return (
+      <div className="min-h-[calc(100vh-96px)] bg-white px-4 py-16">
+        <p className="text-center text-slate-600">
+          牌阵数据不完整，请从步骤2重新录入
+          {isChoice ? `（选项A、B各需${expectedCount}张牌）` : `（需要${expectedCount}张牌）`}
+        </p>
+        <div className="mt-6 flex justify-center">
+          <button
+            onClick={() => router.push(`/lenormand/${caseId}/entry`)}
+            className="rounded-full border border-[#cce7d9] bg-[#ecf8f2] px-6 py-2 text-sm font-medium text-tarot-green hover:bg-[#e4f5ed]"
+          >
+            返回步骤2
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const spreadLabel =
+    spreadType === "linear-3"
+      ? "线性三张"
+      : spreadType === "linear-5"
+        ? "线性五张"
+        : "九宫格";
+  const displaySpreadLabel = isChoice ? `二择一-${spreadLabel}` : spreadLabel;
+
+  return (
+    <div className="min-h-[calc(100vh-96px)] bg-white">
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        {/* 左右分栏 */}
+        <div className="flex gap-6">
+          {/* 左侧：问题、背景、牌型（线性五张加宽以容纳 5 张牌横向展示） */}
+          <div
+            className={`flex shrink-0 flex-col gap-5 ${
+              spreadType === "linear-5" ? "w-[420px]" : "w-[340px]"
+            }`}
+          >
+            <div className="rounded-2xl border border-[#dceee6] bg-[#fbfdfc] p-5">
+              <div className="space-y-3 text-center">
+                <div>
+                  <p className="text-xs font-semibold text-tarot-green">问题</p>
+                  <p className="mt-1 text-sm text-slate-800">{question || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-tarot-green">问题背景</p>
+                  <p className="mt-1 text-sm text-slate-800 whitespace-pre-wrap">{background || "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-tarot-green">时间</p>
+                  <p className="mt-1 text-sm text-slate-800">
+                    {drawDate
+                      ? `${drawDate.slice(0, 4)}年${drawDate.slice(5, 7)}月${drawDate.slice(8, 10)}日`
+                      : "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col items-center">
+              <p className="mb-2 w-full text-center text-xs font-medium text-slate-500">牌型：{displaySpreadLabel}</p>
+              <div className="mt-4 w-full">
+              {isChoice ? (
+              <div className="flex w-full flex-col items-center space-y-6">
+                <div className="flex w-full flex-col items-center">
+                  <p className="mb-2 text-xs font-medium text-slate-500">
+                    选项 A：{optionALabel || "—"}
+                  </p>
+                  <div
+                    className={
+                      isLinear
+                        ? `flex justify-center gap-2 ${spreadType === "linear-5" ? "gap-3" : ""}`
+                        : "grid grid-cols-3 gap-2 justify-items-center"
+                    }
+                  >
+                    {cardsA.map((name, i) => (
+                      <CardBox key={i} name={name} index={i} spreadType={spreadType} />
+                    ))}
+                  </div>
+                </div>
+                <div className="flex w-full flex-col items-center">
+                  <p className="mb-2 text-xs font-medium text-slate-500">
+                    选项 B：{optionBLabel || "—"}
+                  </p>
+                  <div
+                    className={
+                      isLinear
+                        ? `flex justify-center gap-2 ${spreadType === "linear-5" ? "gap-3" : ""}`
+                        : "grid grid-cols-3 gap-2 justify-items-center"
+                    }
+                  >
+                    {cardsB.map((name, i) => (
+                      <CardBox key={i} name={name} index={i} spreadType={spreadType} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                className={
+                  isLinear ? "flex justify-center gap-3" : "grid grid-cols-3 gap-3 justify-items-center"
+                }
+              >
+                {cards.map((name, i) => (
+                  <CardBox key={i} name={name} index={i} spreadType={spreadType} />
+                ))}
+              </div>
+            )}
+              </div>
+            </div>
+          </div>
+
+          {/* 右侧：分析框区域 */}
+          <div className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-[#dceee6] bg-white">
+            <div className="max-h-[calc(100vh-320px)] overflow-y-auto p-5">
+              {isChoice ? (
+                <div className="space-y-6">
+                  <AnalysisSection
+                    title={`选项 A：${optionALabel || "—"}`}
+                    cards={cardsA}
+                    config={analysisEntriesConfig}
+                    prefix="optionA"
+                    analysisEntries={analysisEntries}
+                    updateEntry={updateEntry}
+                  />
+                  <AnalysisSection
+                    title={`选项 B：${optionBLabel || "—"}`}
+                    cards={cardsB}
+                    config={analysisEntriesConfig}
+                    prefix="optionB"
+                    analysisEntries={analysisEntries}
+                    updateEntry={updateEntry}
+                  />
+                  <div className="space-y-1.5">
+                    <label className="block text-sm font-medium text-slate-700">
+                      综合分析
+                    </label>
+                    <textarea
+                      className="min-h-24 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                      value={analysisEntries["choice_overall"] ?? ""}
+                      onChange={(e) =>
+                        updateEntry("choice_overall", e.target.value)
+                      }
+                      placeholder="填写综合分析…"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  {analysisEntriesConfig.map((entry) => {
+                    const cardLabel = entry.getLabel(cards);
+                    const displayLabel =
+                      entry.id === "overall"
+                        ? "整体分析"
+                        : entry.label
+                          ? `${entry.label}：${cardLabel}`
+                          : cardLabel;
+                    return (
+                      <div key={entry.id} className="space-y-1.5">
+                        <label className="block text-sm font-medium text-slate-700 whitespace-nowrap overflow-x-auto">
+                          {displayLabel}
+                        </label>
+                        <textarea
+                          className="min-h-20 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                          value={analysisEntries[entry.id] ?? ""}
+                          onChange={(e) =>
+                            updateEntry(entry.id, e.target.value)
+                          }
+                          placeholder="填写分析内容…"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {fromLibrary && (
+                <div className="mt-6 space-y-1.5">
+                  <label className="block text-sm font-medium text-slate-700">
+                    复盘与反馈
+                  </label>
+                  <textarea
+                    className="min-h-24 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                    value={reviewFeedback}
+                    onChange={(e) => setReviewFeedback(e.target.value)}
+                    onBlur={async () => {
+                      if (caseId) await updateCaseReviewFeedback(caseId, reviewFeedbackRef.current);
+                    }}
+                    placeholder="填写复盘与反馈…"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 下方：保存 + 返回修改 */}
+        <div className="mt-6 flex justify-center gap-4">
+          <button
+            onClick={handleReturnEdit}
+            disabled={loading}
+            className="rounded-full border border-[#cce7d9] bg-white px-8 py-3 text-sm font-medium text-slate-600 transition hover:bg-[#f4fbf8] disabled:opacity-60"
+          >
+            返回修改
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={loading}
+            className="rounded-full bg-tarot-green px-8 py-3 text-sm font-medium text-white shadow-[0_14px_28px_rgba(5,150,105,0.22)] transition hover:bg-emerald-700 disabled:opacity-60"
+          >
+            {loading ? "处理中…" : "保存案例"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

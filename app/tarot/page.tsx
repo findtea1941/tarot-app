@@ -15,7 +15,16 @@ import {
   DEFAULT_CITY_CODE,
 } from "@/lib/region";
 
-const CATEGORIES = ["情感", "事业", "学业", "其他"] as const;
+const CATEGORIES = [
+  "情感",
+  "事业",
+  "学业",
+  "健康",
+  "灵性",
+  "其他",
+  "开放式问题",
+  "封闭式问题",
+] as const;
 const SPREAD_TYPES = [
   "六芒星",
   "四元素",
@@ -33,8 +42,9 @@ export default function TarotNewPage() {
 
   const [question, setQuestion] = useState("");
   const [background, setBackground] = useState("");
-  const [category, setCategory] = useState<typeof CATEGORIES[number] | "">("");
-  const [drawAt, setDrawAt] = useState("");
+  const [categories, setCategories] = useState<string[]>([]);
+  const [drawDate, setDrawDate] = useState("");
+  const [drawTime, setDrawTime] = useState("");
   const [spreadType, setSpreadType] = useState<typeof SPREAD_TYPES[number] | "">("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -73,8 +83,15 @@ export default function TarotNewPage() {
       if (c && c.type === "tarot") {
         setQuestion(c.question ?? "");
         setBackground(c.background ?? "");
-        setCategory((c.category as typeof CATEGORIES[number]) ?? "");
-        setDrawAt(c.drawTime ? formatForDatetimeLocal(c.drawTime) : "");
+        setCategories(c.tarotCategories ?? (c.category ? [c.category] : []));
+        if (c.drawTime) {
+          const parsed = parseDrawTime(c.drawTime);
+          setDrawDate(parsed.date);
+          setDrawTime(parsed.time);
+        } else {
+          setDrawDate("");
+          setDrawTime("");
+        }
         setSpreadType((c.spreadType as typeof SPREAD_TYPES[number]) ?? "");
         if (c.location) {
           setProvinceCode(c.location.provinceCode);
@@ -93,38 +110,31 @@ export default function TarotNewPage() {
     if (caseId) loadDraft(caseId);
   }, [caseId, loadDraft]);
 
-  function formatForDatetimeLocal(isoOrLocal: string): string {
-    if (!isoOrLocal) return "";
+  function parseDrawTime(isoOrLocal: string): { date: string; time: string } {
+    if (!isoOrLocal) return { date: "", time: "" };
     const d = new Date(isoOrLocal);
-    if (isNaN(d.getTime())) return isoOrLocal;
+    if (isNaN(d.getTime())) return { date: "", time: "" };
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     const h = String(d.getHours()).padStart(2, "0");
     const min = String(d.getMinutes()).padStart(2, "0");
-    return `${y}-${m}-${day}T${h}:${min}`;
+    return { date: `${y}-${m}-${day}`, time: `${h}:${min}` };
   }
 
-  function normalizeDatetimeLocalInput(raw: string): string {
-    if (!raw) return "";
-    const [datePart, timePart] = raw.split("T");
-    const [year = "", month, day] = datePart.split("-");
-    const normalizedDate = [year.slice(0, 4), month, day]
-      .filter((part) => part != null)
-      .join("-");
-    return timePart == null ? normalizedDate : `${normalizedDate}T${timePart}`;
-  }
-
-  function toISODrawTime(local: string): string {
-    if (!local) return "";
-    const d = new Date(local);
-    return isNaN(d.getTime()) ? local : d.toISOString();
+  function toISODrawTime(date: string, time: string): string {
+    if (!date) return "";
+    const timePart = (time || "00:00").trim();
+    const m = timePart.match(/^(\d{1,2}):(\d{2})$/);
+    const t = m ? `${m[1].padStart(2, "0")}:${m[2]}` : "00:00";
+    const d = new Date(`${date}T${t}:00`);
+    return isNaN(d.getTime()) ? "" : d.toISOString();
   }
 
   function validate(): string {
     if (!question.trim()) return "请填写问题";
-    if (!category) return "请选择分类";
-    if (!drawAt.trim()) return "请选择抽牌时间";
+    if (categories.length === 0) return "请至少选择一个分类";
+    if (!drawDate.trim()) return "请选择抽牌日期";
     if (!provinceCode) return "请选择省/直辖市";
     if (!cityCode) return "请选择市";
     if (!spreadType) return "请选择牌阵类型";
@@ -161,8 +171,7 @@ export default function TarotNewPage() {
 
     setLoading(true);
     try {
-      const drawTime = toISODrawTime(drawAt);
-      const cat = category as "情感" | "事业" | "学业" | "其他";
+      const isoDrawTime = toISODrawTime(drawDate, drawTime);
       const st = spreadType as SpreadType;
       const location = buildLocation();
 
@@ -170,8 +179,8 @@ export default function TarotNewPage() {
         await updateTarotDraft(caseId, {
           question: question.trim(),
           background: background.trim() || undefined,
-          category: cat,
-          drawTime,
+          categories,
+          drawTime: isoDrawTime,
           spreadType: st,
           location,
         });
@@ -180,8 +189,8 @@ export default function TarotNewPage() {
         const draft = await createTarotDraft({
           question: question.trim(),
           background: background.trim() || undefined,
-          category: cat,
-          drawTime,
+          categories,
+          drawTime: isoDrawTime,
           spreadType: st,
           location,
         });
@@ -202,8 +211,18 @@ export default function TarotNewPage() {
     <div className="min-h-[calc(100vh-96px)] bg-white">
       <div className="mx-auto max-w-4xl px-4 py-10">
         <div className="mb-10 flex flex-col items-center text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#e7f8f0] shadow-inner">
-            <span className="text-3xl font-semibold leading-none text-tarot-green">+</span>
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#d4f0e3] shadow-inner">
+            <div className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-tarot-green p-1">
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-4 w-4 text-[#d4f0e3]"
+                aria-hidden
+              >
+                <rect x="10.5" y="0" width="3" height="24" />
+                <rect x="0" y="10.5" width="24" height="3" />
+              </svg>
+            </div>
           </div>
           <h1 className="mt-5 text-4xl font-semibold tracking-tight text-slate-900">新建塔罗案例 · 基础信息</h1>
         </div>
@@ -234,15 +253,19 @@ export default function TarotNewPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-700">分类 <span className="text-red-400">*</span></label>
+              <label className="block text-sm font-medium text-slate-700">分类 <span className="text-red-400">*</span>（多选）</label>
               <div className="flex flex-wrap gap-2">
                 {CATEGORIES.map((c) => (
                   <button
                     key={c}
                     type="button"
-                    onClick={() => setCategory(c)}
+                    onClick={() =>
+                      setCategories((prev) =>
+                        prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]
+                      )
+                    }
                     className={`rounded-full border px-5 py-2.5 text-sm font-medium transition-colors ${
-                      category === c
+                      categories.includes(c)
                         ? "border-tarot-green bg-tarot-green text-white shadow-[0_8px_18px_rgba(5,150,105,0.18)]"
                         : "border-[#e2ebe7] bg-white text-slate-600 hover:border-[#bedfce] hover:text-slate-800"
                     }`}
@@ -254,15 +277,24 @@ export default function TarotNewPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700">抽牌时间 <span className="text-red-400">*</span></label>
+                <label className="block text-sm font-medium text-slate-700">抽牌日期 <span className="text-red-400">*</span></label>
                 <input
-                  type="datetime-local"
+                  type="date"
                   className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
-                  value={drawAt}
-                  min="1900-01-01T00:00"
-                  max="2099-12-31T23:59"
-                  step={60}
-                  onChange={(e) => setDrawAt(normalizeDatetimeLocalInput(e.target.value))}
+                  value={drawDate}
+                  min="1900-01-01"
+                  max="2099-12-31"
+                  onChange={(e) => setDrawDate(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">抽牌时间</label>
+                <input
+                  type="text"
+                  className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                  value={drawTime}
+                  onChange={(e) => setDrawTime(e.target.value)}
+                  placeholder="例如：14:30"
                 />
               </div>
               <div className="space-y-2">
