@@ -23,6 +23,7 @@ import {
 } from "@/lib/groupSummary";
 import { PlanetOptions } from "@/lib/planetOptions";
 import { HexagramReviewBoard } from "@/components/HexagramReviewBoard";
+import { TimeFlowReviewBoard } from "@/components/TimeFlowReviewBoard";
 
 /**
  * Step5 分析页骨架：左右分栏，左侧案例信息+牌阵可视化，右侧统筹占位+用户解读
@@ -347,13 +348,13 @@ export default function ResultPage() {
     : "—";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-white">
-      <div className="mx-auto grid w-full max-w-[1560px] flex-1 gap-5 px-2 py-2 xl:grid-cols-[540px_minmax(0,1fr)]">
-        <div className="flex min-w-0 flex-col gap-5">
-          <section className="rounded-[22px] border border-[#e3efea] bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-            <p className="text-xs font-semibold tracking-wide text-tarot-green">案例基本信息</p>
-            <h2 className="mt-2 text-[29px] font-semibold leading-tight text-slate-900">塔罗案例分析工作台</h2>
-            <dl className="mt-5 space-y-4 text-sm">
+    <div className="flex min-h-0 flex-1 flex-col items-center bg-white">
+      <div className="mx-auto grid w-fit max-w-[1560px] flex-1 gap-3 px-2 py-2 xl:grid-cols-[1fr_1fr]">
+        <div className="flex min-w-0 flex-col gap-3">
+          <section className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <h2 className="text-[29px] font-semibold leading-tight text-slate-900">塔罗案例分析工作台</h2>
+            <p className="mt-2 text-[20px] font-semibold text-tarot-green">案例基本信息</p>
+            <dl className="mt-3 space-y-3 text-sm">
               <div>
                 <dt className="text-xs font-medium text-slate-500">当前问题</dt>
                 <dd className="mt-1 text-[19px] font-semibold leading-7 text-slate-900">
@@ -374,12 +375,12 @@ export default function ResultPage() {
                   {caseData.spreadType || "—"}
                 </span>
               </div>
-              <div className="grid gap-3 pt-1 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[#e2eee8] bg-white px-4 py-3">
+              <div className="grid gap-2 pt-1 sm:grid-cols-2">
+                <div className="rounded-xl border border-[#e2eee8] bg-white px-3 py-2.5">
                   <dt className="text-xs font-medium text-slate-500">时间</dt>
                   <dd className="mt-1 text-sm text-slate-800">{drawAtDisplay || "—"}</dd>
                 </div>
-                <div className="rounded-2xl border border-[#e2eee8] bg-white px-4 py-3">
+                <div className="rounded-xl border border-[#e2eee8] bg-white px-3 py-2.5">
                   <dt className="text-xs font-medium text-slate-500">地点</dt>
                   <dd className="mt-1 text-sm text-slate-800">{locationDisplay}</dd>
                 </div>
@@ -387,18 +388,20 @@ export default function ResultPage() {
             </dl>
           </section>
 
-          <section className="rounded-[22px] border border-[#e3efea] bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-            <h2 className="text-[22px] font-semibold text-tarot-green">牌阵回顾</h2>
+          <section className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <h2 className="mb-2 text-[22px] font-semibold text-tarot-green">牌阵回顾</h2>
             {layout ? (
               layout.id === "hexagram-7" ? (
                 <HexagramReviewBoard layout={layout} slotStates={slotStates} />
+              ) : layout.id === "timeflow-3" ? (
+                <TimeFlowReviewBoard layout={layout} slotStates={slotStates} />
               ) : (
-                <div className="mt-5 grid gap-3 text-sm">
+                <div className="mt-2 grid gap-2 text-sm">
                   {layout.slots.map((slot) => {
                     const state = slotStates[slot.id];
                     const name = state?.cardName ? (state.reversed ? `${state.cardName}-` : state.cardName) : "—";
                     return (
-                      <div key={slot.id} className="flex items-center gap-2 rounded-2xl border border-tarot-green-light bg-tarot-panel px-3 py-2">
+                      <div key={slot.id} className="flex items-center gap-2 rounded-2xl border border-tarot-green-light bg-tarot-panel px-3 py-2.5">
                         <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tarot-green text-xs font-medium text-white">{slot.id}</span>
                         <span className="text-tarot-green">{slot.name}</span>
                         <span className="text-slate-700">{name}</span>
@@ -413,11 +416,11 @@ export default function ResultPage() {
           </section>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-5 overflow-visible">
-          <section className="rounded-[22px] border border-[#e3efea] bg-white pl-4 pt-4 pb-4 pr-1.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-            <h2 className="mb-3 text-[20px] font-semibold text-tarot-green">统筹分析表格</h2>
+        <div className="flex min-w-0 flex-col gap-3 overflow-visible">
+          <section className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">统筹分析表格</h2>
             {matrixColumns.length > 0 && matrixContext ? (
-              <div className="mt-4 w-full overflow-visible">
+              <div className="mt-2 w-full overflow-visible">
                 <table className="mx-auto w-auto border-collapse text-center text-sm" style={{ tableLayout: "auto" }}>
                   <thead>
                     <tr className="border-b border-slate-200">
@@ -427,7 +430,7 @@ export default function ResultPage() {
                       {matrixColumns.map((col) => (
                         <th
                           key={col.id}
-                          className="border border-slate-200 bg-tarot-panel px-1.5 py-1.5 text-slate-700 font-medium whitespace-nowrap text-center align-middle"
+                          className="border border-slate-200 bg-tarot-panel px-2 py-1.5 text-slate-700 font-medium whitespace-nowrap text-center align-middle"
                         >
                           {col.kind === "signifier" && col.signifierIndex != null ? (
                             editingSignifierTitleIndex === col.signifierIndex ? (
@@ -471,7 +474,7 @@ export default function ResultPage() {
                       {matrixColumns.map((col) => (
                         <td
                           key={col.id}
-                          className="border border-slate-200 px-1.5 py-1 text-slate-800 whitespace-nowrap text-center align-middle"
+                          className="border border-slate-200 px-2 py-1 text-slate-800 whitespace-nowrap text-center align-middle"
                         >
                           {getColumnCardText(col, matrixContext)}
                         </td>
@@ -485,7 +488,7 @@ export default function ResultPage() {
                         {matrixColumns.map((col) => (
                           <td
                             key={col.id}
-                            className="border border-slate-200 px-1.5 py-1 text-slate-800 whitespace-nowrap text-center align-middle"
+                            className="border border-slate-200 px-2 py-1 text-slate-800 whitespace-nowrap text-center align-middle"
                           >
                             {col.kind === "signifier" &&
                             col.signifierIndex != null &&
@@ -538,10 +541,10 @@ export default function ResultPage() {
             )}
           </section>
 
-          <section className="rounded-[22px] border border-[#e3efea] bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-            <h2 className="mb-4 text-[20px] font-semibold text-tarot-green">数字计算</h2>
-            <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between rounded-xl bg-[#f7f9fa] px-4 py-3">
+          <section className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">数字计算</h2>
+            <div className="space-y-2 text-sm">
+              <div className="flex items-center justify-between rounded-lg bg-[#f7f9fa] px-3 py-2.5">
                 <span className="text-slate-500">整体加和</span>
                 <span className="font-semibold text-tarot-green">
                   {groupSummaries
@@ -549,8 +552,8 @@ export default function ResultPage() {
                     : "—"}
                 </span>
               </div>
-              {layout?.id === "hexagram-7" && (
-                <div className="flex items-center justify-between rounded-xl bg-[#eef4f2] px-4 py-3">
+              {(layout?.id === "hexagram-7" || layout?.id === "timeflow-3") && (
+                <div className="flex items-center justify-between rounded-lg bg-[#eef4f2] px-3 py-2.5">
                   <span className="text-slate-500">时间线加和</span>
                   <span className="font-semibold text-slate-700">
                     {groupSummaries
@@ -563,7 +566,7 @@ export default function ResultPage() {
                 <label className="mb-2 block text-sm text-slate-500">手动备注</label>
                 <input
                   type="text"
-                  className="w-full rounded-2xl border border-[#e3ece8] bg-white px-4 py-3 text-sm text-slate-800 placeholder-slate-400"
+                  className="w-full rounded-xl border border-[#e3ece8] bg-white px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400"
                   value={manualNumberNote}
                   onChange={(e) => setManualNumberNote(e.target.value)}
                   onBlur={handleManualNumberNoteBlur}
@@ -573,23 +576,23 @@ export default function ResultPage() {
             </div>
           </section>
 
-          <section className="flex min-h-[340px] flex-1 flex-col rounded-[22px] border border-[#e3efea] bg-white p-5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-            <h2 className="mb-3 text-[20px] font-semibold text-tarot-green">案例解读</h2>
+          <section className="flex min-h-[340px] flex-1 flex-col rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+            <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">案例解读</h2>
             <textarea
               id="result-user-interpretation"
-              className="min-h-[260px] w-full flex-1 resize-y rounded-[22px] border border-[#e3ece8] bg-[#fbfcfc] px-4 py-4 text-slate-800 placeholder-slate-400"
+              className="min-h-[260px] w-full flex-1 resize-y rounded-xl border border-[#e3ece8] bg-[#fbfcfc] px-3 py-2.5 text-slate-800 placeholder-slate-400"
               value={userInterpretation}
               onChange={(e) => setUserInterpretation(e.target.value)}
               onBlur={handleUserInterpretationBlur}
               placeholder="输入你的解读…"
             />
             {fromLibrary && (
-              <div className="mt-5">
+              <div className="mt-4">
                 <label className="mb-2 block text-sm font-medium text-slate-700">
                   复盘与反馈
                 </label>
                 <textarea
-                  className="min-h-24 w-full rounded-2xl border border-[#e3ece8] bg-[#fbfcfc] px-4 py-3 text-sm text-slate-800 placeholder-slate-400"
+                  className="min-h-24 w-full rounded-xl border border-[#e3ece8] bg-[#fbfcfc] px-3 py-2.5 text-sm text-slate-800 placeholder-slate-400"
                   value={reviewFeedback}
                   onChange={(e) => setReviewFeedback(e.target.value)}
                   onBlur={handleReviewFeedbackBlur}
@@ -601,7 +604,7 @@ export default function ResultPage() {
         </div>
       </div>
 
-      <div className="mt-4 flex justify-end gap-3 border-t border-[#e7efeb] pt-4">
+      <div className="mt-3 flex justify-end gap-3 border-t border-[#e7efeb] pt-3">
         <button
           type="button"
           onClick={handleSave}

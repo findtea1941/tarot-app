@@ -15,6 +15,7 @@ import { getDeck } from "@/lib/deck";
 import { validateSlotInputs } from "@/lib/slotInputParse";
 import { SpreadBoard } from "@/components/SpreadBoard";
 import { HexagramEntryBoard } from "@/components/HexagramEntryBoard";
+import { TimeFlowEntryBoard } from "@/components/TimeFlowEntryBoard";
 import { Step4Modal } from "@/components/Step4Modal";
 import { getSlotInputId } from "@/components/SlotStack";
 
@@ -227,7 +228,11 @@ export default function SpreadPage() {
         </div>
       </section>
 
-      <section className="rounded-[32px] border border-[#d5ece2] bg-[#edf8f2] px-4 py-8 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:px-8">
+      <section
+        className={`rounded-[32px] border border-[#d5ece2] bg-[#edf8f2] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:px-8 ${
+          layout?.id === "timeflow-3" ? "pt-8 pb-4" : "py-8"
+        }`}
+      >
         <div className="pt-2 text-center">
           <h2 className="text-xl font-semibold tracking-tight text-slate-900">牌阵录入</h2>
         </div>
@@ -235,6 +240,13 @@ export default function SpreadPage() {
           <div className="mt-1">
             {layout.id === "hexagram-7" ? (
               <HexagramEntryBoard
+                layout={layout}
+                slotInputs={slotInputs}
+                onSlotInputChange={setSlotValue}
+                slotErrors={slotErrors}
+              />
+            ) : layout.id === "timeflow-3" ? (
+              <TimeFlowEntryBoard
                 layout={layout}
                 slotInputs={slotInputs}
                 onSlotInputChange={setSlotValue}
@@ -250,7 +262,7 @@ export default function SpreadPage() {
             )}
           </div>
         ) : (
-          <p className="mt-6 text-center text-sm text-slate-500">该牌阵布局尚未接入，请选择「六芒星」。</p>
+          <p className="mt-6 text-center text-sm text-slate-500">该牌阵布局尚未接入，请选择「六芒星」或「时间流」。</p>
         )}
       </section>
 

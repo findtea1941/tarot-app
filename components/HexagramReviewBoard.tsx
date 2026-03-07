@@ -40,7 +40,7 @@ export function HexagramReviewBoard({
   const slotsById = Object.fromEntries(layout.slots.map((s) => [s.id, s]));
 
   return (
-    <div className="mt-4 rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-6">
+    <div className="rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-0.5">
       {/* 相对容器：固定宽高比，节点和连线都在里面 */}
       <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.05" }}>
         {/* SVG 连线层 */}
@@ -83,7 +83,7 @@ export function HexagramReviewBoard({
           return (
             <div
               key={slotId}
-              className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-2xl border bg-white px-3 py-2 shadow-sm ${
+              className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-2xl border bg-white px-3 py-2.5 shadow-sm ${
                 isCenter
                   ? "border-[#a8ddc8] shadow-[0_8px_20px_rgba(5,150,105,0.14)]"
                   : "border-[#c8e9d9]"

@@ -126,6 +126,13 @@ export function buildColumns(
             if (slot) columns.push({ id: `slot-${key}`, title: slot.name, kind: "slot", slotId: key });
       }
     }
+  } else if (layoutId === "timeflow-3" && slots.length >= 3) {
+    // 过去、现在、未来、时间统筹、整体统筹
+    for (const slot of slots) {
+      columns.push({ id: `slot-${slot.id}`, title: slot.name, kind: "slot", slotId: slot.id });
+    }
+    columns.push({ id: "summary-time", title: "时间统筹", kind: "summary", summaryGroup: "time" });
+    columns.push({ id: "summary-all", title: "整体统筹", kind: "summary", summaryGroup: "all" });
   } else {
     // 其他布局：先全部牌位再整体统筹
     for (const slot of slots) {
@@ -170,12 +177,21 @@ export function getMatrixContext(
     slotIds.map((id) => slotCards.get(id)).filter((e): e is SlotCardEntry => Boolean(e));
 
   const layoutId = layout.id;
+  const timeflowSlotIds = ["1", "2", "3"] as const;
   const summaryGroups = {
-    time: layoutId === "hexagram-7" ? getEntries(HEXAGRAM_SUMMARY_GROUPS.time) : [],
+    time:
+      layoutId === "hexagram-7"
+        ? getEntries(HEXAGRAM_SUMMARY_GROUPS.time)
+        : layoutId === "timeflow-3"
+          ? getEntries(timeflowSlotIds)
+          : [],
     space: layoutId === "hexagram-7" ? getEntries(HEXAGRAM_SUMMARY_GROUPS.space) : [],
-    all: layoutId === "hexagram-7"
-      ? getEntries(HEXAGRAM_SUMMARY_GROUPS.all)
-      : Array.from(slotCards.values()),
+    all:
+      layoutId === "hexagram-7"
+        ? getEntries(HEXAGRAM_SUMMARY_GROUPS.all)
+        : layoutId === "timeflow-3"
+          ? getEntries(timeflowSlotIds)
+          : Array.from(slotCards.values()),
   };
 
   const signifierParts = getSignifierParts(caseData.significatorInput ?? "");

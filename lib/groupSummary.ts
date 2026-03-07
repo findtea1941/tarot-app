@@ -218,6 +218,13 @@ export const HEXAGRAM_GROUP_SLOT_IDS = {
   all: ["1", "2", "3", "4", "5", "6", "7"],
 } as const;
 
+/** 时间流分组：三张牌均为时间线 */
+const TIMEFLOW_GROUP_SLOT_IDS = {
+  time: ["1", "2", "3"],
+  space: [] as const,
+  all: ["1", "2", "3"],
+} as const;
+
 /**
  * 从 caseData + deck 解析出各组的 ResolvedCard[]（仅牌阵 slot，不含指示牌）
  */
@@ -232,6 +239,14 @@ export function getResolvedCardsByGroup(
       time: get(HEXAGRAM_GROUP_SLOT_IDS.time),
       space: get(HEXAGRAM_GROUP_SLOT_IDS.space),
       all: get(HEXAGRAM_GROUP_SLOT_IDS.all),
+    };
+  }
+  if (layoutId === "timeflow-3") {
+    const all = get(TIMEFLOW_GROUP_SLOT_IDS.all);
+    return {
+      time: all,
+      space: [],
+      all,
     };
   }
   const all = Array.from(slotCards.values());
