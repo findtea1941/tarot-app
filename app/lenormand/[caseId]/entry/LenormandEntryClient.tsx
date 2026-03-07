@@ -288,7 +288,7 @@ export function LenormandEntryClient() {
 
   if (loadingDraft) {
     return (
-      <div className="flex min-h-[calc(100vh-96px)] items-center justify-center bg-white">
+      <div className="flex min-h-[calc(100vh-96px)] items-center justify-center">
         <p className="text-sm text-slate-500">加载中…</p>
       </div>
     );
@@ -299,7 +299,7 @@ export function LenormandEntryClient() {
     : SPREAD_LABELS[spreadType];
 
   return (
-    <div className="min-h-[calc(100vh-96px)] bg-white">
+    <div className="min-h-[calc(100vh-96px)]">
       <div className="mx-auto max-w-4xl px-4 py-10">
         <div className="mb-8 flex flex-col items-center text-center">
           <h1 className="text-3xl font-semibold tracking-tight text-slate-900">

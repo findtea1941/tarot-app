@@ -34,10 +34,10 @@ export function TopTabs({ children }: { children: ReactNode }) {
                 <Link
                   key={tab.href}
                   href={tab.href}
-                  className={`px-3 py-1.5 rounded-full border transition-colors ${
+                  className={`px-3 py-1.5 rounded-full border-0 transition-colors ${
                     active
-                      ? "border-[#c8e9d8] bg-[#ecf8f2] text-tarot-green"
-                      : "border-transparent text-slate-500 hover:border-[#d5e9e0] hover:bg-[#f4fbf8] hover:text-slate-700"
+                      ? "bg-[#e5f3f0] font-bold text-[#009769]"
+                      : "bg-transparent text-slate-500 hover:text-slate-700"
                   }`}
                 >
                   {tab.label}
@@ -47,8 +47,10 @@ export function TopTabs({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="mx-auto flex-1 w-full max-w-[1800px] px-4 py-6">
-        {children}
+      <main className="min-h-[calc(100vh-56px)] w-full flex-1 bg-gradient-to-b from-white via-[#fafdfc] to-[#f5faf9]">
+        <div className="mx-auto max-w-[1800px] px-4 py-6">
+          {children}
+        </div>
       </main>
     </div>
   );

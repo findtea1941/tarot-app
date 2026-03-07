@@ -342,11 +342,11 @@ export default function TarotNewPage() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-96px)] bg-white">
+    <div className="min-h-[calc(100vh-96px)]">
       <div className="mx-auto max-w-4xl px-4 py-10">
         <div className="mb-10 flex flex-col items-center text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#d4f0e3] shadow-inner">
-            <div className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-tarot-green p-1">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#deeeec] shadow-inner">
+            <div className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-[#059669] p-1">
               <svg
                 viewBox="0 0 24 24"
                 fill="currentColor"
