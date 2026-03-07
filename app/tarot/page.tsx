@@ -15,10 +15,14 @@ import {
   DEFAULT_CITY_CODE,
 } from "@/lib/region";
 import {
-  getLastTarotDraftId,
   loadTarotDraftFromStorage,
   saveTarotDraftToStorage,
 } from "@/lib/tarotDraftStorage";
+import {
+  DEFAULT_TIME_AXIS_VARIANT,
+  getTimeAxisVariantLabel,
+  TIME_AXIS_VARIANTS,
+} from "@/lib/timeAxisVariant";
 
 const CATEGORIES = [
   "情感",
@@ -51,19 +55,16 @@ export default function TarotNewPage() {
   const [drawDate, setDrawDate] = useState("");
   const [drawTime, setDrawTime] = useState("");
   const [spreadType, setSpreadType] = useState<typeof SPREAD_TYPES[number] | "">("");
+  const [timeAxisVariant, setTimeAxisVariant] = useState(DEFAULT_TIME_AXIS_VARIANT);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   // 用 URL 同步 state，解决 Next 在浏览器后退时 useSearchParams 不更新导致 caseId 为空的问题
   const [urlKey, setUrlKey] = useState(
     () => (typeof window !== "undefined" ? window.location.search : "")
   );
-  const [loadingDraft, setLoadingDraft] = useState(() => {
-    if (typeof window === "undefined") return false;
-    const q = window.location.search;
-    if (q.includes("caseId=")) return true;
-    if (getLastTarotDraftId()) return true;
-    return false;
-  });
+  const [loadingDraft, setLoadingDraft] = useState(() =>
+    typeof window !== "undefined" ? window.location.search.includes("caseId=") : false
+  );
 
   // 地点（中国省市）：默认 上海市 / 上海市(市辖区)
   const [provinceCode, setProvinceCode] = useState(DEFAULT_PROVINCE_CODE);
@@ -103,6 +104,7 @@ export default function TarotNewPage() {
         setDrawDate(stored.drawDate ?? "");
         setDrawTime(stored.drawTime ?? "");
         setSpreadType((stored.spreadType as typeof SPREAD_TYPES[number]) || "");
+        setTimeAxisVariant(stored.timeAxisVariant || DEFAULT_TIME_AXIS_VARIANT);
         setProvinceCode(stored.provinceCode || DEFAULT_PROVINCE_CODE);
         setCityCode(stored.cityCode || DEFAULT_CITY_CODE);
         setLoadingDraft(false);
@@ -122,6 +124,7 @@ export default function TarotNewPage() {
           setDrawTime("");
         }
         setSpreadType((c.spreadType as typeof SPREAD_TYPES[number]) ?? "");
+        setTimeAxisVariant(c.timeAxisVariant || DEFAULT_TIME_AXIS_VARIANT);
         if (c.location) {
           setProvinceCode(c.location.provinceCode);
           setCityCode(c.location.cityCode);
@@ -135,30 +138,34 @@ export default function TarotNewPage() {
     }
   }, []);
 
-  // 始终从当前 URL（或 lastDraftId）取 caseId 并加载草稿，避免 useSearchParams 在浏览器后退后不更新
+  // 始终从当前 URL 取 caseId 并加载草稿，避免 useSearchParams 在浏览器后退后不更新
   const searchForId =
     urlKey || (typeof window !== "undefined" ? window.location.search : "");
   const idFromUrl = searchForId
     ? new URLSearchParams(searchForId).get("caseId")
     : null;
-  const idFromLast =
-    typeof window !== "undefined" ? getLastTarotDraftId() : null;
-  const effectiveId = idFromUrl || caseId || idFromLast;
+  const effectiveId = idFromUrl || caseId;
 
   useEffect(() => {
     if (!effectiveId) return;
     loadDraft(effectiveId);
-    // 若 caseId 来自 lastDraftId 而非 URL，同步地址栏
-    if (
-      typeof window !== "undefined" &&
-      !idFromUrl &&
-      idFromLast &&
-      effectiveId === idFromLast
-    ) {
-      router.replace(`/tarot?caseId=${effectiveId}`);
-      setUrlKey(window.location.search);
-    }
-  }, [effectiveId, loadDraft, router, idFromUrl, idFromLast]);
+  }, [effectiveId, loadDraft]);
+
+  // 从顶部导航直接进入 /tarot 时，始终打开一个全新的基础信息页，不保留上一份录入内容
+  useEffect(() => {
+    if (effectiveId) return;
+    setLoadingDraft(false);
+    setQuestion("");
+    setBackground("");
+    setCategories([]);
+    setDrawDate("");
+    setDrawTime("");
+    setSpreadType("");
+    setTimeAxisVariant(DEFAULT_TIME_AXIS_VARIANT);
+    setProvinceCode(DEFAULT_PROVINCE_CODE);
+    setCityCode(DEFAULT_CITY_CODE);
+    setError("");
+  }, [effectiveId]);
 
   // 浏览器后退/前进时同步 urlKey，使上面的 effect 用最新 URL 再拉草稿
   useEffect(() => {
@@ -178,10 +185,7 @@ export default function TarotNewPage() {
   // 有 caseId 时把表单写入 sessionStorage（防抖），与雷诺曼一致，浏览器后退时能恢复
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    const id =
-      idFromUrl ||
-      caseId ||
-      (typeof window !== "undefined" ? getLastTarotDraftId() : null);
+    const id = idFromUrl || caseId;
     if (!id || loadingDraft) return;
     saveTimerRef.current = setTimeout(() => {
       saveTarotDraftToStorage(id, {
@@ -191,6 +195,7 @@ export default function TarotNewPage() {
         drawDate,
         drawTime,
         spreadType,
+        timeAxisVariant,
         provinceCode,
         cityCode,
       });
@@ -208,6 +213,7 @@ export default function TarotNewPage() {
     drawDate,
     drawTime,
     spreadType,
+    timeAxisVariant,
     provinceCode,
     cityCode,
   ]);
@@ -278,17 +284,22 @@ export default function TarotNewPage() {
       const st = spreadType as SpreadType;
       const location = buildLocation();
 
+      const timeAxis =
+        st === "六芒星" || st === "时间流" ? timeAxisVariant : undefined;
+      const currentCaseId = idFromUrl || caseId;
       let nextCaseId: string;
-      if (caseId) {
-        await updateTarotDraft(caseId, {
+      const existingCase = currentCaseId ? await getCaseById(currentCaseId) : undefined;
+      if (existingCase?.type === "tarot") {
+        await updateTarotDraft(currentCaseId, {
           question: question.trim(),
           background: background.trim() || undefined,
           categories,
           drawTime: isoDrawTime,
           spreadType: st,
+          timeAxisVariant: timeAxis,
           location,
         });
-        nextCaseId = caseId;
+        nextCaseId = currentCaseId;
       } else {
         const draft = await createTarotDraft({
           question: question.trim(),
@@ -296,9 +307,13 @@ export default function TarotNewPage() {
           categories,
           drawTime: isoDrawTime,
           spreadType: st,
+          ...(timeAxis != null && timeAxis !== "" ? { timeAxisVariant: timeAxis } : {}),
           location,
         });
         nextCaseId = draft.id;
+        await new Promise((r) => setTimeout(r, 0));
+        const verify = await getCaseById(draft.id);
+        if (!verify) throw new Error("Case not found after create");
       }
       // 写入 sessionStorage，与雷诺曼一致，浏览器后退时能恢复
       saveTarotDraftToStorage(nextCaseId, {
@@ -308,6 +323,7 @@ export default function TarotNewPage() {
         drawDate,
         drawTime,
         spreadType: st,
+        timeAxisVariant: timeAxis,
         provinceCode,
         cityCode,
       });
@@ -428,6 +444,23 @@ export default function TarotNewPage() {
                   ))}
                 </select>
               </div>
+              {(spreadType === "六芒星" || spreadType === "时间流") && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">时间流变形</label>
+                  <select
+                    className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                    value={timeAxisVariant}
+                    onChange={(e) => setTimeAxisVariant(e.target.value)}
+                  >
+                    {TIME_AXIS_VARIANTS.map((v) => (
+                      <option key={v.id} value={v.id}>
+                        {getTimeAxisVariantLabel(v.id)}
+                        {v.id === DEFAULT_TIME_AXIS_VARIANT ? "（默认）" : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
             <div className="space-y-3 rounded-[24px] border border-[#e1ece8] bg-[#fbfdfc] p-5">
               <h3 className="text-sm font-medium text-slate-700">地点（省-市） <span className="text-red-400">*</span></h3>

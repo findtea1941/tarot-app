@@ -1,5 +1,5 @@
 ---
-description: 牌阵录入与牌阵回顾区域为固定布局，修改前需与用户确认
+description: 牌阵录入与牌阵回顾区域为固定布局，位置与大小改动须经用户书面授权
 globs: app/tarot/**/spread/**/*.tsx, app/tarot/**/result/page.tsx, components/*ReviewBoard.tsx, components/*EntryBoard.tsx
 alwaysApply: false
 ---
@@ -7,5 +7,6 @@ alwaysApply: false
 # 牌阵录入与牌阵回顾区域固定约定
 
 - **牌阵录入界面**（`app/tarot/[caseId]/spread/page.tsx` 中「牌阵录入」区块及其调用的各 `*EntryBoard` 组件）与 **牌阵回顾界面**（`app/tarot/[caseId]/result/page.tsx` 中「牌阵回顾」区块及其调用的各 `*ReviewBoard` 组件）的 **视觉大小与位置已按当前设计固定**。
-- 后续若需调整这两部分的大小、位置或布局，**必须先与用户文字确认**，不得自行改动。
+- **二择一牌阵回顾区域**（`components/ChooseOneReviewBoard.tsx` 内整体容器尺寸、牌位坐标与间距）已单独锁定；对该区域的**位置与大小**的任何改动，**必须经过用户书面授权**，不得自行修改。
+- 上述所有区域若需调整大小、位置或布局，**必须先取得用户书面授权**，不得自行改动。
 - 其它页面区块（如案例基本信息、统筹分析表格、数字计算等）的调整不受此限制，但不得影响牌阵录入/牌阵回顾的既有尺寸与位置。

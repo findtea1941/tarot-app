@@ -20,7 +20,7 @@ export function TopTabs({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-[#e4efe9] bg-white/90 backdrop-blur">
+      <header className="sticky top-0 z-50 border-b border-[#e4efe9] bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1800px] items-center justify-between px-4 py-3">
           <div className="text-lg font-semibold tracking-wide text-tarot-green">
             占卜案例助手

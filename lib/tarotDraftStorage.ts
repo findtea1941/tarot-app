@@ -9,6 +9,7 @@ export type TarotDraftStored = {
   drawDate: string;
   drawTime: string;
   spreadType: string;
+  timeAxisVariant?: string;
   provinceCode: string;
   cityCode: string;
 };

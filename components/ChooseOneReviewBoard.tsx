@@ -3,15 +3,20 @@
 import type { SpreadLayout } from "@/lib/spreadTypes";
 import type { SpreadSlotState } from "@/lib/spreadTypes";
 
+/**
+ * 二择一牌阵回顾：位置与大小已锁定。
+ * 修改本组件内容器尺寸、牌位坐标（NODE_COORDS）或间距，须经用户书面授权。
+ */
+
 const CHOOSE_ONE_NODE_ORDER = ["4", "5", "2", "3", "1"] as const;
 
-/** 二择一：上排4/5，中排2在1-4连线、3在1-5连线上，下排1；适度放松间距 */
+/** 二择一：上排4/5，中排2/3，下排1；以2、3为中轴，1与4、5的垂直间距镜像一致 */
 const NODE_COORDS: Record<string, [number, number]> = {
   "4": [32, 22],
   "5": [68, 22],
   "2": [39, 48], // 在 1 与 4 的连线附近
   "3": [61, 48], // 在 1 与 5 的连线附近
-  "1": [50, 76],
+  "1": [50, 74], // 1 到 2、3 的垂直距离 = 2、3 到 4、5 的垂直距离（26%）
 };
 
 type SlotStatesMap = Record<string, SpreadSlotState>;

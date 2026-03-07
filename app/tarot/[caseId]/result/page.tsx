@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Case } from "@/lib/db";
 import { getCaseById, saveCaseStep5, updateCaseStep5Partial, updateCaseReviewFeedback, updateCaseUserInterpretation } from "@/lib/repo/caseRepo";
-import { getLayout } from "@/layouts";
+import { getLayout, getLayoutWithTimeAxisVariant } from "@/layouts";
 import { getDeck } from "@/lib/deck";
 import type { SpreadSlotState } from "@/lib/spreadTypes";
 import { buildAnalysisTable } from "@/lib/buildAnalysisTable";
@@ -53,27 +53,46 @@ export default function ResultPage() {
 
   useEffect(() => {
     if (!caseId) return;
-    getCaseById(caseId)
-      .then((c) => {
-        if (!c) setNotFound(true);
-        else {
-          setCaseData(c);
-          const notes =
-            c.userInterpretation ??
-            (c.analysis && typeof c.analysis === "object" && "userNotes" in c.analysis
-              ? (c.analysis as { userNotes: string }).userNotes
-              : "");
-          setUserInterpretation(notes ?? "");
-          setManualNumberNote(
-            (c.analysis && typeof c.analysis === "object" && "manualNumberNote" in c.analysis
-              ? (c.analysis as { manualNumberNote?: string }).manualNumberNote
-              : "") ?? ""
-          );
-          setReviewFeedback(c.reviewFeedback ?? "");
+    let cancelled = false;
+    setLoading(true);
+    setNotFound(false);
+
+    const loadCase = async () => {
+      try {
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          const c = await getCaseById(caseId);
+          if (c) {
+            if (cancelled) return;
+            setCaseData(c);
+            const notes =
+              c.userInterpretation ??
+              (c.analysis && typeof c.analysis === "object" && "userNotes" in c.analysis
+                ? (c.analysis as { userNotes: string }).userNotes
+                : "");
+            setUserInterpretation(notes ?? "");
+            setManualNumberNote(
+              (c.analysis && typeof c.analysis === "object" && "manualNumberNote" in c.analysis
+                ? (c.analysis as { manualNumberNote?: string }).manualNumberNote
+                : "") ?? ""
+            );
+            setReviewFeedback(c.reviewFeedback ?? "");
+            setNotFound(false);
+            return;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 120));
         }
-      })
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false));
+        if (!cancelled) setNotFound(true);
+      } catch {
+        if (!cancelled) setNotFound(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void loadCase();
+    return () => {
+      cancelled = true;
+    };
   }, [caseId]);
 
   useEffect(() => {
@@ -83,8 +102,14 @@ export default function ResultPage() {
   }, [toast]);
 
   const layout = useMemo(
-    () => (caseData?.spreadType ? getLayout(caseData.spreadType) : null),
-    [caseData?.spreadType]
+    () =>
+      caseData?.spreadType
+        ? getLayoutWithTimeAxisVariant(
+            getLayout(caseData.spreadType),
+            caseData.timeAxisVariant
+          )
+        : null,
+    [caseData?.spreadType, caseData?.timeAxisVariant]
   );
 
   /** 用 case.cards + 牌库 构建 slotStates（含牌名、逆位），供 SpreadBoard 展示 */

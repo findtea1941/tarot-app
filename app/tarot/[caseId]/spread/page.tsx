@@ -3,15 +3,22 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Case } from "@/lib/db";
+import type { Case, SpreadType } from "@/lib/db";
 import {
   getCaseById,
+  restoreTarotDraft,
   updateCaseSlotInputs,
   updateCaseSpreadCards,
   updateCaseStep4,
 } from "@/lib/repo/caseRepo";
-import { getLayout } from "@/layouts";
+import { getLayout, getLayoutWithTimeAxisVariant } from "@/layouts";
 import { getDeck } from "@/lib/deck";
+import {
+  DEFAULT_CITY_CODE,
+  DEFAULT_PROVINCE_CODE,
+  getCities,
+  getProvinces,
+} from "@/lib/region";
 import { validateSlotInputs } from "@/lib/slotInputParse";
 import { BodyMindSpiritEntryBoard } from "@/components/BodyMindSpiritEntryBoard";
 import { ChooseOneEntryBoard } from "@/components/ChooseOneEntryBoard";
@@ -24,6 +31,7 @@ import { TimeFlowEntryBoard } from "@/components/TimeFlowEntryBoard";
 import { Step4Modal } from "@/components/Step4Modal";
 import { getSlotInputId } from "@/components/SlotStack";
 import { getCategoryPillStyle } from "@/lib/categoryTagStyles";
+import { loadTarotDraftFromStorage } from "@/lib/tarotDraftStorage";
 
 export default function SpreadPage() {
   const params = useParams();
@@ -46,21 +54,89 @@ export default function SpreadPage() {
 
   useEffect(() => {
     if (!caseId) return;
-    getCaseById(caseId)
-      .then((c) => {
-        if (!c) setNotFound(true);
-        else {
-          setCaseData(c);
-          setSlotInputs((c.slotInputs && typeof c.slotInputs === "object") ? { ...c.slotInputs } : {});
+    let cancelled = false;
+    setLoading(true);
+    setNotFound(false);
+
+    const loadCase = async () => {
+      try {
+        // 新建案例后立即跳转到 Step3 时，IndexedDB 可能短暂还未可见；先重试几次再判定未找到
+        for (let attempt = 0; attempt < 6; attempt += 1) {
+          const c = await getCaseById(caseId);
+          if (c) {
+            if (cancelled) return;
+            setCaseData(c);
+            setSlotInputs(
+              c.slotInputs && typeof c.slotInputs === "object" ? { ...c.slotInputs } : {}
+            );
+            setNotFound(false);
+            return;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 120));
         }
-      })
-      .catch(() => setNotFound(true))
-      .finally(() => setLoading(false));
+
+        const stored = loadTarotDraftFromStorage(caseId);
+        if (stored?.question && stored.spreadType) {
+          const provinceCode = stored.provinceCode || DEFAULT_PROVINCE_CODE;
+          const cityCode = stored.cityCode || DEFAULT_CITY_CODE;
+          const provinceName =
+            getProvinces().find((p) => p.code === provinceCode)?.name ?? "";
+          const cityName =
+            getCities(provinceCode).find((c) => c.code === cityCode)?.name ?? "";
+          const cityDisplay = cityName === "市辖区" ? provinceName : cityName;
+          const drawTimeValue = stored.drawDate
+            ? new Date(`${stored.drawDate}T${stored.drawTime || "00:00"}:00`)
+            : null;
+          const repaired = await restoreTarotDraft(caseId, {
+            question: stored.question,
+            background: stored.background || undefined,
+            categories: stored.categories ?? [],
+            drawTime:
+              drawTimeValue && !Number.isNaN(drawTimeValue.getTime())
+                ? drawTimeValue.toISOString()
+                : "",
+            spreadType: stored.spreadType as SpreadType,
+            timeAxisVariant: stored.timeAxisVariant,
+            location: {
+              provinceCode,
+              provinceName,
+              cityCode,
+              cityName,
+              districtCode: "",
+              districtName: "",
+              label: [provinceName, cityDisplay].filter(Boolean).join("-"),
+            },
+          });
+          if (cancelled) return;
+          setCaseData(repaired);
+          setSlotInputs({});
+          setNotFound(false);
+          return;
+        }
+
+        if (!cancelled) setNotFound(true);
+      } catch {
+        if (!cancelled) setNotFound(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    void loadCase();
+    return () => {
+      cancelled = true;
+    };
   }, [caseId]);
 
   const layout = useMemo(
-    () => (caseData?.spreadType ? getLayout(caseData.spreadType) : null),
-    [caseData?.spreadType]
+    () =>
+      caseData?.spreadType
+        ? getLayoutWithTimeAxisVariant(
+            getLayout(caseData.spreadType),
+            caseData.timeAxisVariant
+          )
+        : null,
+    [caseData?.spreadType, caseData?.timeAxisVariant]
   );
 
   const setSlotValue = useCallback((slotId: string, value: string) => {

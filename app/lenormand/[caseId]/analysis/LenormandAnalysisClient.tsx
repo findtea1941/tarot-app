@@ -38,11 +38,13 @@ function CardBox({
   const [numPart, namePart] = getLenormandCardDisplay(name).split(" ", 2);
   const isLinear = spreadType === "linear-3" || spreadType === "linear-5";
   const useWhiteBg =
-    isLinear && spreadType === "linear-3"
-      ? index === 0 || index === 2
-      : isLinear && spreadType === "linear-5"
-        ? index === 1 || index === 3
-        : false;
+    spreadType === "nine-grid"
+      ? index !== 4
+      : isLinear && spreadType === "linear-3"
+        ? index === 0 || index === 2
+        : isLinear && spreadType === "linear-5"
+          ? index === 1 || index === 3
+          : false;
   const bgClass = useWhiteBg ? "bg-white" : "bg-tarot-panel";
   return (
     <div
@@ -383,7 +385,7 @@ export function LenormandAnalysisClient() {
             }`}
           >
             <div className="rounded-2xl border border-[#dceee6] bg-[#fbfdfc] p-5">
-              <div className="space-y-3 text-center">
+              <div className="space-y-3 text-left">
                 <div>
                   <p className="text-xs font-semibold text-tarot-green">问题</p>
                   <p className="mt-1 text-sm text-slate-800">{question || "—"}</p>
@@ -401,9 +403,9 @@ export function LenormandAnalysisClient() {
                   </p>
                 </div>
                 {categories.length > 0 && (
-                  <div className="flex flex-col items-center">
+                  <div className="flex flex-col items-start">
                     <p className="text-xs font-semibold text-tarot-green">分类</p>
-                    <div className="mt-1 flex flex-wrap justify-center gap-2">
+                    <div className="mt-1 flex flex-wrap justify-start gap-2">
                       {categories.map((cat) => {
                         const isQuestionType =
                           cat === "开放式问题" || cat === "封闭式问题";
@@ -426,7 +428,9 @@ export function LenormandAnalysisClient() {
               </div>
             </div>
             <div className="flex flex-col items-center">
-              <p className="mb-2 w-full text-center text-xs font-medium text-slate-500">牌型：{displaySpreadLabel}</p>
+              <div className="flex min-h-10 w-full flex-col justify-center">
+                <p className="w-full text-center text-xs font-medium text-slate-500">牌型：{displaySpreadLabel}</p>
+              </div>
               <div className="mt-4 w-full">
               {isChoice ? (
               <div className="flex w-full flex-col items-center space-y-6">
@@ -438,7 +442,7 @@ export function LenormandAnalysisClient() {
                     className={
                       isLinear
                         ? `flex justify-center gap-2 ${spreadType === "linear-5" ? "gap-3" : ""}`
-                        : "grid grid-cols-3 gap-2 justify-items-center"
+                        : "mx-auto grid w-fit grid-cols-3 gap-x-3 gap-y-1.5 justify-items-center"
                     }
                   >
                     {cardsA.map((name, i) => (
@@ -454,7 +458,7 @@ export function LenormandAnalysisClient() {
                     className={
                       isLinear
                         ? `flex justify-center gap-2 ${spreadType === "linear-5" ? "gap-3" : ""}`
-                        : "grid grid-cols-3 gap-2 justify-items-center"
+                        : "mx-auto grid w-fit grid-cols-3 gap-x-3 gap-y-1.5 justify-items-center"
                     }
                   >
                     {cardsB.map((name, i) => (
@@ -466,7 +470,7 @@ export function LenormandAnalysisClient() {
             ) : (
               <div
                 className={
-                  isLinear ? "flex justify-center gap-3" : "grid grid-cols-3 gap-3 justify-items-center"
+                  isLinear ? "flex justify-center gap-3" : "mx-auto grid w-fit grid-cols-3 gap-x-3 gap-y-1.5 justify-items-center"
                 }
               >
                 {cards.map((name, i) => (

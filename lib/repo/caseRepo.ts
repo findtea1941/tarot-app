@@ -27,6 +27,7 @@ export async function createTarotDraft(input: {
   categories: string[];
   drawTime: string;
   spreadType: SpreadType;
+  timeAxisVariant?: string;
   location: Location;
 }): Promise<Case> {
   const now = Date.now();
@@ -53,7 +54,54 @@ export async function createTarotDraft(input: {
     createdAt: now,
     updatedAt: now,
   };
+  if (input.timeAxisVariant != null && input.timeAxisVariant !== "") {
+    item.timeAxisVariant = input.timeAxisVariant;
+  }
   await db.cases.add(item);
+  return item;
+}
+
+/** 当基础信息草稿已存在但案例记录缺失时，用指定 id 重建塔罗草稿 */
+export async function restoreTarotDraft(
+  id: string,
+  input: {
+    question: string;
+    background?: string;
+    categories: string[];
+    drawTime: string;
+    spreadType: SpreadType;
+    timeAxisVariant?: string;
+    location: Location;
+  }
+): Promise<Case> {
+  const now = Date.now();
+  const dateStr = input.drawTime.slice(0, 10);
+  const catLabel = input.categories.length > 0 ? input.categories.join("、") : "";
+  const title = `${dateStr} | ${catLabel} | ${input.question.trim().slice(0, 30)}${input.question.length > 30 ? "…" : ""}`;
+  const item: Case = {
+    id,
+    type: "tarot",
+    status: "draft",
+    title,
+    question: input.question.trim(),
+    background: input.background?.trim() || undefined,
+    category: (input.categories[0] as CaseCategory) || undefined,
+    tarotCategories: input.categories,
+    drawTime: input.drawTime,
+    spreadType: input.spreadType,
+    location: input.location,
+    locationLabel: input.location.label,
+    cards: [],
+    extra: undefined,
+    analysis: undefined,
+    userInterpretation: "",
+    createdAt: now,
+    updatedAt: now,
+  };
+  if (input.timeAxisVariant != null && input.timeAxisVariant !== "") {
+    item.timeAxisVariant = input.timeAxisVariant;
+  }
+  await db.cases.put(item);
   return item;
 }
 
@@ -66,6 +114,7 @@ export async function updateTarotDraft(
     categories: string[];
     drawTime: string;
     spreadType: SpreadType;
+    timeAxisVariant: string;
     location: Location;
   }>
 ): Promise<void> {

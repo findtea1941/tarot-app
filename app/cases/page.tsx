@@ -37,7 +37,7 @@ export default function CasesPage() {
 
   const isSearchMode = !!searchQuery.trim();
   const displayItems = showDrafts
-    ? drafts.filter((c) => c.type === tab)
+    ? drafts
     : items;
 
   return (
@@ -49,7 +49,10 @@ export default function CasesPage() {
             <div className="flex gap-0.5 rounded-full border border-[#e2ebe7] bg-white p-0.5">
               <button
                 type="button"
-                onClick={() => setTab("tarot")}
+                onClick={() => {
+                  setTab("tarot");
+                  if (showDrafts) setShowDrafts(false);
+                }}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
                   tab === "tarot"
                     ? "bg-tarot-green text-white"
@@ -60,7 +63,10 @@ export default function CasesPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setTab("lenormand")}
+                onClick={() => {
+                  setTab("lenormand");
+                  if (showDrafts) setShowDrafts(false);
+                }}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
                   tab === "lenormand"
                     ? "bg-tarot-green text-white"

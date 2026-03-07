@@ -72,6 +72,8 @@ export interface Case {
   tarotCategories?: string[];
   drawTime?: string; // datetime-local 值，如 "2025-03-06T14:30"
   spreadType?: SpreadType;
+  /** 六芒星/时间流专用：1–3 号位名称变体，如 past-present-future（过去-现在-未来） */
+  timeAxisVariant?: string;
   /** 地点（中国省市两级；区县字段仅兼容旧数据） */
   location?: Location;
   /** 展示用，与 location.label 一致，兼容旧数据 */
