@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import type { Case } from "@/lib/db";
 import { deleteCase, listCasesByType, listDrafts, searchCases } from "@/lib/repo/caseRepo";
@@ -8,12 +9,14 @@ import { deleteCase, listCasesByType, listDrafts, searchCases } from "@/lib/repo
 type CaseTab = "tarot" | "lenormand";
 
 export default function CasesPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [tab, setTab] = useState<CaseTab>("tarot");
   const [searchQuery, setSearchQuery] = useState("");
   const [items, setItems] = useState<Case[]>([]);
   const [drafts, setDrafts] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showDrafts, setShowDrafts] = useState(false);
+  const showDrafts = searchParams.get("view") === "drafts";
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -51,7 +54,7 @@ export default function CasesPage() {
                 type="button"
                 onClick={() => {
                   setTab("tarot");
-                  if (showDrafts) setShowDrafts(false);
+                  if (showDrafts) router.push("/cases");
                 }}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
                   tab === "tarot"
@@ -65,7 +68,7 @@ export default function CasesPage() {
                 type="button"
                 onClick={() => {
                   setTab("lenormand");
-                  if (showDrafts) setShowDrafts(false);
+                  if (showDrafts) router.push("/cases");
                 }}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
                   tab === "lenormand"
@@ -80,7 +83,7 @@ export default function CasesPage() {
         </div>
         <button
           type="button"
-          onClick={() => setShowDrafts(!showDrafts)}
+          onClick={() => router.push(showDrafts ? "/cases" : "/cases?view=drafts")}
           className={`pb-0.5 text-sm font-normal text-tarot-green hover:underline ${showDrafts ? "underline" : ""}`}
         >
           草稿箱
@@ -114,8 +117,8 @@ export default function CasesPage() {
               <Link
                 href={
                   c.type === "lenormand"
-                    ? `/lenormand/${c.id}/analysis${showDrafts ? "" : "?from=library"}`
-                    : `/tarot/${c.id}/result${showDrafts ? "" : "?from=library"}`
+                    ? `/lenormand/${c.id}/analysis${showDrafts ? "?from=draft" : "?from=library"}`
+                    : `/tarot/${c.id}/result${showDrafts ? "?from=draft" : "?from=library"}`
                 }
                 className="min-w-0 flex-1 transition hover:text-tarot-green"
               >

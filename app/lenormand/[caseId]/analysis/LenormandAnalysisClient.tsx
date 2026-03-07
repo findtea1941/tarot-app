@@ -133,6 +133,7 @@ export function LenormandAnalysisClient() {
   const reviewFeedbackRef = useRef(reviewFeedback);
   reviewFeedbackRef.current = reviewFeedback;
   const fromLibrary = searchParams.get("from") === "library";
+  const fromDraft = searchParams.get("from") === "draft";
 
   const loadCase = useCallback(async (id: string) => {
     setLoadingCase(true);
@@ -316,7 +317,7 @@ export function LenormandAnalysisClient() {
     try {
       await updateLenormandAnalysis(caseId, analysisEntries);
       if (fromLibrary) await updateCaseReviewFeedback(caseId, reviewFeedback);
-      router.push(`/lenormand/${caseId}/entry`);
+      router.push(fromDraft ? "/cases?view=drafts" : `/lenormand/${caseId}/entry`);
     } catch {
       setLoading(false);
     } finally {
@@ -372,217 +373,236 @@ export function LenormandAnalysisClient() {
         ? "线性五张"
         : "九宫格";
   const displaySpreadLabel = isChoice ? `二择一-${spreadLabel}` : spreadLabel;
+  const isNineGrid = spreadType === "nine-grid";
+  const leftColumnWidthPx = spreadType === "linear-5" ? 460 : 340;
+  const layoutGridClass =
+    spreadType === "linear-5"
+      ? "xl:grid-cols-[460px_1px_minmax(0,1fr)]"
+      : "xl:grid-cols-[340px_1px_minmax(0,1fr)]";
+  const footerGridClass =
+    spreadType === "linear-5" ? "xl:grid-cols-[460px_1fr]" : "xl:grid-cols-[340px_1fr]";
+  const spreadBoardWidthClass =
+    spreadType === "linear-5" ? "w-[25.5rem]" : "w-[15rem]";
+  const spreadBoardOffsetClass =
+    isNineGrid || spreadType === "linear-3" ? "pl-7" : "pl-0";
 
-  return (
-    <div className="min-h-[calc(100vh-96px)] bg-white">
-      <div className="mx-auto max-w-6xl px-4 py-6">
-        {/* 左右分栏 */}
-        <div className="flex gap-6">
-          {/* 左侧：问题、背景、牌型（线性五张加宽以容纳 5 张牌横向展示） */}
-          <div
-            className={`flex shrink-0 flex-col gap-5 ${
-              spreadType === "linear-5" ? "w-[420px]" : "w-[340px]"
-            }`}
-          >
-            <div className="rounded-2xl border border-[#dceee6] bg-[#fbfdfc] p-5">
-              <div className="space-y-3 text-left">
-                <div>
-                  <p className="text-xs font-semibold text-tarot-green">问题</p>
-                  <p className="mt-1 text-sm text-slate-800">{question || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-tarot-green">问题背景</p>
-                  <p className="mt-1 text-sm text-slate-800 whitespace-pre-wrap">{background || "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-tarot-green">时间</p>
-                  <p className="mt-1 text-sm text-slate-800">
-                    {drawDate
-                      ? `${drawDate.slice(0, 4)}年${drawDate.slice(5, 7)}月${drawDate.slice(8, 10)}日`
-                      : "—"}
-                  </p>
-                </div>
-                {categories.length > 0 && (
-                  <div className="flex flex-col items-start">
-                    <p className="text-xs font-semibold text-tarot-green">分类</p>
-                    <div className="mt-1 flex flex-wrap justify-start gap-2">
-                      {categories.map((cat) => {
-                        const isQuestionType =
-                          cat === "开放式问题" || cat === "封闭式问题";
-                        return (
-                          <span
-                            key={cat}
-                            className={
-                              isQuestionType
-                                ? "inline-flex items-center rounded-full border border-tarot-green bg-white px-3 py-1.5 text-xs font-medium text-tarot-green"
-                                : "inline-flex items-center rounded-full bg-[#d4f0e3] px-3 py-1.5 text-xs font-medium text-[#047857]"
-                            }
-                          >
-                            {cat}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="flex min-h-10 w-full flex-col justify-center">
-                <p className="w-full text-center text-xs font-medium text-slate-500">牌型：{displaySpreadLabel}</p>
-              </div>
-              <div className="mt-4 w-full">
-              {isChoice ? (
-              <div className="flex w-full flex-col items-center space-y-6">
-                <div className="flex w-full flex-col items-center">
-                  <p className="mb-2 text-xs font-medium text-slate-500">
-                    选项 A：{optionALabel || "—"}
-                  </p>
-                  <div
-                    className={
-                      isLinear
-                        ? `flex justify-center gap-2 ${spreadType === "linear-5" ? "gap-3" : ""}`
-                        : "mx-auto grid w-fit grid-cols-3 gap-x-3 gap-y-1.5 justify-items-center"
-                    }
-                  >
-                    {cardsA.map((name, i) => (
-                      <CardBox key={i} name={name} index={i} spreadType={spreadType} />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex w-full flex-col items-center">
-                  <p className="mb-2 text-xs font-medium text-slate-500">
-                    选项 B：{optionBLabel || "—"}
-                  </p>
-                  <div
-                    className={
-                      isLinear
-                        ? `flex justify-center gap-2 ${spreadType === "linear-5" ? "gap-3" : ""}`
-                        : "mx-auto grid w-fit grid-cols-3 gap-x-3 gap-y-1.5 justify-items-center"
-                    }
-                  >
-                    {cardsB.map((name, i) => (
-                      <CardBox key={i} name={name} index={i} spreadType={spreadType} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div
-                className={
-                  isLinear ? "flex justify-center gap-3" : "mx-auto grid w-fit grid-cols-3 gap-x-3 gap-y-1.5 justify-items-center"
-                }
-              >
-                {cards.map((name, i) => (
-                  <CardBox key={i} name={name} index={i} spreadType={spreadType} />
-                ))}
-              </div>
-            )}
-              </div>
-            </div>
-          </div>
-
-          {/* 右侧：分析框区域 */}
-          <div className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-[#dceee6] bg-white">
-            <div className="max-h-[calc(100vh-320px)] overflow-y-auto p-5">
-              {isChoice ? (
-                <div className="space-y-6">
-                  <AnalysisSection
-                    title={`选项 A：${optionALabel || "—"}`}
-                    cards={cardsA}
-                    config={analysisEntriesConfig}
-                    prefix="optionA"
-                    analysisEntries={analysisEntries}
-                    updateEntry={updateEntry}
-                  />
-                  <AnalysisSection
-                    title={`选项 B：${optionBLabel || "—"}`}
-                    cards={cardsB}
-                    config={analysisEntriesConfig}
-                    prefix="optionB"
-                    analysisEntries={analysisEntries}
-                    updateEntry={updateEntry}
-                  />
-                  <div className="space-y-1.5">
-                    <label className="block text-sm font-medium text-slate-700">
-                      综合分析
-                    </label>
-                    <textarea
-                      className="min-h-24 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
-                      value={analysisEntries["choice_overall"] ?? ""}
-                      onChange={(e) =>
-                        updateEntry("choice_overall", e.target.value)
-                      }
-                      placeholder="填写综合分析…"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-5">
-                  {analysisEntriesConfig.map((entry) => {
-                    const cardLabel = entry.getLabel(cards);
-                    const displayLabel =
-                      entry.id === "overall"
-                        ? "整体分析"
-                        : entry.label
-                          ? `${entry.label}：${cardLabel}`
-                          : cardLabel;
-                    return (
-                      <div key={entry.id} className="space-y-1.5">
-                        <label className="block text-sm font-medium text-slate-700 whitespace-nowrap overflow-x-auto">
-                          {displayLabel}
-                        </label>
-                        <textarea
-                          className="min-h-20 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
-                          value={analysisEntries[entry.id] ?? ""}
-                          onChange={(e) =>
-                            updateEntry(entry.id, e.target.value)
-                          }
-                          placeholder="填写分析内容…"
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {fromLibrary && (
-                <div className="mt-6 space-y-1.5">
-                  <label className="block text-sm font-medium text-slate-700">
-                    复盘与反馈
-                  </label>
-                  <textarea
-                    className="min-h-24 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
-                    value={reviewFeedback}
-                    onChange={(e) => setReviewFeedback(e.target.value)}
-                    onBlur={async () => {
-                      if (caseId) await updateCaseReviewFeedback(caseId, reviewFeedbackRef.current);
-                    }}
-                    placeholder="填写复盘与反馈…"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 下方：保存 + 返回修改 */}
-        <div className="mt-6 flex justify-center gap-4">
-          <button
-            onClick={handleReturnEdit}
-            disabled={loading}
-            className="rounded-full border border-[#cce7d9] bg-white px-8 py-3 text-sm font-medium text-slate-600 transition hover:bg-[#f4fbf8] disabled:opacity-60"
-          >
-            返回修改
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="rounded-full bg-tarot-green px-8 py-3 text-sm font-medium text-white shadow-[0_14px_28px_rgba(5,150,105,0.22)] transition hover:bg-emerald-700 disabled:opacity-60"
-          >
-            {loading ? "处理中…" : "保存案例"}
-          </button>
+  const spreadBoardContent = isChoice ? (
+    <div className="flex w-full flex-col items-start space-y-6">
+      <div className="flex w-full flex-col items-start">
+        <p className="mb-2 text-xs font-medium text-slate-500">
+          选项 A：{optionALabel || "—"}
+        </p>
+        <div
+          className={
+            isLinear
+              ? `flex justify-start gap-2 ${spreadType === "linear-5" ? "gap-3" : ""}`
+              : "grid w-fit grid-cols-3 gap-x-3 gap-y-1.5 justify-items-center"
+          }
+        >
+          {cardsA.map((name, i) => (
+            <CardBox key={i} name={name} index={i} spreadType={spreadType} />
+          ))}
         </div>
       </div>
+      <div className="flex w-full flex-col items-start">
+        <p className="mb-2 text-xs font-medium text-slate-500">
+          选项 B：{optionBLabel || "—"}
+        </p>
+        <div
+          className={
+            isLinear
+              ? `flex justify-start gap-2 ${spreadType === "linear-5" ? "gap-3" : ""}`
+              : "grid w-fit grid-cols-3 gap-x-3 gap-y-1.5 justify-items-center"
+          }
+        >
+          {cardsB.map((name, i) => (
+            <CardBox key={i} name={name} index={i} spreadType={spreadType} />
+          ))}
+        </div>
+      </div>
+    </div>
+  ) : (
+    <div
+      className={
+        isLinear
+          ? "flex justify-start gap-3"
+          : "grid w-fit grid-cols-3 gap-x-3 gap-y-1.5 justify-items-center"
+      }
+    >
+      {cards.map((name, i) => (
+        <CardBox key={i} name={name} index={i} spreadType={spreadType} />
+      ))}
+    </div>
+  );
+
+  const analysisContent = isChoice ? (
+    <div className="space-y-6">
+      <AnalysisSection
+        title={`选项 A：${optionALabel || "—"}`}
+        cards={cardsA}
+        config={analysisEntriesConfig}
+        prefix="optionA"
+        analysisEntries={analysisEntries}
+        updateEntry={updateEntry}
+      />
+      <AnalysisSection
+        title={`选项 B：${optionBLabel || "—"}`}
+        cards={cardsB}
+        config={analysisEntriesConfig}
+        prefix="optionB"
+        analysisEntries={analysisEntries}
+        updateEntry={updateEntry}
+      />
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-slate-700">
+          综合分析
+        </label>
+        <textarea
+          className="min-h-24 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+          value={analysisEntries["choice_overall"] ?? ""}
+          onChange={(e) =>
+            updateEntry("choice_overall", e.target.value)
+          }
+          placeholder="填写综合分析…"
+        />
+      </div>
+    </div>
+  ) : (
+    <div className="space-y-5">
+      {analysisEntriesConfig.map((entry) => {
+        const cardLabel = entry.getLabel(cards);
+        const displayLabel =
+          entry.id === "overall"
+            ? "整体分析"
+            : entry.label
+              ? `${entry.label}：${cardLabel}`
+              : cardLabel;
+        return (
+          <div key={entry.id} className="space-y-1.5">
+            <label className="block text-sm font-medium text-slate-700 whitespace-nowrap overflow-x-auto">
+              {displayLabel}
+            </label>
+            <textarea
+              className="min-h-20 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+              value={analysisEntries[entry.id] ?? ""}
+              onChange={(e) =>
+                updateEntry(entry.id, e.target.value)
+              }
+              placeholder="填写分析内容…"
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div className="min-h-[calc(100vh-96px)] bg-white pb-24">
+      <div className={`mx-auto grid w-full max-w-[1400px] grid-cols-1 px-4 ${layoutGridClass}`}>
+        <div className="flex min-w-0 shrink-0 flex-col" style={{ width: leftColumnWidthPx }}>
+          <section className="shrink-0 border-b border-slate-200 bg-white px-0 py-5">
+            <div className="space-y-3 text-left">
+              <div>
+                <p className="text-xs font-semibold text-tarot-green">问题</p>
+                <p className="mt-1 text-sm text-slate-800">{question || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-tarot-green">问题背景</p>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">{background || "—"}</p>
+              </div>
+              <div>
+                <p className="text-xs font-semibold text-tarot-green">时间</p>
+                <p className="mt-1 text-sm text-slate-800">
+                  {drawDate
+                    ? `${drawDate.slice(0, 4)}年${drawDate.slice(5, 7)}月${drawDate.slice(8, 10)}日`
+                    : "—"}
+                </p>
+              </div>
+              {categories.length > 0 && (
+                <div className="flex flex-col items-start">
+                  <p className="text-xs font-semibold text-tarot-green">分类</p>
+                  <div className="mt-1 flex flex-wrap justify-start gap-2">
+                    {categories.map((cat) => {
+                      const isQuestionType =
+                        cat === "开放式问题" || cat === "封闭式问题";
+                      return (
+                        <span
+                          key={cat}
+                          className={
+                            isQuestionType
+                              ? "inline-flex items-center rounded-full border border-tarot-green bg-white px-3 py-1.5 text-xs font-medium text-tarot-green"
+                              : "inline-flex items-center rounded-full bg-[#d4f0e3] px-3 py-1.5 text-xs font-medium text-[#047857]"
+                          }
+                        >
+                          {cat}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          <section className="flex flex-1 flex-col items-start border-t border-slate-200 bg-white px-0 py-5">
+            <div className={spreadBoardOffsetClass}>
+              <div className={`flex min-h-10 ${spreadBoardWidthClass} flex-col justify-center`}>
+                <p className="w-full text-center text-xs font-medium text-slate-500">牌型：{displaySpreadLabel}</p>
+              </div>
+              <div className={`mt-4 ${spreadBoardWidthClass}`}>{spreadBoardContent}</div>
+            </div>
+          </section>
+        </div>
+
+        <div className="hidden w-px shrink-0 self-stretch bg-slate-200 xl:block" aria-hidden />
+
+        <div className="min-w-0 overflow-hidden pl-0 xl:pl-8">
+          <section className="max-h-[calc(100vh-220px)] overflow-y-auto py-5 pr-1 xl:pr-4">
+            {analysisContent}
+            {fromLibrary && (
+              <div className="mt-6 space-y-1.5">
+                <label className="block text-sm font-medium text-slate-700">
+                  复盘与反馈
+                </label>
+                <textarea
+                  className="min-h-24 w-full rounded-xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-sm text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                  value={reviewFeedback}
+                  onChange={(e) => setReviewFeedback(e.target.value)}
+                  onBlur={async () => {
+                    if (caseId) await updateCaseReviewFeedback(caseId, reviewFeedbackRef.current);
+                  }}
+                  placeholder="填写复盘与反馈…"
+                />
+              </div>
+            )}
+          </section>
+        </div>
+      </div>
+
+      <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
+        <div
+          className={`mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-4 px-4 sm:grid-cols-2 ${footerGridClass}`}
+        >
+          <div className="flex items-center justify-start">
+            <button
+              onClick={handleReturnEdit}
+              disabled={loading}
+              className="text-sm text-slate-500 transition hover:text-tarot-green disabled:opacity-60"
+            >
+              {fromDraft ? "← 返回草稿箱" : "← 返回修改"}
+            </button>
+          </div>
+          <div className="flex items-center justify-end gap-3 pt-3 sm:pt-0">
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="rounded-xl bg-tarot-green px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
+            >
+              {loading ? "处理中…" : "保存案例"}
+            </button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

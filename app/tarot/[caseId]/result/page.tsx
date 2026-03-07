@@ -40,6 +40,7 @@ export default function ResultPage() {
   const searchParams = useSearchParams();
   const caseId = params.caseId as string;
   const fromLibrary = searchParams.get("from") === "library";
+  const fromDraft = searchParams.get("from") === "draft";
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -758,10 +759,10 @@ export default function ResultPage() {
           {/* 返回：统一与主内容左列左缘对齐 */}
           <div className="flex items-center justify-start">
             <Link
-              href={`/tarot/${caseId}/spread`}
+              href={fromDraft ? "/cases?view=drafts" : `/tarot/${caseId}/spread`}
               className="text-sm text-slate-500 transition hover:text-tarot-green"
             >
-              ← 返回修改界面
+              {fromDraft ? "← 返回草稿箱" : "← 返回修改界面"}
             </Link>
           </div>
           <div className="flex items-center justify-end gap-3 pt-3 sm:pt-0">
