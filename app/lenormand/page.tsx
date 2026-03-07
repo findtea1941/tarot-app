@@ -118,14 +118,14 @@ export default function LenormandPage() {
               <label className="block text-sm font-medium text-slate-700">
                 牌阵类型
               </label>
-              <div className="flex flex-wrap gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
                 {SPREAD_OPTIONS.map((opt) => (
                   <button
                     key={opt.type}
                     type="button"
                     onClick={() => setSpreadType(opt.type)}
                     disabled={opt.placeholder}
-                    className={`flex min-w-[140px] flex-col items-center justify-center rounded-2xl border-2 px-6 py-8 transition ${
+                    className={`flex w-full flex-col items-center justify-center rounded-2xl border-2 px-6 py-8 transition ${
                       opt.placeholder
                         ? "cursor-not-allowed border-[#e8ecea] bg-slate-50 text-slate-400"
                         : spreadType === opt.type
