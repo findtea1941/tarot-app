@@ -3,32 +3,32 @@
 import type { SpreadLayout } from "@/lib/spreadTypes";
 import type { SpreadSlotState } from "@/lib/spreadTypes";
 
-const HOLY_TRIANGLE_NODE_ORDER = ["2", "3", "1"] as const;
+const BODY_MIND_SPIRIT_ORDER = ["1", "2", "3"] as const;
 
-/** 圣三角：上左现在、上右未来、下中过去 */
+/** 身心灵：1 上中灵阶，2 左中心阶，3 最下且水平在 1 与 2 之间；三张牌垂直等距、略拉大 */
 const NODE_COORDS: Record<string, [number, number]> = {
-  "2": [22, 24],
-  "3": [78, 24],
-  "1": [50, 72],
+  "1": [50, 20],
+  "2": [28, 50],
+  "3": [39, 80],
 };
 
 type SlotStatesMap = Record<string, SpreadSlotState>;
 
-export function HolyTriangleReviewBoard({
+export function BodyMindSpiritReviewBoard({
   layout,
   slotStates = {},
 }: {
   layout: SpreadLayout;
   slotStates?: SlotStatesMap;
 }) {
-  if (layout.id !== "holy-triangle-3" || layout.slots.length < 3) return null;
+  if (layout.id !== "body-mind-spirit-3" || layout.slots.length < 3) return null;
 
   const slotsById = Object.fromEntries(layout.slots.map((slot) => [slot.id, slot]));
 
   return (
-    <div className="mx-auto w-full max-w-[320px] rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-1">
-      <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.05" }}>
-        {HOLY_TRIANGLE_NODE_ORDER.map((slotId) => {
+    <div className="rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-1">
+      <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.2" }}>
+        {BODY_MIND_SPIRIT_ORDER.map((slotId) => {
           const slot = slotsById[slotId];
           if (!slot) return null;
           const state = slotStates[slotId];

@@ -135,6 +135,7 @@ export default function TarotNewPage() {
     if (!question.trim()) return "请填写问题";
     if (categories.length === 0) return "请至少选择一个分类";
     if (!drawDate.trim()) return "请选择抽牌日期";
+    if (!drawTime.trim()) return "请填写抽牌时间";
     if (!provinceCode) return "请选择省/直辖市";
     if (!cityCode) return "请选择市";
     if (!spreadType) return "请选择牌阵类型";
@@ -288,7 +289,7 @@ export default function TarotNewPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-slate-700">抽牌时间</label>
+                <label className="block text-sm font-medium text-slate-700">抽牌时间 <span className="text-red-400">*</span></label>
                 <input
                   type="text"
                   className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"

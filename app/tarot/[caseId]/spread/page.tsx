@@ -13,14 +13,17 @@ import {
 import { getLayout } from "@/layouts";
 import { getDeck } from "@/lib/deck";
 import { validateSlotInputs } from "@/lib/slotInputParse";
+import { BodyMindSpiritEntryBoard } from "@/components/BodyMindSpiritEntryBoard";
 import { ChooseOneEntryBoard } from "@/components/ChooseOneEntryBoard";
 import { FourElementsEntryBoard } from "@/components/FourElementsEntryBoard";
 import { HolyTriangleEntryBoard } from "@/components/HolyTriangleEntryBoard";
+import { NoSpreadEntryBoard } from "@/components/NoSpreadEntryBoard";
 import { SpreadBoard } from "@/components/SpreadBoard";
 import { HexagramEntryBoard } from "@/components/HexagramEntryBoard";
 import { TimeFlowEntryBoard } from "@/components/TimeFlowEntryBoard";
 import { Step4Modal } from "@/components/Step4Modal";
 import { getSlotInputId } from "@/components/SlotStack";
+import { getCategoryPillStyle } from "@/lib/categoryTagStyles";
 
 export default function SpreadPage() {
   const params = useParams();
@@ -209,16 +212,35 @@ export default function SpreadPage() {
           <div className="hidden h-full w-px items-stretch justify-center sm:flex">
             <div className="mx-auto h-full w-px rounded-full bg-[#d8ede4]" aria-hidden />
           </div>
-          {/* 右侧：分类 + 抽牌时间/地点，与左侧视觉连贯 */}
+          {/* 右侧：分类（每项单独圈）+ 牌阵类型/抽牌时间/地点（纯文字） */}
           <div className="mt-4 flex flex-col justify-center gap-3 text-sm sm:mt-0">
             <div>
               <dt className="text-xs font-semibold text-tarot-green">分类</dt>
-              <dd className="mt-1">
-                <span className="inline-block rounded-lg bg-[#d4f0e3] px-3 py-1 text-sm font-medium text-tarot-green">
-                  {(caseData.tarotCategories?.length ? caseData.tarotCategories.join("、") : caseData.category) || "—"}
-                </span>
+              <dd className="mt-1 flex flex-wrap gap-2">
+                {(caseData.tarotCategories?.length
+                  ? caseData.tarotCategories
+                  : caseData.category
+                    ? [caseData.category]
+                    : []
+                ).map((cat) => {
+                  const pill = getCategoryPillStyle(cat);
+                  return (
+                    <span key={cat} className={pill.className} style={pill.style}>
+                      {cat}
+                    </span>
+                  );
+                })}
+                {!caseData.tarotCategories?.length && !caseData.category && (
+                  <span className="text-slate-400">—</span>
+                )}
               </dd>
             </div>
+            {caseData.spreadType && (
+              <div>
+                <dt className="text-xs font-semibold text-tarot-green">牌阵类型</dt>
+                <dd className="mt-1 text-sm font-medium text-slate-900">{caseData.spreadType}</dd>
+              </div>
+            )}
             <div>
               <dt className="text-xs font-semibold text-tarot-green">抽牌时间</dt>
               <dd className="mt-1 text-sm font-medium text-slate-900">{drawAtDisplay}</dd>
@@ -268,8 +290,22 @@ export default function SpreadPage() {
                 onSlotInputChange={setSlotValue}
                 slotErrors={slotErrors}
               />
+            ) : layout.id === "body-mind-spirit-3" ? (
+              <BodyMindSpiritEntryBoard
+                layout={layout}
+                slotInputs={slotInputs}
+                onSlotInputChange={setSlotValue}
+                slotErrors={slotErrors}
+              />
             ) : layout.id === "holy-triangle-3" ? (
               <HolyTriangleEntryBoard
+                layout={layout}
+                slotInputs={slotInputs}
+                onSlotInputChange={setSlotValue}
+                slotErrors={slotErrors}
+              />
+            ) : layout.id === "no-spread-3" ? (
+              <NoSpreadEntryBoard
                 layout={layout}
                 slotInputs={slotInputs}
                 onSlotInputChange={setSlotValue}

@@ -121,6 +121,7 @@ export function LenormandAnalysisClient() {
   const [optionBLabel, setOptionBLabel] = useState("");
   const [isChoice, setIsChoice] = useState(false);
   const [spreadType, setSpreadType] = useState<LenormandSpreadType>("nine-grid");
+  const [categories, setCategories] = useState<string[]>([]);
   const [analysisEntries, setAnalysisEntries] = useState<Record<string, string>>(
     {}
   );
@@ -172,6 +173,7 @@ export function LenormandAnalysisClient() {
                 if (!qFromUrl) setQuestion(c.question ?? "");
                 if (!bgFromUrl) setBackground(c.background ?? "");
                 setDrawDate(c.lenormandDrawDate ?? "");
+                setCategories(c.lenormandCategories ?? (c.category ? [c.category] : []));
                 setAnalysisEntries(c.lenormandAnalysis ?? {});
                 setReviewFeedback(c.reviewFeedback ?? "");
               }
@@ -202,6 +204,7 @@ export function LenormandAnalysisClient() {
               if (!qFromUrl) setQuestion(c.question ?? "");
               if (!bgFromUrl) setBackground(c.background ?? "");
               setDrawDate(c.lenormandDrawDate ?? "");
+              setCategories(c.lenormandCategories ?? (c.category ? [c.category] : []));
               setAnalysisEntries(c.lenormandAnalysis ?? {});
               setReviewFeedback(c.reviewFeedback ?? "");
               updateLenormandDraft(id, { lenormandCards: parsed }).catch(() => {});
@@ -222,6 +225,7 @@ export function LenormandAnalysisClient() {
         setQuestion(c.question ?? "");
         setBackground(c.background ?? "");
         setDrawDate(c.lenormandDrawDate ?? "");
+        setCategories(c.lenormandCategories ?? (c.category ? [c.category] : []));
         setOptionALabel(c.lenormandOptionALabel ?? "");
         setOptionBLabel(c.lenormandOptionBLabel ?? "");
         setReviewFeedback(c.reviewFeedback ?? "");
@@ -396,6 +400,29 @@ export function LenormandAnalysisClient() {
                       : "—"}
                   </p>
                 </div>
+                {categories.length > 0 && (
+                  <div className="flex flex-col items-center">
+                    <p className="text-xs font-semibold text-tarot-green">分类</p>
+                    <div className="mt-1 flex flex-wrap justify-center gap-2">
+                      {categories.map((cat) => {
+                        const isQuestionType =
+                          cat === "开放式问题" || cat === "封闭式问题";
+                        return (
+                          <span
+                            key={cat}
+                            className={
+                              isQuestionType
+                                ? "inline-flex items-center rounded-full border border-tarot-green bg-white px-3 py-1.5 text-xs font-medium text-tarot-green"
+                                : "inline-flex items-center rounded-full bg-[#d4f0e3] px-3 py-1.5 text-xs font-medium text-[#047857]"
+                            }
+                          >
+                            {cat}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex flex-col items-center">

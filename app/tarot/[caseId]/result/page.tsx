@@ -22,10 +22,13 @@ import {
   getResolvedCardsByGroup,
 } from "@/lib/groupSummary";
 import { PlanetOptions } from "@/lib/planetOptions";
+import { getCategoryPillStyle, SPREAD_TYPE_PILL_CLASS } from "@/lib/categoryTagStyles";
+import { BodyMindSpiritReviewBoard } from "@/components/BodyMindSpiritReviewBoard";
 import { ChooseOneReviewBoard } from "@/components/ChooseOneReviewBoard";
 import { FourElementsReviewBoard } from "@/components/FourElementsReviewBoard";
 import { HolyTriangleReviewBoard } from "@/components/HolyTriangleReviewBoard";
 import { HexagramReviewBoard } from "@/components/HexagramReviewBoard";
+import { NoSpreadReviewBoard } from "@/components/NoSpreadReviewBoard";
 import { TimeFlowReviewBoard } from "@/components/TimeFlowReviewBoard";
 
 /**
@@ -391,13 +394,23 @@ export default function ResultPage() {
                   {caseData.background || "—"}
                 </dd>
               </div>
-              <div className="flex flex-wrap gap-2 pt-1">
-                <span className="rounded-full bg-[#ecf8f2] px-3 py-1 text-xs font-medium text-tarot-green">
-                  {(caseData.tarotCategories?.length ? caseData.tarotCategories.join("、") : caseData.category) || "—"}
-                </span>
-                <span className="rounded-full bg-[#ecf8f2] px-3 py-1 text-xs font-medium text-tarot-green">
-                  {caseData.spreadType || "—"}
-                </span>
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                {(caseData.tarotCategories?.length
+                  ? caseData.tarotCategories
+                  : caseData.category
+                    ? [caseData.category]
+                    : []
+                ).map((cat) => {
+                  const pill = getCategoryPillStyle(cat);
+                  return (
+                    <span key={cat} className={pill.className} style={pill.style}>
+                      {cat}
+                    </span>
+                  );
+                })}
+                {caseData.spreadType && (
+                  <span className={SPREAD_TYPE_PILL_CLASS}>{caseData.spreadType}</span>
+                )}
               </div>
               <div className="grid gap-2 pt-1 sm:grid-cols-2">
                 <div className="rounded-xl border border-[#e2eee8] bg-white px-3 py-2.5">
@@ -425,8 +438,12 @@ export default function ResultPage() {
                 <ChooseOneReviewBoard layout={layout} slotStates={slotStates} />
               ) : layout.id === "four-elements-4" ? (
                 <FourElementsReviewBoard layout={layout} slotStates={slotStates} />
+              ) : layout.id === "body-mind-spirit-3" ? (
+                <BodyMindSpiritReviewBoard layout={layout} slotStates={slotStates} />
               ) : layout.id === "holy-triangle-3" ? (
                 <HolyTriangleReviewBoard layout={layout} slotStates={slotStates} />
+              ) : layout.id === "no-spread-3" ? (
+                <NoSpreadReviewBoard layout={layout} slotStates={slotStates} />
               ) : layout.id === "timeflow-3" ? (
                 <TimeFlowReviewBoard layout={layout} slotStates={slotStates} />
               ) : (

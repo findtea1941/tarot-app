@@ -3,32 +3,32 @@
 import type { SpreadLayout } from "@/lib/spreadTypes";
 import type { SpreadSlotState } from "@/lib/spreadTypes";
 
-const HOLY_TRIANGLE_NODE_ORDER = ["2", "3", "1"] as const;
+const NO_SPREAD_ORDER = ["1", "2", "3"] as const;
 
-/** 圣三角：上左现在、上右未来、下中过去 */
+/** 无牌阵：1 上中主牌，2 左下副牌1，3 右下副牌2；位置与框大小与圣三角一致 */
 const NODE_COORDS: Record<string, [number, number]> = {
-  "2": [22, 24],
-  "3": [78, 24],
-  "1": [50, 72],
+  "1": [50, 24],
+  "2": [22, 72],
+  "3": [78, 72],
 };
 
 type SlotStatesMap = Record<string, SpreadSlotState>;
 
-export function HolyTriangleReviewBoard({
+export function NoSpreadReviewBoard({
   layout,
   slotStates = {},
 }: {
   layout: SpreadLayout;
   slotStates?: SlotStatesMap;
 }) {
-  if (layout.id !== "holy-triangle-3" || layout.slots.length < 3) return null;
+  if (layout.id !== "no-spread-3" || layout.slots.length < 3) return null;
 
   const slotsById = Object.fromEntries(layout.slots.map((slot) => [slot.id, slot]));
 
   return (
     <div className="mx-auto w-full max-w-[320px] rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-1">
       <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.05" }}>
-        {HOLY_TRIANGLE_NODE_ORDER.map((slotId) => {
+        {NO_SPREAD_ORDER.map((slotId) => {
           const slot = slotsById[slotId];
           if (!slot) return null;
           const state = slotStates[slotId];
