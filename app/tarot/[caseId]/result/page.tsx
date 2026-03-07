@@ -22,6 +22,9 @@ import {
   getResolvedCardsByGroup,
 } from "@/lib/groupSummary";
 import { PlanetOptions } from "@/lib/planetOptions";
+import { ChooseOneReviewBoard } from "@/components/ChooseOneReviewBoard";
+import { FourElementsReviewBoard } from "@/components/FourElementsReviewBoard";
+import { HolyTriangleReviewBoard } from "@/components/HolyTriangleReviewBoard";
 import { HexagramReviewBoard } from "@/components/HexagramReviewBoard";
 import { TimeFlowReviewBoard } from "@/components/TimeFlowReviewBoard";
 
@@ -137,16 +140,31 @@ export default function ResultPage() {
     });
   }, [caseData, signifierColumnCount, editingSignifierTitleIndex]);
 
-  /** 六芒星三组统筹结果（时间线/空间线/整体），用于统筹列与数字加和区 */
+  /** 当前牌阵的统筹结果，用于统筹列与数字加和区 */
   const groupSummaries = useMemo(() => {
     if (!matrixContext || !layout) return null;
     const groups = getResolvedCardsByGroup(matrixContext.slotCards, layout.id);
     return {
       time: buildGroupSummary(groups.time),
       space: buildGroupSummary(groups.space),
+      optionA: buildGroupSummary(groups.optionA),
+      optionB: buildGroupSummary(groups.optionB),
       all: buildGroupSummary(groups.all),
     };
   }, [matrixContext, layout]);
+
+  const chooseOneNumberSummary = useMemo(() => {
+    if (!groupSummaries || !matrixContext || layout?.id !== "choose-one-5") return null;
+    const base = matrixContext.slotCards.get("1");
+    const baseSigned = base?.card.number != null ? (base.reversed ? -base.card.number : base.card.number) : 0;
+    const mod22 = (value: number) => ((value % 22) + 22) % 22;
+    return {
+      optionADirect: mod22(groupSummaries.optionA.numbers.sumSigned),
+      optionAObjective: mod22(groupSummaries.optionA.numbers.sumSigned - baseSigned),
+      optionBDirect: mod22(groupSummaries.optionB.numbers.sumSigned),
+      optionBObjective: mod22(groupSummaries.optionB.numbers.sumSigned - baseSigned),
+    };
+  }, [groupSummaries, matrixContext, layout]);
 
   const drawAtDisplay =
     caseData?.drawTime &&
@@ -349,9 +367,15 @@ export default function ResultPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center bg-white">
-      <div className="mx-auto grid w-fit max-w-[1560px] flex-1 gap-3 px-2 py-2 xl:grid-cols-[1fr_1fr]">
-        <div className="flex min-w-0 flex-col gap-3">
-          <section className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+      <div
+        className={`mx-auto grid w-fit max-w-[1560px] flex-1 gap-3 px-2 py-2 ${
+          layout?.id === "choose-one-5" ? "xl:grid-cols-[auto_auto]" : "xl:grid-cols-[1fr_1fr]"
+        }`}
+      >
+        <div className="flex min-w-0 flex-col gap-3" style={layout?.id === "choose-one-5" ? { width: 540 } : undefined}>
+          <section
+            className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
+          >
             <h2 className="text-[29px] font-semibold leading-tight text-slate-900">塔罗案例分析工作台</h2>
             <p className="mt-2 text-[20px] font-semibold text-tarot-green">案例基本信息</p>
             <dl className="mt-3 space-y-3 text-sm">
@@ -388,11 +412,21 @@ export default function ResultPage() {
             </dl>
           </section>
 
-          <section className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <section
+            className={`rounded-[22px] border border-[#e3efea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] ${
+              layout?.id === "choose-one-5" ? "p-5" : "p-4"
+            }`}
+          >
             <h2 className="mb-2 text-[22px] font-semibold text-tarot-green">牌阵回顾</h2>
             {layout ? (
               layout.id === "hexagram-7" ? (
                 <HexagramReviewBoard layout={layout} slotStates={slotStates} />
+              ) : layout.id === "choose-one-5" ? (
+                <ChooseOneReviewBoard layout={layout} slotStates={slotStates} />
+              ) : layout.id === "four-elements-4" ? (
+                <FourElementsReviewBoard layout={layout} slotStates={slotStates} />
+              ) : layout.id === "holy-triangle-3" ? (
+                <HolyTriangleReviewBoard layout={layout} slotStates={slotStates} />
               ) : layout.id === "timeflow-3" ? (
                 <TimeFlowReviewBoard layout={layout} slotStates={slotStates} />
               ) : (
@@ -552,6 +586,26 @@ export default function ResultPage() {
                     : "—"}
                 </span>
               </div>
+              {layout?.id === "choose-one-5" && (
+                <>
+                  <div className="flex items-center justify-between rounded-lg bg-[#eef4f2] px-3 py-2.5">
+                    <span className="text-slate-500">选项A加和</span>
+                    <span className="font-semibold text-slate-700">
+                      {chooseOneNumberSummary
+                        ? `直接加和：${chooseOneNumberSummary.optionADirect} / 客观加和：${chooseOneNumberSummary.optionAObjective}`
+                        : "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between rounded-lg bg-[#eef4f2] px-3 py-2.5">
+                    <span className="text-slate-500">选项B加和</span>
+                    <span className="font-semibold text-slate-700">
+                      {chooseOneNumberSummary
+                        ? `直接加和：${chooseOneNumberSummary.optionBDirect} / 客观加和：${chooseOneNumberSummary.optionBObjective}`
+                        : "—"}
+                    </span>
+                  </div>
+                </>
+              )}
               {(layout?.id === "hexagram-7" || layout?.id === "timeflow-3") && (
                 <div className="flex items-center justify-between rounded-lg bg-[#eef4f2] px-3 py-2.5">
                   <span className="text-slate-500">时间线加和</span>

@@ -225,13 +225,26 @@ const TIMEFLOW_GROUP_SLOT_IDS = {
   all: ["1", "2", "3"],
 } as const;
 
+/** 二择一分组：A=1,2,4 B=1,3,5 */
+const CHOOSE_ONE_GROUP_SLOT_IDS = {
+  optionA: ["1", "2", "4"],
+  optionB: ["1", "3", "5"],
+  all: ["1", "2", "3", "4", "5"],
+} as const;
+
 /**
  * 从 caseData + deck 解析出各组的 ResolvedCard[]（仅牌阵 slot，不含指示牌）
  */
 export function getResolvedCardsByGroup(
   slotCards: Map<string, ResolvedCard>,
   layoutId: string
-): { time: ResolvedCard[]; space: ResolvedCard[]; all: ResolvedCard[] } {
+): {
+  time: ResolvedCard[];
+  space: ResolvedCard[];
+  all: ResolvedCard[];
+  optionA: ResolvedCard[];
+  optionB: ResolvedCard[];
+} {
   const get = (ids: readonly string[]) =>
     ids.map((id) => slotCards.get(id)).filter((e): e is ResolvedCard => Boolean(e));
   if (layoutId === "hexagram-7") {
@@ -239,6 +252,8 @@ export function getResolvedCardsByGroup(
       time: get(HEXAGRAM_GROUP_SLOT_IDS.time),
       space: get(HEXAGRAM_GROUP_SLOT_IDS.space),
       all: get(HEXAGRAM_GROUP_SLOT_IDS.all),
+      optionA: [],
+      optionB: [],
     };
   }
   if (layoutId === "timeflow-3") {
@@ -247,8 +262,19 @@ export function getResolvedCardsByGroup(
       time: all,
       space: [],
       all,
+      optionA: [],
+      optionB: [],
+    };
+  }
+  if (layoutId === "choose-one-5") {
+    return {
+      time: [],
+      space: [],
+      all: get(CHOOSE_ONE_GROUP_SLOT_IDS.all),
+      optionA: get(CHOOSE_ONE_GROUP_SLOT_IDS.optionA),
+      optionB: get(CHOOSE_ONE_GROUP_SLOT_IDS.optionB),
     };
   }
   const all = Array.from(slotCards.values());
-  return { time: [], space: [], all };
+  return { time: [], space: [], all, optionA: [], optionB: [] };
 }

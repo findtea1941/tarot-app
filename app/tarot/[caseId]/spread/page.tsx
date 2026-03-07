@@ -13,6 +13,9 @@ import {
 import { getLayout } from "@/layouts";
 import { getDeck } from "@/lib/deck";
 import { validateSlotInputs } from "@/lib/slotInputParse";
+import { ChooseOneEntryBoard } from "@/components/ChooseOneEntryBoard";
+import { FourElementsEntryBoard } from "@/components/FourElementsEntryBoard";
+import { HolyTriangleEntryBoard } from "@/components/HolyTriangleEntryBoard";
 import { SpreadBoard } from "@/components/SpreadBoard";
 import { HexagramEntryBoard } from "@/components/HexagramEntryBoard";
 import { TimeFlowEntryBoard } from "@/components/TimeFlowEntryBoard";
@@ -230,7 +233,13 @@ export default function SpreadPage() {
 
       <section
         className={`rounded-[32px] border border-[#d5ece2] bg-[#edf8f2] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:px-8 ${
-          layout?.id === "timeflow-3" ? "pt-8 pb-4" : "py-8"
+          layout?.id === "timeflow-3"
+            ? "pt-8 pb-4"
+            : layout?.id === "four-elements-4"
+              ? "pt-8 pb-5"
+              : layout?.id === "holy-triangle-3"
+                ? "pt-8 pb-5"
+              : "py-8"
         }`}
       >
         <div className="pt-2 text-center">
@@ -240,6 +249,27 @@ export default function SpreadPage() {
           <div className="mt-1">
             {layout.id === "hexagram-7" ? (
               <HexagramEntryBoard
+                layout={layout}
+                slotInputs={slotInputs}
+                onSlotInputChange={setSlotValue}
+                slotErrors={slotErrors}
+              />
+            ) : layout.id === "choose-one-5" ? (
+              <ChooseOneEntryBoard
+                layout={layout}
+                slotInputs={slotInputs}
+                onSlotInputChange={setSlotValue}
+                slotErrors={slotErrors}
+              />
+            ) : layout.id === "four-elements-4" ? (
+              <FourElementsEntryBoard
+                layout={layout}
+                slotInputs={slotInputs}
+                onSlotInputChange={setSlotValue}
+                slotErrors={slotErrors}
+              />
+            ) : layout.id === "holy-triangle-3" ? (
+              <HolyTriangleEntryBoard
                 layout={layout}
                 slotInputs={slotInputs}
                 onSlotInputChange={setSlotValue}

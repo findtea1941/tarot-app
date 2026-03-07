@@ -16,14 +16,22 @@ const HEXAGRAM_SUMMARY_GROUPS = {
   all: ["1", "2", "3", "4", "5", "6", "7"],
 } as const;
 
+/** 二择一：A 线=1,2,4 B 线=1,3,5 整体=1..5 */
+const CHOOSE_ONE_SUMMARY_GROUPS = {
+  optionA: ["1", "2", "4"],
+  optionB: ["1", "3", "5"],
+  all: ["1", "2", "3", "4", "5"],
+} as const;
+
 export type ColumnKind = "slot" | "summary" | "signifier";
+export type SummaryGroupKey = "time" | "space" | "all" | "optionA" | "optionB";
 
 export interface AnalysisColumn {
   id: string;
   title: string;
   kind: ColumnKind;
   slotId?: string;
-  summaryGroup?: "time" | "space" | "all";
+  summaryGroup?: SummaryGroupKey;
   signifierIndex?: number;
 }
 
@@ -38,6 +46,8 @@ export interface MatrixContext {
     time: SlotCardEntry[];
     space: SlotCardEntry[];
     all: SlotCardEntry[];
+    optionA: SlotCardEntry[];
+    optionB: SlotCardEntry[];
   };
   /** 与指示牌列一一对应；解析失败或未录入则为 null */
   signifierCards: (SlotCardEntry | null)[];
@@ -133,6 +143,13 @@ export function buildColumns(
     }
     columns.push({ id: "summary-time", title: "时间统筹", kind: "summary", summaryGroup: "time" });
     columns.push({ id: "summary-all", title: "整体统筹", kind: "summary", summaryGroup: "all" });
+  } else if (layoutId === "choose-one-5" && slots.length >= 5) {
+    for (const slot of slots) {
+      columns.push({ id: `slot-${slot.id}`, title: slot.name, kind: "slot", slotId: slot.id });
+    }
+    columns.push({ id: "summary-optionA", title: "选项A统筹", kind: "summary", summaryGroup: "optionA" });
+    columns.push({ id: "summary-optionB", title: "选项B统筹", kind: "summary", summaryGroup: "optionB" });
+    columns.push({ id: "summary-all", title: "整体统筹", kind: "summary", summaryGroup: "all" });
   } else {
     // 其他布局：先全部牌位再整体统筹
     for (const slot of slots) {
@@ -191,7 +208,11 @@ export function getMatrixContext(
         ? getEntries(HEXAGRAM_SUMMARY_GROUPS.all)
         : layoutId === "timeflow-3"
           ? getEntries(timeflowSlotIds)
+          : layoutId === "choose-one-5"
+            ? getEntries(CHOOSE_ONE_SUMMARY_GROUPS.all)
           : Array.from(slotCards.values()),
+    optionA: layoutId === "choose-one-5" ? getEntries(CHOOSE_ONE_SUMMARY_GROUPS.optionA) : [],
+    optionB: layoutId === "choose-one-5" ? getEntries(CHOOSE_ONE_SUMMARY_GROUPS.optionB) : [],
   };
 
   const signifierParts = getSignifierParts(caseData.significatorInput ?? "");
@@ -298,7 +319,7 @@ export function getCellValue(
   col: AnalysisColumn,
   row: DimensionRow,
   ctx: MatrixContext,
-  groupSummaries?: Record<"time" | "space" | "all", GroupSummary>
+  groupSummaries?: Partial<Record<SummaryGroupKey, GroupSummary>>
 ): string {
   if (col.kind === "slot" && col.slotId) {
     const entry = ctx.slotCards.get(col.slotId);
