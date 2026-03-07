@@ -370,12 +370,35 @@ export default function ResultPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col items-center bg-white">
+      <div className="w-full max-w-[1560px] px-2 pt-2">
+        <Link
+          href={`/tarot?caseId=${caseId}`}
+          className="text-sm text-slate-500 transition hover:text-tarot-green"
+        >
+          ← 返回修改基础信息
+        </Link>
+      </div>
       <div
-        className={`mx-auto grid w-fit max-w-[1560px] flex-1 gap-3 px-2 py-2 ${
-          layout?.id === "choose-one-5" ? "xl:grid-cols-[auto_auto]" : "xl:grid-cols-[1fr_1fr]"
+        className={`mx-auto grid w-fit flex-1 gap-3 px-2 py-2 ${
+          layout?.id === "hexagram-7"
+            ? "max-w-none xl:grid-cols-[500px_auto]"
+            : layout?.id === "four-elements-4"
+              ? "max-w-none xl:grid-cols-[500px_auto]"
+            : layout?.id === "choose-one-5"
+              ? "max-w-[1560px] xl:grid-cols-[auto_auto]"
+              : "max-w-[1560px] xl:grid-cols-[1fr_1fr]"
         }`}
       >
-        <div className="flex min-w-0 flex-col gap-3" style={layout?.id === "choose-one-5" ? { width: 540 } : undefined}>
+        <div
+          className="flex min-w-0 shrink-0 flex-col gap-3"
+          style={
+            layout?.id === "choose-one-5"
+              ? { width: 540 }
+              : layout?.id === "hexagram-7" || layout?.id === "four-elements-4"
+                ? { width: 500 }
+                : undefined
+          }
+        >
           <section
             className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
           >
@@ -425,8 +448,9 @@ export default function ResultPage() {
             </dl>
           </section>
 
+          {/* 牌阵回顾：大小与位置已固定，勿随其它布局改动；修改前需与用户确认 */}
           <section
-            className={`rounded-[22px] border border-[#e3efea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] ${
+            className={`shrink-0 rounded-[22px] border border-[#e3efea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] ${
               layout?.id === "choose-one-5" ? "p-5" : "p-4"
             }`}
           >
@@ -467,12 +491,30 @@ export default function ResultPage() {
           </section>
         </div>
 
-        <div className="flex min-w-0 flex-col gap-3 overflow-visible">
+        <div className="flex min-w-0 w-max flex-col gap-3 overflow-visible">
           <section className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
             <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">统筹分析表格</h2>
             {matrixColumns.length > 0 && matrixContext ? (
-              <div className="mt-2 w-full overflow-visible">
-                <table className="mx-auto w-auto border-collapse text-center text-sm" style={{ tableLayout: "auto" }}>
+              (() => {
+                const colCount = matrixColumns.length;
+                const totalCols = colCount + 1;
+                // 总宽度不固定，随列数延展；每列等宽。列多时略收窄、列少时略加宽，保证文字完整且视觉一致
+                const colWidthPx =
+                  totalCols <= 4 ? 130 : totalCols <= 6 ? 112 : totalCols <= 8 ? 100 : totalCols <= 10 ? 90 : 80;
+                const tableWidthPx = totalCols * colWidthPx;
+                const colWidthPct = `${100 / totalCols}%`;
+                return (
+              <div className="mt-2 overflow-visible">
+                <table
+                  className="border-collapse text-center text-sm table-fixed"
+                  style={{ tableLayout: "fixed", width: tableWidthPx }}
+                >
+                  <colgroup>
+                    <col style={{ width: colWidthPct }} />
+                    {matrixColumns.map((_, i) => (
+                      <col key={i} style={{ width: colWidthPct }} />
+                    ))}
+                  </colgroup>
                   <thead>
                     <tr className="border-b border-slate-200">
                       <th className="border border-slate-200 bg-tarot-panel px-2 py-1.5 text-slate-600 font-medium whitespace-nowrap text-center align-middle">
@@ -587,6 +629,8 @@ export default function ResultPage() {
                   </tbody>
                 </table>
               </div>
+                );
+              })()
             ) : (
               <p className="mt-4 text-sm text-slate-500">无牌阵数据或布局未接入</p>
             )}

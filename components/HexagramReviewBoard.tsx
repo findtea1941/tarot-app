@@ -11,13 +11,13 @@ const HEXAGRAM_NODE_ORDER = ["4", "2", "3", "7", "5", "6", "1"] as const;
  * SVG viewBox = "0 0 100 100"，节点定位也用同一坐标系（百分比）。
  */
 const NODE_COORDS: Record<string, [number, number]> = {
-  "4": [50, 8],    // 顶部中央
-  "2": [14, 32],   // 左中
-  "3": [86, 32],   // 右中
-  "7": [50, 52],   // 中心
-  "5": [14, 72],   // 左下
-  "6": [86, 72],   // 右下
-  "1": [50, 92],   // 底部中央
+  "4": [50, 14],   // 顶部中央
+  "2": [24, 36],   // 左中，和下半区保持镜像关系
+  "3": [76, 36],   // 右中，和下半区保持镜像关系
+  "7": [50, 52],   // 轴心
+  "5": [24, 68],   // 左下，和上半区保持镜像关系
+  "6": [76, 68],   // 右下，和上半区保持镜像关系
+  "1": [50, 90],   // 底部中央，与 4 号牌关于 7 号牌近似镜像
 };
 
 /** 连线：中心 → 各顶点；外圈依次相连 */
@@ -40,7 +40,7 @@ export function HexagramReviewBoard({
   const slotsById = Object.fromEntries(layout.slots.map((s) => [s.id, s]));
 
   return (
-    <div className="rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-0.5">
+    <div className="mx-auto w-full max-w-[440px] rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-0.5">
       {/* 相对容器：固定宽高比，节点和连线都在里面 */}
       <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.05" }}>
         {/* SVG 连线层 */}

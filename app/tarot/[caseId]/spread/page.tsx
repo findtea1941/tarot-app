@@ -253,8 +253,9 @@ export default function SpreadPage() {
         </div>
       </section>
 
+      {/* 牌阵录入：大小与位置已固定，勿随其它布局改动；修改前需与用户确认 */}
       <section
-        className={`rounded-[32px] border border-[#d5ece2] bg-[#edf8f2] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:px-8 ${
+        className={`shrink-0 rounded-[32px] border border-[#d5ece2] bg-[#edf8f2] px-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] sm:px-8 ${
           layout?.id === "timeflow-3"
             ? "pt-8 pb-4"
             : layout?.id === "four-elements-4"

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createTarotDraft,
   getCaseById,
@@ -14,6 +14,11 @@ import {
   DEFAULT_PROVINCE_CODE,
   DEFAULT_CITY_CODE,
 } from "@/lib/region";
+import {
+  getLastTarotDraftId,
+  loadTarotDraftFromStorage,
+  saveTarotDraftToStorage,
+} from "@/lib/tarotDraftStorage";
 
 const CATEGORIES = [
   "情感",
@@ -48,7 +53,17 @@ export default function TarotNewPage() {
   const [spreadType, setSpreadType] = useState<typeof SPREAD_TYPES[number] | "">("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loadingDraft, setLoadingDraft] = useState(!!caseId);
+  // 用 URL 同步 state，解决 Next 在浏览器后退时 useSearchParams 不更新导致 caseId 为空的问题
+  const [urlKey, setUrlKey] = useState(
+    () => (typeof window !== "undefined" ? window.location.search : "")
+  );
+  const [loadingDraft, setLoadingDraft] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const q = window.location.search;
+    if (q.includes("caseId=")) return true;
+    if (getLastTarotDraftId()) return true;
+    return false;
+  });
 
   // 地点（中国省市）：默认 上海市 / 上海市(市辖区)
   const [provinceCode, setProvinceCode] = useState(DEFAULT_PROVINCE_CODE);
@@ -79,6 +94,20 @@ export default function TarotNewPage() {
   const loadDraft = useCallback(async (id: string) => {
     setLoadingDraft(true);
     try {
+      // 优先从 sessionStorage 恢复（与雷诺曼一致，浏览器后退时能保留）
+      const stored = loadTarotDraftFromStorage(id);
+      if (stored) {
+        setQuestion(stored.question);
+        setBackground(stored.background);
+        setCategories(stored.categories ?? []);
+        setDrawDate(stored.drawDate ?? "");
+        setDrawTime(stored.drawTime ?? "");
+        setSpreadType((stored.spreadType as typeof SPREAD_TYPES[number]) || "");
+        setProvinceCode(stored.provinceCode || DEFAULT_PROVINCE_CODE);
+        setCityCode(stored.cityCode || DEFAULT_CITY_CODE);
+        setLoadingDraft(false);
+        return;
+      }
       const c = await getCaseById(id);
       if (c && c.type === "tarot") {
         setQuestion(c.question ?? "");
@@ -106,9 +135,82 @@ export default function TarotNewPage() {
     }
   }, []);
 
+  // 始终从当前 URL（或 lastDraftId）取 caseId 并加载草稿，避免 useSearchParams 在浏览器后退后不更新
+  const searchForId =
+    urlKey || (typeof window !== "undefined" ? window.location.search : "");
+  const idFromUrl = searchForId
+    ? new URLSearchParams(searchForId).get("caseId")
+    : null;
+  const idFromLast =
+    typeof window !== "undefined" ? getLastTarotDraftId() : null;
+  const effectiveId = idFromUrl || caseId || idFromLast;
+
   useEffect(() => {
-    if (caseId) loadDraft(caseId);
-  }, [caseId, loadDraft]);
+    if (!effectiveId) return;
+    loadDraft(effectiveId);
+    // 若 caseId 来自 lastDraftId 而非 URL，同步地址栏
+    if (
+      typeof window !== "undefined" &&
+      !idFromUrl &&
+      idFromLast &&
+      effectiveId === idFromLast
+    ) {
+      router.replace(`/tarot?caseId=${effectiveId}`);
+      setUrlKey(window.location.search);
+    }
+  }, [effectiveId, loadDraft, router, idFromUrl, idFromLast]);
+
+  // 浏览器后退/前进时同步 urlKey，使上面的 effect 用最新 URL 再拉草稿
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onPopState = () => setUrlKey(window.location.search);
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setUrlKey(window.location.search);
+    };
+    window.addEventListener("popstate", onPopState);
+    window.addEventListener("pageshow", onPageShow);
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("pageshow", onPageShow);
+    };
+  }, []);
+
+  // 有 caseId 时把表单写入 sessionStorage（防抖），与雷诺曼一致，浏览器后退时能恢复
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    const id =
+      idFromUrl ||
+      caseId ||
+      (typeof window !== "undefined" ? getLastTarotDraftId() : null);
+    if (!id || loadingDraft) return;
+    saveTimerRef.current = setTimeout(() => {
+      saveTarotDraftToStorage(id, {
+        question,
+        background,
+        categories,
+        drawDate,
+        drawTime,
+        spreadType,
+        provinceCode,
+        cityCode,
+      });
+    }, 400);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [
+    idFromUrl,
+    caseId,
+    loadingDraft,
+    question,
+    background,
+    categories,
+    drawDate,
+    drawTime,
+    spreadType,
+    provinceCode,
+    cityCode,
+  ]);
 
   function parseDrawTime(isoOrLocal: string): { date: string; time: string } {
     if (!isoOrLocal) return { date: "", time: "" };
@@ -176,6 +278,7 @@ export default function TarotNewPage() {
       const st = spreadType as SpreadType;
       const location = buildLocation();
 
+      let nextCaseId: string;
       if (caseId) {
         await updateTarotDraft(caseId, {
           question: question.trim(),
@@ -185,7 +288,7 @@ export default function TarotNewPage() {
           spreadType: st,
           location,
         });
-        router.push(`/tarot/${caseId}/spread`);
+        nextCaseId = caseId;
       } else {
         const draft = await createTarotDraft({
           question: question.trim(),
@@ -195,8 +298,22 @@ export default function TarotNewPage() {
           spreadType: st,
           location,
         });
-        router.push(`/tarot/${draft.id}/spread`);
+        nextCaseId = draft.id;
       }
+      // 写入 sessionStorage，与雷诺曼一致，浏览器后退时能恢复
+      saveTarotDraftToStorage(nextCaseId, {
+        question: question.trim(),
+        background: background.trim(),
+        categories,
+        drawDate,
+        drawTime,
+        spreadType: st,
+        provinceCode,
+        cityCode,
+      });
+      // 用带 caseId 的地址替换当前历史，这样浏览器后退时会回到 /tarot?caseId=xxx 并加载草稿
+      router.replace(`/tarot?caseId=${nextCaseId}`);
+      router.push(`/tarot/${nextCaseId}/spread`);
     } catch (e) {
       setError("保存失败，请重试");
     } finally {

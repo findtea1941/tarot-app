@@ -7,10 +7,10 @@ const FOUR_ELEMENTS_NODE_ORDER = ["1", "2", "3", "4"] as const;
 
 /** 四元素：火上、风左、土右、水下 */
 const NODE_COORDS: Record<string, [number, number]> = {
-  "1": [50, 14],
-  "2": [24, 50],
-  "3": [76, 50],
-  "4": [50, 86],
+  "1": [50, 16],
+  "2": [26, 50],
+  "3": [74, 50],
+  "4": [50, 84],
 };
 
 type SlotStatesMap = Record<string, SpreadSlotState>;
@@ -27,7 +27,7 @@ export function FourElementsReviewBoard({
   const slotsById = Object.fromEntries(layout.slots.map((slot) => [slot.id, slot]));
 
   return (
-    <div className="rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-0.5">
+    <div className="mx-auto w-full max-w-[440px] rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-0.5">
       <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.05" }}>
         {FOUR_ELEMENTS_NODE_ORDER.map((slotId) => {
           const slot = slotsById[slotId];
