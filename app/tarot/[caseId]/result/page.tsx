@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Case } from "@/lib/db";
 import { getCaseById, saveCaseStep5, updateCaseStep5Partial, updateCaseReviewFeedback, updateCaseUserInterpretation } from "@/lib/repo/caseRepo";
 import { getLayout, getLayoutWithTimeAxisVariant } from "@/layouts";
@@ -50,6 +50,19 @@ export default function ResultPage() {
   const [editingSignifierTitleIndex, setEditingSignifierTitleIndex] = useState<number | null>(null);
   const [manualNumberNote, setManualNumberNote] = useState("");
   const [reviewFeedback, setReviewFeedback] = useState("");
+  const interpretationTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /** 案例解读 textarea 随内容自动增高 */
+  const resizeInterpretationTextarea = useCallback(() => {
+    const el = interpretationTextareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.max(260, el.scrollHeight)}px`;
+  }, []);
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => resizeInterpretationTextarea());
+    return () => cancelAnimationFrame(raf);
+  }, [userInterpretation, resizeInterpretationTextarea]);
 
   useEffect(() => {
     if (!caseId) return;
@@ -394,39 +407,23 @@ export default function ResultPage() {
     : "—";
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col items-center bg-white">
-      <div className="w-full max-w-[1560px] px-2 pt-2">
-        <Link
-          href={`/tarot?caseId=${caseId}`}
-          className="text-sm text-slate-500 transition hover:text-tarot-green"
-        >
-          ← 返回修改基础信息
-        </Link>
-      </div>
+    <div className="flex min-h-0 flex-1 flex-col items-center bg-white pb-16">
+      {/* 竖线分左右，左侧横线+淡绿区隔牌阵回顾（无外框） */}
       <div
-        className={`mx-auto grid w-fit flex-1 gap-3 px-2 py-2 ${
-          layout?.id === "hexagram-7"
-            ? "max-w-none xl:grid-cols-[500px_auto]"
-            : layout?.id === "four-elements-4"
-              ? "max-w-none xl:grid-cols-[500px_auto]"
-            : layout?.id === "choose-one-5"
-              ? "max-w-[1560px] xl:grid-cols-[auto_auto]"
-              : "max-w-[1560px] xl:grid-cols-[1fr_1fr]"
+        className={`mx-auto grid w-fit min-h-0 flex-1 grid-cols-1 items-stretch ${
+          layout?.id === "choose-one-5"
+            ? "max-w-none xl:grid-cols-[540px_1px_auto]"
+            : "max-w-none xl:grid-cols-[500px_1px_auto]"
         }`}
       >
+        {/* 左侧列：上为工作台，下为牌阵回顾 */}
         <div
-          className="flex min-w-0 shrink-0 flex-col gap-3"
+          className="flex min-w-0 shrink-0 flex-col"
           style={
-            layout?.id === "choose-one-5"
-              ? { width: 540 }
-              : layout?.id === "hexagram-7" || layout?.id === "four-elements-4"
-                ? { width: 500 }
-                : undefined
+            layout?.id === "choose-one-5" ? { width: 540 } : { width: 500 }
           }
         >
-          <section
-            className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]"
-          >
+          <section className="shrink-0 border-b border-slate-200 bg-white p-4">
             <h2 className="text-[29px] font-semibold leading-tight text-slate-900">塔罗案例分析工作台</h2>
             <p className="mt-2 text-[20px] font-semibold text-tarot-green">案例基本信息</p>
             <dl className="mt-3 space-y-3 text-sm">
@@ -473,9 +470,9 @@ export default function ResultPage() {
             </dl>
           </section>
 
-          {/* 牌阵回顾：大小与位置已固定，勿随其它布局改动；修改前需与用户确认 */}
+          {/* 牌阵回顾：横线下淡绿色背景区隔 */}
           <section
-            className={`shrink-0 rounded-[22px] border border-[#e3efea] bg-white shadow-[0_8px_24px_rgba(15,23,42,0.04)] ${
+            className={`min-h-0 flex-1 border-t border-slate-200 bg-[#edf8f2] ${
               layout?.id === "choose-one-5" ? "p-5" : "p-4"
             }`}
           >
@@ -516,8 +513,12 @@ export default function ResultPage() {
           </section>
         </div>
 
-        <div className="flex min-w-0 w-max flex-col gap-3 overflow-visible">
-          <section className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+        {/* 竖线分隔左右：顶格贯通，与左侧横线相交 */}
+        <div className="hidden w-px shrink-0 self-stretch bg-slate-200 xl:block" aria-hidden />
+
+        {/* 右侧列：统筹表格、数字、案例解读，文字离竖线留足间距，三块上下拉开 */}
+        <div className="flex min-w-0 w-max flex-col gap-10 overflow-visible pl-8 pr-4 pt-4 pb-4 xl:gap-12 xl:pl-10">
+          <section className="shrink-0">
             <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">统筹分析表格</h2>
             {matrixColumns.length > 0 && matrixContext ? (
               (() => {
@@ -529,7 +530,7 @@ export default function ResultPage() {
                 const tableWidthPx = totalCols * colWidthPx;
                 const colWidthPct = `${100 / totalCols}%`;
                 return (
-              <div className="mt-2 overflow-visible">
+              <div className="mt-2 inline-block overflow-hidden rounded-lg border border-slate-200 bg-white">
                 <table
                   className="border-collapse text-center text-sm table-fixed"
                   style={{ tableLayout: "fixed", width: tableWidthPx }}
@@ -661,7 +662,7 @@ export default function ResultPage() {
             )}
           </section>
 
-          <section className="rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <section className="shrink-0">
             <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">数字计算</h2>
             <div className="space-y-2 text-sm">
               <div className="flex items-center justify-between rounded-lg bg-[#f7f9fa] px-3 py-2.5">
@@ -716,11 +717,12 @@ export default function ResultPage() {
             </div>
           </section>
 
-          <section className="flex min-h-[340px] flex-1 flex-col rounded-[22px] border border-[#e3efea] bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+          <section className="flex min-h-[340px] flex-1 flex-col shrink-0">
             <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">案例解读</h2>
             <textarea
+              ref={interpretationTextareaRef}
               id="result-user-interpretation"
-              className="min-h-[260px] w-full flex-1 resize-y rounded-xl border border-[#e3ece8] bg-[#fbfcfc] px-3 py-2.5 text-slate-800 placeholder-slate-400"
+              className="min-h-[260px] w-full resize-none overflow-hidden rounded-xl border border-[#e3ece8] bg-[#fbfcfc] px-3 py-2.5 text-slate-800 placeholder-slate-400"
               value={userInterpretation}
               onChange={(e) => setUserInterpretation(e.target.value)}
               onBlur={handleUserInterpretationBlur}
@@ -744,22 +746,42 @@ export default function ResultPage() {
         </div>
       </div>
 
-      <div className="mt-3 flex justify-end gap-3 border-t border-[#e7efeb] pt-3">
-        <button
-          type="button"
-          onClick={handleSave}
-          className="rounded-xl border border-[#dfe7e3] bg-white px-4 py-2 text-slate-700 shadow-sm hover:bg-slate-50"
+      {/* 底部固定 banner：与内容同宽网格，返回在牌阵回顾左缘下，保存在案例解读右缘下 */}
+      <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
+        <div
+          className={`mx-auto grid grid-cols-1 items-center gap-4 px-4 sm:grid-cols-2 ${
+            layout?.id === "choose-one-5"
+              ? "w-full max-w-[1800px] xl:grid-cols-[540px_1fr]"
+              : "w-full max-w-[1800px] xl:grid-cols-[500px_1fr]"
+          }`}
         >
-          保存
-        </button>
-        <button
-          type="button"
-          onClick={handleSaveAndBack}
-          className="rounded-xl bg-tarot-green px-5 py-2 text-white shadow-sm hover:bg-emerald-700"
-        >
-          保存并返回案例库
-        </button>
-      </div>
+          {/* 返回：统一与主内容左列左缘对齐 */}
+          <div className="flex items-center justify-start">
+            <Link
+              href={`/tarot/${caseId}/spread`}
+              className="text-sm text-slate-500 transition hover:text-tarot-green"
+            >
+              ← 返回修改界面
+            </Link>
+          </div>
+          <div className="flex items-center justify-end gap-3 pt-3 sm:pt-0">
+            <button
+              type="button"
+              onClick={handleSave}
+              className="rounded-xl border border-[#dfe7e3] bg-white px-4 py-2 text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              保存
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveAndBack}
+              className="rounded-xl bg-tarot-green px-5 py-2 text-white shadow-sm hover:bg-emerald-700"
+            >
+              保存并返回案例库
+            </button>
+          </div>
+        </div>
+      </footer>
 
       {toast && (
         <div

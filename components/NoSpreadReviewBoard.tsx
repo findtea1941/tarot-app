@@ -26,7 +26,7 @@ export function NoSpreadReviewBoard({
   const slotsById = Object.fromEntries(layout.slots.map((slot) => [slot.id, slot]));
 
   return (
-    <div className="mx-auto w-full max-w-[320px] rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-1">
+    <div className="mx-auto w-full max-w-[320px]">
       <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.05" }}>
         {NO_SPREAD_ORDER.map((slotId) => {
           const slot = slotsById[slotId];

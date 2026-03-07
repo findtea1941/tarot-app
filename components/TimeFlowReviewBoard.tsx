@@ -19,7 +19,7 @@ export function TimeFlowReviewBoard({
   const isCenter = (id: string) => id === "2";
 
   return (
-    <div className="overflow-hidden rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-0.5">
+    <div>
       <div className="relative mx-auto w-full overflow-hidden" style={{ aspectRatio: "1 / 0.32" }}>
         <div className="absolute inset-[2px] flex items-center justify-center gap-2">
           {slots.map((slot) => {

@@ -48,9 +48,15 @@ export function TopTabs({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="min-h-[calc(100vh-56px)] w-full flex-1 bg-gradient-to-b from-white via-[#fafdfc] to-[#f5faf9]">
-        <div className="mx-auto max-w-[1800px] px-4 py-6">
-          {children}
-        </div>
+        {pathname?.match(/^\/tarot\/[^/]+\/spread$/)
+          ? <div className="w-full">{children}</div>
+          : pathname?.match(/^\/tarot\/[^/]+\/result$/)
+            ? <div className="mx-auto max-w-[1800px] px-4 pt-0 pb-6">{children}</div>
+            : (
+              <div className="mx-auto max-w-[1800px] px-4 py-6">
+                {children}
+              </div>
+            )}
       </main>
     </div>
   );

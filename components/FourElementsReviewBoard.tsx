@@ -27,7 +27,7 @@ export function FourElementsReviewBoard({
   const slotsById = Object.fromEntries(layout.slots.map((slot) => [slot.id, slot]));
 
   return (
-    <div className="mx-auto w-full max-w-[440px] rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-0.5">
+    <div className="mx-auto w-full max-w-[440px]">
       <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.05" }}>
         {FOUR_ELEMENTS_NODE_ORDER.map((slotId) => {
           const slot = slotsById[slotId];

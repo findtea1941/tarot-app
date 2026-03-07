@@ -40,7 +40,7 @@ export function HexagramReviewBoard({
   const slotsById = Object.fromEntries(layout.slots.map((s) => [s.id, s]));
 
   return (
-    <div className="mx-auto w-full max-w-[440px] rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-0.5">
+    <div className="mx-auto w-full max-w-[440px]">
       {/* 相对容器：固定宽高比，节点和连线都在里面 */}
       <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.05" }}>
         {/* SVG 连线层 */}

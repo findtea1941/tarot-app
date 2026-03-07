@@ -26,7 +26,7 @@ export function BodyMindSpiritReviewBoard({
   const slotsById = Object.fromEntries(layout.slots.map((slot) => [slot.id, slot]));
 
   return (
-    <div className="rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-1">
+    <div>
       <div className="relative mx-auto w-full" style={{ aspectRatio: "1 / 1.2" }}>
         {BODY_MIND_SPIRIT_ORDER.map((slotId) => {
           const slot = slotsById[slotId];

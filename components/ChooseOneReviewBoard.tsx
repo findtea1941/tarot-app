@@ -33,7 +33,7 @@ export function ChooseOneReviewBoard({
   const slotsById = Object.fromEntries(layout.slots.map((slot) => [slot.id, slot]));
 
   return (
-    <div className="mx-auto w-fit rounded-[24px] border border-[#dcefe6] bg-[#f2faf6] p-0.5">
+    <div className="mx-auto w-fit">
       <div className="relative w-[420px] sm:w-[470px]" style={{ aspectRatio: "1 / 0.96" }}>
         {CHOOSE_ONE_NODE_ORDER.map((slotId) => {
           const slot = slotsById[slotId];
