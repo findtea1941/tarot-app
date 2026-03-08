@@ -807,44 +807,6 @@ export default function ResultPageContent() {
                       getSlotName={isStarFortune ? getSlotNameStarFortune : undefined}
                     />
                   </FlyChainGraphBoundary>
-                  <div className="overflow-x-auto rounded-xl border border-[#e2ebe7] bg-[#fbfdfc]">
-                    <table className="w-full min-w-[640px] border-collapse text-sm">
-                      <thead>
-                        <tr className="border-b border-[#d7ebe2] bg-[#f5fbf8]">
-                          <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-tarot-green">起点（牌面）</th>
-                          <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-tarot-green">飞宫链路</th>
-                          <th className="whitespace-nowrap px-3 py-2 text-center font-semibold text-tarot-green">分支数</th>
-                          <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-tarot-green">停止点</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {flyChainTable.rows.map((row) => {
-                          const pathText = row.branches.length
-                            ? row.branches.map((b) =>
-                                b.path.map((s) => {
-                                  const pos = getFlySlotNameResolved(s.node);
-                                  const entry = matrixContext.slotCards.get(s.node);
-                                  const name = entry ? `${entry.card.name}${entry.reversed ? "-" : ""}` : "—";
-                                  let t = `${pos}（${name}）`;
-                                  if (s.isTurningPoint) t = `【${t}】`;
-                                  if (s.isRed) t = `*${t}*`;
-                                  return t;
-                                }).join(" → ")
-                              ).join(" | ")
-                            : "—";
-                          const branchCount = row.branches.length;
-                          return (
-                            <tr key={row.startSlotId} className="border-b border-[#e5f3f0]">
-                              <td className="px-3 py-2 text-slate-800">{row.startLabel}</td>
-                              <td className="max-w-[480px] break-words px-3 py-2 text-slate-700">{pathText}</td>
-                              <td className="px-3 py-2 text-center text-slate-800">{branchCount}</td>
-                              <td className="px-3 py-2 text-slate-800">{row.stopLabel}</td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
                 </section>
               )}
           <section className="flex min-h-[420px] flex-1 flex-col">
@@ -1116,10 +1078,10 @@ export default function ResultPageContent() {
           {/* 返回：统一与主内容左列左缘对齐 */}
           <div className="flex items-center justify-start">
             <Link
-              href={fromDraft ? "/cases?view=drafts" : `/tarot/${caseId}/spread`}
+              href={`/tarot/${caseId}/spread`}
               className="text-sm text-slate-500 transition hover:text-tarot-green"
             >
-              {fromDraft ? "← 返回草稿箱" : "← 返回修改界面"}
+              ← 返回修改
             </Link>
           </div>
           <div className="flex items-center justify-end gap-3 pt-3 sm:pt-0">
