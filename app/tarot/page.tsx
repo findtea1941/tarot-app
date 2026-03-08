@@ -55,27 +55,10 @@ const SPREAD_TYPES = [
 function TarotNewPageContent() {
   const router = useRouter();
 
-  const [question, setQuestion] = useState("");
-  const [background, setBackground] = useState("");
-  const [categories, setCategories] = useState<string[]>([]);
-  const [drawDate, setDrawDate] = useState("");
-  const [drawTime, setDrawTime] = useState("");
-  const [spreadType, setSpreadType] = useState<typeof SPREAD_TYPES[number] | "">("");
-  const [timeAxisVariant, setTimeAxisVariant] = useState(DEFAULT_TIME_AXIS_VARIANT);
-  /** 年运牌阵：案主出生日期，输入格式 MMDD，存库 MM-DD */
-  const [clientBirthday, setClientBirthday] = useState("");
-  /** 年运牌阵：看盘起始月，输入格式 YYMM，存库 YYYY-MM */
-  const [readingStartMonth, setReadingStartMonth] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  // 用 URL 同步 state，解决 Next 在浏览器后退时 useSearchParams 不更新导致 caseId 为空的问题
-  const [urlKey, setUrlKey] = useState(
-    () => (typeof window !== "undefined" ? window.location.search : "")
-  );
-  // 仅在实际执行 loadDraft 时置 true，避免从顶端进入或 replace 后重挂载时因 returnDraftId 误显「加载中…」
-  const [loadingDraft, setLoadingDraft] = useState(false);
-  /** 挂载时同步从 sessionStorage 读出的草稿（规则：返回后不依赖 effect/URL 时机，首帧即恢复） */
-  const [mountSnapshot] = useState<{ id: string; data: TarotDraftStored | null } | null>(() => {
+  // ── 挂载时同步从 URL + sessionStorage 确定 caseId 与初始数据（仅客户端、仅一次） ──
+  // 将结果用于所有表单 useState 初始值，保证首帧即有正确数据，
+  // 避免 effect 时序问题导致"保存空数据覆盖 sessionStorage"。
+  const [initSnapshot] = useState<{ id: string; data: TarotDraftStored | null } | null>(() => {
     if (typeof window === "undefined") return null;
     const q = window.location.search;
     if (q.includes("new=1")) return null;
@@ -86,9 +69,42 @@ function TarotNewPageContent() {
     return { id, data };
   });
 
-  // 地点（中国省市）：默认 上海市 / 上海市(市辖区)
-  const [provinceCode, setProvinceCode] = useState(DEFAULT_PROVINCE_CODE);
-  const [cityCode, setCityCode] = useState(DEFAULT_CITY_CODE);
+  const _d = initSnapshot?.data;
+  const _parseBirthday = (v?: string) => v ? v.replace(/-/g, "").slice(0, 4) : "";
+  const _parseStartMonth = (v?: string) => {
+    if (!v) return "";
+    if (v.length === 7) return v.slice(2, 4) + v.slice(5, 7);
+    return v.replace(/-/g, "").slice(0, 4);
+  };
+
+  const [question, setQuestion] = useState(_d?.question ?? "");
+  const [background, setBackground] = useState(_d?.background ?? "");
+  const [categories, setCategories] = useState<string[]>(_d?.categories ?? []);
+  const [drawDate, setDrawDate] = useState(_d?.drawDate ?? "");
+  const [drawTime, setDrawTime] = useState(_d?.drawTime ?? "");
+  const [spreadType, setSpreadType] = useState<typeof SPREAD_TYPES[number] | "">((_d?.spreadType as typeof SPREAD_TYPES[number]) || "");
+  const [timeAxisVariant, setTimeAxisVariant] = useState(_d?.timeAxisVariant || DEFAULT_TIME_AXIS_VARIANT);
+  const [clientBirthday, setClientBirthday] = useState(_parseBirthday(_d?.clientBirthday));
+  const [readingStartMonth, setReadingStartMonth] = useState(_parseStartMonth(_d?.readingStartMonth));
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [urlKey, setUrlKey] = useState(
+    () => (typeof window !== "undefined" ? window.location.search : "")
+  );
+  // 与雷诺曼一致：初始 true，防止保存 effect 在数据加载完成前用空值覆盖 sessionStorage
+  const [loadingDraft, setLoadingDraft] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const q = window.location.search;
+    if (q.includes("new=1")) return false;
+    // 有 initSnapshot 且 sessionStorage 已有数据 → 无需加载，首帧即就绪
+    if (initSnapshot?.data) return false;
+    // 有 id 但无 sessionStorage 数据 → 需要从 DB 异步加载
+    if (initSnapshot?.id) return true;
+    return false;
+  });
+
+  const [provinceCode, setProvinceCode] = useState(_d?.provinceCode || DEFAULT_PROVINCE_CODE);
+  const [cityCode, setCityCode] = useState(_d?.cityCode || DEFAULT_CITY_CODE);
 
   // 省市数据仅在客户端加载，避免 SSR 报 window 未定义；挂载后再取数以保持一致
   const [regionReady, setRegionReady] = useState(false);
@@ -168,24 +184,7 @@ function TarotNewPageContent() {
     loadDraftRef.current = loadDraft;
   }, [loadDraft]);
 
-  // 挂载时同步读到的草稿立即应用到表单（规则：不依赖 effect 顺序与 URL 时机）
-  useEffect(() => {
-    const data = mountSnapshot?.data;
-    if (!data) return;
-    setQuestion(data.question);
-    setBackground(data.background);
-    setCategories(data.categories ?? []);
-    setDrawDate(data.drawDate ?? "");
-    setDrawTime(data.drawTime ?? "");
-    setSpreadType((data.spreadType as typeof SPREAD_TYPES[number]) || "");
-    setTimeAxisVariant(data.timeAxisVariant || DEFAULT_TIME_AXIS_VARIANT);
-    setProvinceCode(data.provinceCode || DEFAULT_PROVINCE_CODE);
-    setCityCode(data.cityCode || DEFAULT_CITY_CODE);
-    setClientBirthday(data.clientBirthday ? data.clientBirthday.replace(/-/g, "").slice(0, 4) : "");
-    setReadingStartMonth(data.readingStartMonth ? (data.readingStartMonth.length === 7 ? data.readingStartMonth.slice(2, 4) + data.readingStartMonth.slice(5, 7) : data.readingStartMonth.replace(/-/g, "").slice(0, 4)) : "");
-  }, [mountSnapshot]);
-
-  // 优先从当前 URL 取 caseId；effectiveId 含 mountSnapshot.id（规则 2）浏览器后退时 popstate 可能早于组件挂载，故每次渲染都读 window.location 作首要来源
+  // 优先从当前 URL 取 caseId；effectiveId 含 initSnapshot.id。浏览器后退时 popstate 可能早于组件挂载，故每次渲染都读 window.location
   const searchFromWindow =
     typeof window !== "undefined" ? window.location.search : "";
   const isFromBanner =
@@ -210,17 +209,17 @@ function TarotNewPageContent() {
   // 从顶部 banner 进入（new=1）时不恢复草稿，强制空白页；其余情况优先 URL 再兜底 lastDraftId
   const effectiveId = isFromBanner
     ? null
-    : mountSnapshot?.id ?? idFromWindow ?? idFromUrl ?? fallbackId ?? lastDraftIdWhenNotNew ?? null;
+    : initSnapshot?.id ?? idFromWindow ?? idFromUrl ?? fallbackId ?? lastDraftIdWhenNotNew ?? null;
 
   useEffect(() => {
     if (!effectiveId) return;
     loadDraft(effectiveId);
   }, [effectiveId, loadDraft]);
 
-  // 仅当确定不是「从牌阵页返回」且不是「从顶端 new=1」时才清空；有 effectiveId / 有 mountSnapshot / 有最近草稿 / URL 含 new=1 都不清空
+  // 仅当确定不是「从牌阵页返回」且不是「从顶端 new=1」时才清空；有 effectiveId / 有 initSnapshot / 有最近草稿 都不清空
   useEffect(() => {
     if (effectiveId) return;
-    if (mountSnapshot?.id) return;
+    if (initSnapshot?.id) return;
     if (typeof window !== "undefined" && getLastTarotDraftId()) return;
     if (searchFromWindow.includes("new=1")) return;
     setLoadingDraft(false);
@@ -236,9 +235,9 @@ function TarotNewPageContent() {
     setProvinceCode(DEFAULT_PROVINCE_CODE);
     setCityCode(DEFAULT_CITY_CODE);
     setError("");
-  }, [effectiveId, searchFromWindow, mountSnapshot?.id]);
+  }, [effectiveId, searchFromWindow, initSnapshot?.id]);
 
-  // 挂载时同步 URL；延迟再同步一次（与先前修复一致），避免 router.push 返回时首帧 URL 未更新
+  // 挂载时同步 URL；延迟再同步一次，避免 router.push 返回时首帧 URL 未更新
   useEffect(() => {
     if (typeof window === "undefined") return;
     setUrlKey(window.location.search);
@@ -246,7 +245,7 @@ function TarotNewPageContent() {
     return () => clearTimeout(tid);
   }, []);
 
-  // 仅当「从顶端进入」且 URL 只有 new=1（无 caseId）时清空，避免返回时误清；顶部 tab 仅受此条件影响
+  // 仅当「从顶端进入」且 URL 只有 new=1（无 caseId）时清空；顶部 tab 仅受此条件影响
   useEffect(() => {
     if (typeof window === "undefined") return;
     const q = window.location.search;
