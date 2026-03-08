@@ -31,26 +31,57 @@ export const HOUSE_IDS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11
 
 /**
  * 根据案主生日(MM-DD)和看盘起始月(YYYY-MM)计算十二宫每宫对应的年-月-日。
- * 一宫=出生月日(1月X日)，二宫=2月X日，…；看盘起始月落在的宫位为该年起点，顺推12个月。
+ * 规则：一宫=出生月日，二宫=出生月+1的同日，…轮转至十二宫；看盘起始月落入的宫位为该年起点，从该宫顺时针 12 个月定年。
  */
 export function getAnnualHouseDates(
   clientBirthday: string,
   readingStartMonth: string
 ): Record<string, string> {
   const parts = clientBirthday.trim().split("-").map((s) => parseInt(s, 10));
-  const mm = parts[0];
-  const dd = parts[1] ?? 1;
+  const M0 = parts[0]; // 出生月 1..12
+  const D = parts[1] ?? 1;
   const [yStr, mStr] = readingStartMonth.trim().split("-");
-  const year = parseInt(yStr, 10);
-  const startMonth = parseInt(mStr, 10);
-  if (Number.isNaN(mm) || Number.isNaN(dd) || Number.isNaN(year) || Number.isNaN(startMonth))
+  const Y0 = parseInt(yStr, 10);
+  const M_start = parseInt(mStr, 10);
+  if (Number.isNaN(M0) || Number.isNaN(D) || Number.isNaN(Y0) || Number.isNaN(M_start))
     return {};
+  const pad = (n: number) => String(n).padStart(2, "0");
+  // 宫位 k(1..12) 的月份：一宫=M0，二宫=M0+1，…，十二宫=M0+11 (mod 12)
+  const monthOfHouse = (k: number) => ((M0 - 1 + (k - 1)) % 12) + 1;
+  // 看盘起始月落在哪一宫
+  let K0 = ((M_start - M0 + 1) % 12 + 12) % 12;
+  if (K0 === 0) K0 = 12;
   const result: Record<string, string> = {};
-  for (let h = 1; h <= 12; h++) {
-    const houseYear = h >= startMonth ? year : year + 1;
-    const m = String(h).padStart(2, "0");
-    const d = String(dd).padStart(2, "0");
-    result[String(h)] = `${houseYear}-${m}-${d}`;
+  for (let k = 1; k <= 12; k++) {
+    const monthIndex = (k - K0 + 12) % 12; // 从起点宫开始的月偏移 0..11
+    const calendarMonth = monthOfHouse(k);
+    const year = Y0 + Math.floor((M_start - 1 + monthIndex) / 12);
+    result[String(k)] = `${year}-${pad(calendarMonth)}-${pad(D)}`;
   }
   return result;
+}
+
+const HOUSE_LABELS: Record<number, string> = {
+  1: "一宫", 2: "二宫", 3: "三宫", 4: "四宫", 5: "五宫", 6: "六宫",
+  7: "七宫", 8: "八宫", 9: "九宫", 10: "十宫", 11: "十一宫", 12: "十二宫",
+};
+
+/** 看盘起始月落入的宫位（1～12），与 getAnnualHouseDates 计算一致 */
+export function getReadingStartMonthHouse(
+  clientBirthday: string,
+  readingStartMonth: string
+): number | null {
+  const parts = clientBirthday.trim().split("-").map((s) => parseInt(s, 10));
+  const M0 = parts[0];
+  const mStr = readingStartMonth.trim().split("-")[1];
+  const M_start = mStr ? parseInt(mStr, 10) : NaN;
+  if (Number.isNaN(M0) || Number.isNaN(M_start)) return null;
+  let K0 = ((M_start - M0 + 1) % 12 + 12) % 12;
+  if (K0 === 0) K0 = 12;
+  return K0;
+}
+
+/** 宫位数字对应的中文标签 */
+export function getHouseLabel(houseNum: number): string {
+  return HOUSE_LABELS[houseNum] ?? `${houseNum}宫`;
 }

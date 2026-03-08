@@ -83,10 +83,10 @@ export function HexagramReviewBoard({
           return (
             <div
               key={slotId}
-              className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-2xl border bg-white px-3 py-2.5 shadow-sm ${
+              className={`absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-2xl border-2 bg-white px-3 py-2.5 shadow-[0_4px_10px_rgba(5,150,105,0.10)] ${
                 isCenter
-                  ? "border-[#a8ddc8] shadow-[0_8px_20px_rgba(5,150,105,0.14)]"
-                  : "border-[#c8e9d9]"
+                  ? "border-[#a8d9c8] shadow-[0_8px_20px_rgba(5,150,105,0.14)]"
+                  : "border-[#a8d9c8]"
               }`}
               style={{
                 left: `${px}%`,

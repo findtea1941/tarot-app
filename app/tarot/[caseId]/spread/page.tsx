@@ -292,86 +292,154 @@ export default function SpreadPage() {
         .join(" · ")
     : "—";
 
+  const isAnnual = layout?.id === "annual-17";
+  const annualExtra =
+    caseData.extra && typeof caseData.extra === "object" && "annual" in caseData.extra
+      ? (caseData.extra as { annual?: { clientBirthday?: string; readingStartMonth?: string } }).annual
+      : undefined;
+
   return (
     <div className="min-h-screen w-full">
-      {/* 上部：白色背景 - 全宽，靠近顶栏，顶部细线区隔 */}
-      <section className="w-full border-t border-slate-200/80 bg-white pt-3 pb-6 lg:pt-4 lg:pb-8">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="flex items-center gap-2 text-base font-semibold text-tarot-green">
-            <span
-              className="flex h-5 w-5 items-center justify-center rounded bg-tarot-green/15 text-tarot-green"
-              aria-hidden
-            >
-              <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </span>
-            案例基本信息摘要
-          </h2>
-          <div className="mt-5 grid gap-6 sm:grid-cols-[minmax(0,1.4fr)_1px_minmax(0,0.9fr)] sm:items-stretch">
-            <div className="flex flex-col gap-4">
-              <div className="shrink-0">
-                <dt className="text-xs font-semibold text-tarot-green">问题</dt>
-                <dd className="mt-1 text-base font-semibold leading-snug text-slate-900">
-                  {caseData.question || "—"}
-                </dd>
+      {isAnnual ? (
+        <div className="min-h-screen bg-white">
+          <div
+            className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/35 p-4 backdrop-blur-[2px]"
+            role="dialog"
+            aria-labelledby="annual-entry-title"
+            aria-modal="true"
+          >
+            <div className="max-h-[92vh] w-[min(96vw,1520px)] overflow-y-auto rounded-[28px] border border-[#d7ebe2] bg-[#edf8f2] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+              <div className="sticky top-0 z-10 border-b border-[#deebe5] bg-[#edf8f2]/95 px-6 py-5 text-center backdrop-blur">
+                <h2
+                  id="annual-entry-title"
+                  className="text-2xl font-semibold tracking-tight text-slate-900 lg:text-3xl"
+                >
+                  年运牌阵录入
+                </h2>
+                <p className="mt-1.5 text-sm text-slate-500">支持从 Excel 多选表格粘贴导入</p>
               </div>
-              <div className="flex min-h-0 flex-1 flex-col">
-                <dt className="shrink-0 text-xs font-semibold text-tarot-green">问题背景</dt>
-                <dd className="mt-1 min-h-0 flex-1">
-                  <div className="h-full min-h-[100px] rounded-xl bg-[#ecf8f2] px-4 py-3 text-sm leading-relaxed text-slate-800 whitespace-pre-wrap">
-                    {caseData.background || "—"}
-                  </div>
-                </dd>
+              <div className="px-6 py-6">
+                {layout ? (
+                  <AnnualEntryBoard
+                    layout={layout}
+                    slotInputs={slotInputs}
+                    onSlotInputChange={setSlotValue}
+                    onBulkSlotInputChange={(updates) =>
+                      setSlotInputs((prev) => ({ ...prev, ...updates }))
+                    }
+                    slotErrors={slotErrors}
+                    clientBirthday={annualExtra?.clientBirthday}
+                    readingStartMonth={annualExtra?.readingStartMonth}
+                  />
+                ) : (
+                  <p className="text-center text-sm text-slate-500">
+                    该牌阵布局尚未接入，请选择「六芒星」或「时间流」。
+                  </p>
+                )}
               </div>
-            </div>
-            <div className="hidden h-full w-px items-stretch justify-center sm:flex">
-              <div className="mx-auto h-full w-px rounded-full bg-[#d8ede4]" aria-hidden />
-            </div>
-            <div className="mt-4 flex flex-col justify-center gap-3 text-sm sm:mt-0">
-              <div>
-                <dt className="text-xs font-semibold text-tarot-green">分类</dt>
-                <dd className="mt-1 flex flex-wrap gap-2">
-                  {(caseData.tarotCategories?.length
-                    ? caseData.tarotCategories
-                    : caseData.category
-                      ? [caseData.category]
-                      : []
-                  ).map((cat) => {
-                    const pill = getCategoryPillStyle(cat);
-                    return (
-                      <span key={cat} className={pill.className} style={pill.style}>
-                        {cat}
-                      </span>
-                    );
-                  })}
-                  {!caseData.tarotCategories?.length && !caseData.category && (
-                    <span className="text-slate-400">—</span>
-                  )}
-                </dd>
-              </div>
-              {caseData.spreadType && (
-                <div>
-                  <dt className="text-xs font-semibold text-tarot-green">牌阵类型</dt>
-                  <dd className="mt-1 text-sm font-medium text-slate-900">{caseData.spreadType}</dd>
+              <div className="sticky bottom-0 border-t border-[#deebe5] bg-white/95 px-6 py-5 backdrop-blur">
+                <div className="flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
+                  <button
+                    type="button"
+                    onClick={handleReturn}
+                    className="text-sm text-slate-500 transition hover:text-tarot-green"
+                  >
+                    ← 返回修改案例信息
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleConfirm}
+                    className="rounded-full bg-tarot-green px-8 py-3 text-sm font-medium text-white shadow-[0_10px_24px_rgba(5,150,105,0.22)] transition hover:bg-emerald-700"
+                  >
+                    确定录入
+                  </button>
                 </div>
-              )}
-              <div>
-                <dt className="text-xs font-semibold text-tarot-green">抽牌时间</dt>
-                <dd className="mt-1 text-sm font-medium text-slate-900">{drawAtDisplay}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-semibold text-tarot-green">抽牌地点</dt>
-                <dd className="mt-1 text-sm font-medium text-slate-900">{locationDisplay}</dd>
               </div>
             </div>
           </div>
         </div>
-      </section>
+      ) : (
+        /* 上部：白色背景 - 案例基本信息摘要（年运时不显示） */
+        <section className="w-full border-t border-slate-200/80 bg-white pt-3 pb-6 lg:pt-4 lg:pb-8">
+          <div className="mx-auto max-w-6xl px-6">
+            <h2 className="flex items-center gap-2 text-base font-semibold text-tarot-green">
+              <span
+                className="flex h-5 w-5 items-center justify-center rounded bg-tarot-green/15 text-tarot-green"
+                aria-hidden
+              >
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </span>
+              案例基本信息摘要
+            </h2>
+            <div className="mt-5 grid gap-6 sm:grid-cols-[minmax(0,1.4fr)_1px_minmax(0,0.9fr)] sm:items-stretch">
+              <div className="flex flex-col gap-4">
+                <div className="shrink-0">
+                  <dt className="text-xs font-semibold text-tarot-green">问题</dt>
+                  <dd className="mt-1 text-base font-semibold leading-snug text-slate-900">
+                    {caseData.question || "—"}
+                  </dd>
+                </div>
+                <div className="flex min-h-0 flex-1 flex-col">
+                  <dt className="shrink-0 text-xs font-semibold text-tarot-green">问题背景</dt>
+                  <dd className="mt-1 min-h-0 flex-1">
+                    <div className="h-full min-h-[100px] rounded-xl bg-[#ecf8f2] px-4 py-3 text-sm leading-relaxed text-slate-800 whitespace-pre-wrap">
+                      {caseData.background || "—"}
+                    </div>
+                  </dd>
+                </div>
+              </div>
+              <div className="hidden h-full w-px items-stretch justify-center sm:flex">
+                <div className="mx-auto h-full w-px rounded-full bg-[#d8ede4]" aria-hidden />
+              </div>
+              <div className="mt-4 flex flex-col justify-center gap-3 text-sm sm:mt-0">
+                <div>
+                  <dt className="text-xs font-semibold text-tarot-green">分类</dt>
+                  <dd className="mt-1 flex flex-wrap gap-2">
+                    {(caseData.tarotCategories?.length
+                      ? caseData.tarotCategories
+                      : caseData.category
+                        ? [caseData.category]
+                        : []
+                    ).map((cat) => {
+                      const pill = getCategoryPillStyle(cat);
+                      return (
+                        <span key={cat} className={pill.className} style={pill.style}>
+                          {cat}
+                        </span>
+                      );
+                    })}
+                    {!caseData.tarotCategories?.length && !caseData.category && (
+                      <span className="text-slate-400">—</span>
+                    )}
+                  </dd>
+                </div>
+                {caseData.spreadType && (
+                  <div>
+                    <dt className="text-xs font-semibold text-tarot-green">牌阵类型</dt>
+                    <dd className="mt-1 text-sm font-medium text-slate-900">{caseData.spreadType}</dd>
+                  </div>
+                )}
+                <div>
+                  <dt className="text-xs font-semibold text-tarot-green">抽牌时间</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{drawAtDisplay}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold text-tarot-green">抽牌地点</dt>
+                  <dd className="mt-1 text-sm font-medium text-slate-900">{locationDisplay}</dd>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
-      {/* 中部：所有牌阵统一为同宽连续淡绿色块 */}
+      {!isAnnual && (
+      <>
+      {/* 中部：牌阵录入区域 */}
       <section className="w-full bg-white pt-0 pb-0">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className={`mx-auto max-w-6xl px-6 ${isAnnual ? "w-full flex flex-col items-center" : ""}`}>
           <div
             className="-mt-3 rounded-t-2xl bg-[#edf8f2] px-4 pt-7 lg:-mt-4 lg:px-6 lg:pt-9"
           >
@@ -429,23 +497,6 @@ export default function SpreadPage() {
                     onSlotInputChange={setSlotValue}
                     slotErrors={slotErrors}
                   />
-                ) : layout.id === "annual-17" ? (
-                  <AnnualEntryBoard
-                    layout={layout}
-                    slotInputs={slotInputs}
-                    onSlotInputChange={setSlotValue}
-                    slotErrors={slotErrors}
-                    clientBirthday={
-                      caseData.extra && typeof caseData.extra === "object" && "annual" in caseData.extra
-                        ? (caseData.extra as { annual?: { clientBirthday?: string } }).annual?.clientBirthday
-                        : undefined
-                    }
-                    readingStartMonth={
-                      caseData.extra && typeof caseData.extra === "object" && "annual" in caseData.extra
-                        ? (caseData.extra as { annual?: { readingStartMonth?: string } }).annual?.readingStartMonth
-                        : undefined
-                    }
-                  />
                 ) : (
                   <SpreadBoard
                     layout={layout}
@@ -488,6 +539,8 @@ export default function SpreadPage() {
           </div>
         </div>
       </section>
+      </>
+      )}
 
       {/* Step4 补充信息弹窗 */}
       {layout && (

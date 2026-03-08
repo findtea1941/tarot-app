@@ -1,11 +1,12 @@
 "use client";
 
-import { memo, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import {
   Background,
   Handle,
   MarkerType,
   ReactFlow,
+  type ReactFlowInstance,
   type NodeProps,
   Position,
   type Edge,
@@ -17,6 +18,7 @@ import { getSlotName as getFlySlotName } from "@/lib/flyingPalace";
 type AnnualFlyChainGraphProps = {
   rows: FlyChainRow[];
   slotCards: Map<string, SlotCardEntry>;
+  houseDates?: Record<string, string>;
 };
 
 type TreeNode = {
@@ -31,8 +33,11 @@ type TreeNode = {
 };
 
 const NODE_WIDTH = 78;
+const NODE_HEIGHT = 52;
 const X_GAP = 104;
-const Y_GAP = 68;
+const ROW_GAP = 40;
+const BRANCH_GAP = 18;
+const GRAPH_VIEWPORT_SHIFT_Y = 150;
 
 type AnnualFlyData = {
   label: string;
@@ -54,9 +59,11 @@ function AnnualFlyNode({
         style={{ opacity: 0, pointerEvents: "none" }}
       />
       <div
-        className="rounded-xl px-2 py-1.5 text-center text-xs leading-4 text-slate-800"
+        className="rounded-xl px-2 py-1.5 text-center text-xs leading-4 text-slate-800 flex items-center justify-center"
         style={{
           width: NODE_WIDTH,
+          height: NODE_HEIGHT,
+          minHeight: NODE_HEIGHT,
           whiteSpace: "pre-line",
           border: nodeData.isRed
             ? "2.5px solid #10b981"
@@ -93,19 +100,32 @@ function AnnualFlyNode({
 
 const NODE_TYPES = { annualFly: AnnualFlyNode };
 
-function buildNodeLabel(step: PathStep, slotCards: Map<string, SlotCardEntry>): string {
+function buildNodeLabel(
+  step: PathStep,
+  slotCards: Map<string, SlotCardEntry>,
+  houseDates?: Record<string, string>
+): string {
   const pos = getFlySlotName(step.node);
   const entry = slotCards.get(step.node);
   const name = entry ? `${entry.card.name}${entry.reversed ? "-" : ""}` : "—";
-  return `${pos}\n${name}`;
+  const raw = houseDates && /^\d+$/.test(step.node) ? houseDates[step.node] : "";
+  const date = raw.length >= 7 ? `${raw.slice(2, 4)}-${raw.slice(5, 7)}` : raw;
+  return date ? `${pos}\n${name}\n${date}` : `${pos}\n${name}`;
 }
 
-function buildTree(row: FlyChainRow, slotCards: Map<string, SlotCardEntry>): TreeNode {
+function buildTree(
+  row: FlyChainRow,
+  slotCards: Map<string, SlotCardEntry>,
+  houseDates?: Record<string, string>
+): TreeNode {
   const spaceIdx = row.startLabel.indexOf(" ");
-  const rootLabel =
+  let rootLabel =
     spaceIdx >= 0
       ? `${row.startLabel.slice(0, spaceIdx)}\n${row.startLabel.slice(spaceIdx + 1)}`
       : row.startLabel;
+  const rawStart = houseDates && /^\d+$/.test(row.startSlotId) ? houseDates[row.startSlotId] : "";
+  const startDate = rawStart.length >= 7 ? `${rawStart.slice(2, 4)}-${rawStart.slice(5, 7)}` : rawStart;
+  if (startDate) rootLabel += `\n${startDate}`;
   const root: TreeNode = {
     id: `${row.startSlotId}-root`,
     key: row.startSlotId,
@@ -125,7 +145,7 @@ function buildTree(row: FlyChainRow, slotCards: Map<string, SlotCardEntry>): Tre
         child = {
           id: `${row.startSlotId}-${branchIndex}-${stepIndex}-${step.node}-${current.children.length}`,
           key,
-          label: buildNodeLabel(step, slotCards),
+          label: buildNodeLabel(step, slotCards, houseDates),
           children: [],
           isTurningPoint: step.isTurningPoint,
           isRed: step.isRed,
@@ -145,17 +165,30 @@ function getLeafCount(node: TreeNode): number {
   return node.children.reduce((sum, child) => sum + getLeafCount(child), 0);
 }
 
-function buildFlow(tree: TreeNode, yOffset: number): { nodes: Node[]; edges: Edge[] } {
+function buildFlow(tree: TreeNode, rowTopY: number): { nodes: Node[]; edges: Edge[]; height: number } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
+  const leafGap = NODE_HEIGHT + BRANCH_GAP;
+  const totalLeaves = getLeafCount(tree);
+  const height = Math.max(NODE_HEIGHT, (totalLeaves - 1) * leafGap + NODE_HEIGHT);
 
-  const place = (node: TreeNode, depth: number, topLeaf: number) => {
-    const leafCount = getLeafCount(node);
-    const y = yOffset + (topLeaf + (leafCount - 1) / 2) * Y_GAP;
+  const place = (node: TreeNode, depth: number, startLeafIndex: number): number => {
+    let centerLeafIndex = startLeafIndex;
+    if (node.children.length > 0) {
+      let cursor = startLeafIndex;
+      const childCenters: number[] = [];
+      node.children.forEach((child) => {
+        const childLeaves = getLeafCount(child);
+        childCenters.push(place(child, depth + 1, cursor));
+        cursor += childLeaves;
+      });
+      centerLeafIndex = (childCenters[0] + childCenters[childCenters.length - 1]) / 2;
+    }
+
     nodes.push({
       id: node.id,
       type: "annualFly",
-      position: { x: depth * X_GAP, y },
+      position: { x: depth * X_GAP, y: rowTopY + centerLeafIndex * leafGap },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
       draggable: false,
@@ -169,52 +202,49 @@ function buildFlow(tree: TreeNode, yOffset: number): { nodes: Node[]; edges: Edg
       },
     });
 
-    let cursor = topLeaf;
-    const isBranch = node.children.length > 1;
     node.children.forEach((child) => {
-      const childLeafCount = getLeafCount(child);
       edges.push({
         id: `${node.id}-${child.id}`,
         source: node.id,
         target: child.id,
-        type: isBranch ? "straight" : "step",
+        type: "straight",
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: "#0f766e" },
         style: {
           stroke: child.isTurningPoint ? "#059669" : "#0f766e",
           strokeWidth: 1.7,
         },
       });
-      place(child, depth + 1, cursor);
-      cursor += childLeafCount;
     });
+    return centerLeafIndex;
   };
 
   place(tree, 0, 0);
-  return { nodes, edges };
+  return { nodes, edges, height };
 }
 
-function AnnualFlyChainGraphInner({ rows, slotCards }: AnnualFlyChainGraphProps) {
+function AnnualFlyChainGraphInner({ rows, slotCards, houseDates }: AnnualFlyChainGraphProps) {
+  const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null);
+
   const { nodes, edges } = useMemo(() => {
-    let nextYOffset = 0;
+    let rowTopY = 0;
     const allNodes: Node[] = [];
     const allEdges: Edge[] = [];
 
     rows.forEach((row) => {
-      const tree = buildTree(row, slotCards);
-      const flow = buildFlow(tree, nextYOffset);
+      const tree = buildTree(row, slotCards, houseDates);
+      const flow = buildFlow(tree, rowTopY);
       allNodes.push(...flow.nodes);
       allEdges.push(...flow.edges);
-      const treeHeight = Math.max(getLeafCount(tree) * Y_GAP, 1 * Y_GAP);
-      nextYOffset += treeHeight + 52;
+      rowTopY += flow.height + ROW_GAP;
     });
 
     return { nodes: allNodes, edges: allEdges };
-  }, [rows, slotCards]);
+  }, [rows, slotCards, houseDates]);
 
   const graphHeight = useMemo(() => {
     if (nodes.length === 0) return 160;
     const maxY = Math.max(...nodes.map((node) => node.position.y));
-    return Math.max(234, maxY + 78);
+    return Math.max(234, maxY + NODE_HEIGHT + 24 + 2); /* 上下各扩大 1 */
   }, [nodes]);
 
   const graphWidth = useMemo(() => {
@@ -222,6 +252,21 @@ function AnnualFlyChainGraphInner({ rows, slotCards }: AnnualFlyChainGraphProps)
     const maxX = Math.max(...nodes.map((node) => node.position.x));
     return Math.max(546, maxX + NODE_WIDTH + 104);
   }, [nodes]);
+
+  const alignViewport = useCallback((instance: ReactFlowInstance) => {
+    requestAnimationFrame(() => {
+      void instance.fitView({ padding: 0.12 });
+      requestAnimationFrame(() => {
+        const { x, y, zoom } = instance.getViewport();
+        void instance.setViewport({ x, y: y - GRAPH_VIEWPORT_SHIFT_Y, zoom });
+      });
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!flowInstance) return;
+    alignViewport(flowInstance);
+  }, [flowInstance, alignViewport, nodes, edges, graphHeight, graphWidth]);
 
   return (
     <div className="w-full">
@@ -237,14 +282,16 @@ function AnnualFlyChainGraphInner({ rows, slotCards }: AnnualFlyChainGraphProps)
         绿色节点表示转折点，加粗绿框表示触发停止点。
       </div>
       <div className="border-t border-[#e7f3ee] pt-2">
-        <div className="overflow-x-auto overflow-y-hidden">
+        <div className="mt-0 overflow-x-auto overflow-y-hidden">
           <div style={{ width: graphWidth, height: graphHeight }} className="bg-[#fbfdfc]">
             <ReactFlow
               nodes={nodes}
               edges={edges}
               nodeTypes={NODE_TYPES}
-              fitView
-              fitViewOptions={{ padding: 0.12 }}
+              onInit={(instance) => {
+                setFlowInstance(instance);
+                alignViewport(instance);
+              }}
               nodesConnectable={false}
               nodesDraggable={false}
               elementsSelectable={false}

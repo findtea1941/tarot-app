@@ -58,9 +58,9 @@ function TarotNewPageContent() {
   const [drawTime, setDrawTime] = useState("");
   const [spreadType, setSpreadType] = useState<typeof SPREAD_TYPES[number] | "">("");
   const [timeAxisVariant, setTimeAxisVariant] = useState(DEFAULT_TIME_AXIS_VARIANT);
-  /** 年运牌阵：案主出生日期 MM-DD */
+  /** 年运牌阵：案主出生日期，输入格式 MMDD，存库 MM-DD */
   const [clientBirthday, setClientBirthday] = useState("");
-  /** 年运牌阵：看盘起始月 YYYY-MM */
+  /** 年运牌阵：看盘起始月，输入格式 YYMM，存库 YYYY-MM */
   const [readingStartMonth, setReadingStartMonth] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -113,8 +113,8 @@ function TarotNewPageContent() {
         setTimeAxisVariant(stored.timeAxisVariant || DEFAULT_TIME_AXIS_VARIANT);
         setProvinceCode(stored.provinceCode || DEFAULT_PROVINCE_CODE);
         setCityCode(stored.cityCode || DEFAULT_CITY_CODE);
-        setClientBirthday(stored.clientBirthday ?? "");
-        setReadingStartMonth(stored.readingStartMonth ?? "");
+        setClientBirthday(stored.clientBirthday ? stored.clientBirthday.replace(/-/g, "").slice(0, 4) : "");
+        setReadingStartMonth(stored.readingStartMonth ? (stored.readingStartMonth.length === 7 ? stored.readingStartMonth.slice(2, 4) + stored.readingStartMonth.slice(5, 7) : stored.readingStartMonth.replace(/-/g, "").slice(0, 4)) : "");
         setLoadingDraft(false);
         return;
       }
@@ -134,8 +134,8 @@ function TarotNewPageContent() {
         setSpreadType((c.spreadType as typeof SPREAD_TYPES[number]) ?? "");
         setTimeAxisVariant(c.timeAxisVariant || DEFAULT_TIME_AXIS_VARIANT);
         const annual = c.extra && typeof c.extra === "object" && "annual" in c.extra ? (c.extra as { annual?: { clientBirthday?: string; readingStartMonth?: string } }).annual : undefined;
-        setClientBirthday(annual?.clientBirthday ?? "");
-        setReadingStartMonth(annual?.readingStartMonth ?? "");
+        setClientBirthday(annual?.clientBirthday ? annual.clientBirthday.replace(/-/g, "") : "");
+        setReadingStartMonth(annual?.readingStartMonth ? annual.readingStartMonth.slice(2, 4) + annual.readingStartMonth.slice(5, 7) : "");
         if (c.location) {
           setProvinceCode(c.location.provinceCode);
           setCityCode(c.location.cityCode);
@@ -265,12 +265,12 @@ function TarotNewPageContent() {
     if (!cityCode) return "请选择市";
     if (!spreadType) return "请选择牌阵类型";
     if (spreadType === "年运") {
-      const mmdd = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-      if (!clientBirthday.trim()) return "请输入案主出生日期（MM-DD）";
-      if (!mmdd.test(clientBirthday.trim())) return "案主出生日期格式为 MM-DD，如 01-17";
-      if (!readingStartMonth.trim()) return "请输入看盘起始月（YYYY-MM）";
-      const yyyymm = /^\d{4}-(0[1-9]|1[0-2])$/;
-      if (!yyyymm.test(readingStartMonth.trim())) return "看盘起始月格式为 YYYY-MM，如 2025-03";
+      const mmdd = /^(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$/;
+      if (!clientBirthday.trim()) return "请输入案主出生日期（MMDD）";
+      if (!mmdd.test(clientBirthday.trim())) return "案主出生日期格式为 MMDD，如 0117";
+      if (!readingStartMonth.trim()) return "请输入看盘起始月（YYMM）";
+      const yymm = /^[0-9]{2}(0[1-9]|1[0-2])$/;
+      if (!yymm.test(readingStartMonth.trim())) return "看盘起始月格式为 YYMM，如 2503";
     }
     return "";
   }
@@ -313,7 +313,13 @@ function TarotNewPageContent() {
         st === "六芒星" || st === "时间流" ? timeAxisVariant : undefined;
       const annual =
         st === "年运" && clientBirthday.trim() && readingStartMonth.trim()
-          ? { clientBirthday: clientBirthday.trim(), readingStartMonth: readingStartMonth.trim() }
+          ? (() => {
+              const b = clientBirthday.trim();
+              const r = readingStartMonth.trim();
+              const clientBirthdayStored = b.length === 4 ? `${b.slice(0, 2)}-${b.slice(2, 4)}` : b;
+              const readingStartMonthStored = r.length === 4 ? `20${r.slice(0, 2)}-${r.slice(2, 4)}` : r;
+              return { clientBirthday: clientBirthdayStored, readingStartMonth: readingStartMonthStored };
+            })()
           : undefined;
       const currentCaseId = idFromUrl || caseId;
       let nextCaseId: string;
@@ -476,49 +482,51 @@ function TarotNewPageContent() {
                   ))}
                 </select>
               </div>
-              {(spreadType === "六芒星" || spreadType === "时间流") && (
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">时间流变形</label>
-                  <select
-                    className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
-                    value={timeAxisVariant}
-                    onChange={(e) => setTimeAxisVariant(e.target.value)}
-                  >
-                    {TIME_AXIS_VARIANTS.map((v) => (
-                      <option key={v.id} value={v.id}>
-                        {getTimeAxisVariantLabel(v.id)}
-                        {v.id === DEFAULT_TIME_AXIS_VARIANT ? "（默认）" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              {spreadType === "年运" && (
-                <>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">案主出生日期 <span className="text-red-400">*</span></label>
-                    <input
-                      type="text"
-                      className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
-                      value={clientBirthday}
-                      onChange={(e) => setClientBirthday(e.target.value)}
-                      placeholder="MM-DD，如 01-17"
-                      maxLength={5}
-                    />
+              <div className="space-y-2 min-w-0">
+                {spreadType === "年运" && (
+                  <div className="flex gap-2">
+                    <div className="w-1/2 min-w-0 space-y-2">
+                      <label className="block text-sm font-medium text-slate-700">案主出生日期 <span className="text-red-400">*</span></label>
+                      <input
+                        type="text"
+                        className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-3 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                        value={clientBirthday}
+                        onChange={(e) => setClientBirthday(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        placeholder="MMDD"
+                        maxLength={4}
+                      />
+                    </div>
+                    <div className="w-1/2 min-w-0 space-y-2">
+                      <label className="block text-sm font-medium text-slate-700">年运起始月 <span className="text-red-400">*</span></label>
+                      <input
+                        type="text"
+                        className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-3 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                        value={readingStartMonth}
+                        onChange={(e) => setReadingStartMonth(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                        placeholder="YYMM"
+                        maxLength={4}
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-slate-700">看盘起始月 <span className="text-red-400">*</span></label>
-                    <input
-                      type="text"
-                      className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
-                      value={readingStartMonth}
-                      onChange={(e) => setReadingStartMonth(e.target.value)}
-                      placeholder="YYYY-MM，如 2025-03"
-                      maxLength={7}
-                    />
-                  </div>
-                </>
-              )}
+                )}
+                {(spreadType === "六芒星" || spreadType === "时间流") && (
+                  <>
+                    <label className="block text-sm font-medium text-slate-700">时间流变形</label>
+                    <select
+                      className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                      value={timeAxisVariant}
+                      onChange={(e) => setTimeAxisVariant(e.target.value)}
+                    >
+                      {TIME_AXIS_VARIANTS.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {getTimeAxisVariantLabel(v.id)}
+                          {v.id === DEFAULT_TIME_AXIS_VARIANT ? "（默认）" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </>
+                )}
+              </div>
             </div>
             <div className="space-y-3 rounded-[24px] border border-[#e1ece8] bg-[#fbfdfc] p-5">
               <h3 className="text-sm font-medium text-slate-700">地点（省-市） <span className="text-red-400">*</span></h3>

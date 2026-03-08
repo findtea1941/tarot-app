@@ -51,7 +51,7 @@ export function FourElementsEntryBoard({
               </span>
               <span className="whitespace-nowrap">{slot.name}</span>
             </div>
-            <div className="rounded-2xl border border-[#cfeee0] bg-white/95 p-2 shadow-sm transition-shadow">
+            <div className="rounded-2xl border-2 border-[#a8d9c8] bg-white/95 p-2 transition-shadow">
               <input
                 id={getSlotInputId(slot.id)}
                 type="text"

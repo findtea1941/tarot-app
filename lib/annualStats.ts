@@ -59,8 +59,12 @@ export function buildAnnualStats(slotCards: Map<string, SlotCardEntry>): AnnualS
       houseCount[key] = (houseCount[key] ?? 0) + 1;
     }
     for (const p of card.planets ?? []) {
-      const key = String(p).trim();
-      if (key) planetCount[key] = (planetCount[key] ?? 0) + 1;
+      const raw = String(p).trim();
+      if (!raw) continue;
+      const parts = raw.split(/[,，\s]+/).map((s) => s.trim()).filter(Boolean);
+      for (const key of parts.length > 0 ? parts : [raw]) {
+        planetCount[key] = (planetCount[key] ?? 0) + 1;
+      }
     }
   }
 
@@ -77,10 +81,10 @@ export function buildAnnualStats(slotCards: Map<string, SlotCardEntry>): AnnualS
   };
 }
 
-/** 格式：火6土6风2水3 */
+/** 格式：火3 土4 风5 水6 */
 export function formatElementLine(stats: AnnualStats): string {
   const { elements } = stats;
-  return ["火", "土", "风", "水"].map((e) => `${e}${elements[e as keyof typeof elements] ?? 0}`).join("");
+  return ["火", "土", "风", "水"].map((e) => `${e}${elements[e as keyof typeof elements] ?? 0}`).join(" ");
 }
 
 const STAGE_LABELS: Record<keyof AnnualStats["stages"], string> = {
@@ -90,22 +94,22 @@ const STAGE_LABELS: Record<keyof AnnualStats["stages"], string> = {
   转化: "转",
 };
 
-/** 格式：开8固4变3转2 */
+/** 格式：开8 固4 变3 转2 */
 export function formatStageLine(stats: AnnualStats): string {
   const { stages } = stats;
-  return (["开创", "固定", "变动", "转化"] as const).map((s) => STAGE_LABELS[s] + (stages[s] ?? 0)).join("");
+  return (["开创", "固定", "变动", "转化"] as const).map((s) => STAGE_LABELS[s] + (stages[s] ?? 0)).join(" ");
 }
 
-/** 格式：角4续5果6蛋2 */
+/** 格式：角4 续5 果6 蛋2 */
 export function formatTraitLine(stats: AnnualStats): string {
   const { traits } = stats;
-  return (["角", "续", "果", "蛋"] as const).map((t) => `${t}${traits[t] ?? 0}`).join("");
+  return (["角", "续", "果", "蛋"] as const).map((t) => `${t}${traits[t] ?? 0}`).join(" ");
 }
 
-/** 格式：大X数Y宫Z */
+/** 格式：大阿卡纳X 数字牌X 宫廷牌X */
 export function formatCardTypeLine(stats: AnnualStats): string {
   const { cardTypes } = stats;
-  return `大${cardTypes.major}数${cardTypes.minor}宫${cardTypes.court}`;
+  return `大阿卡纳${cardTypes.major} 数字牌${cardTypes.minor} 宫廷牌${cardTypes.court}`;
 }
 
 /** 数量≥2 的星座/宫位，取前二（可并列） */
@@ -115,6 +119,35 @@ export function topTwoKeys(count: Record<string, number>): string[] {
   entries.sort((a, b) => b[1] - a[1]);
   const max = entries[0][1];
   return entries.filter(([, c]) => c === max).slice(0, 3).map(([k]) => k);
+}
+
+/** 星座/宫位：取数量≥minCount 的前三档，每项后括号标数量；若某档并列≥5 项则省略该档并说明 */
+export type TopKeysWithCount = { items: Array<{ key: string; count: number }>; note?: string };
+
+export function topKeysWithCount(
+  count: Record<string, number>,
+  minCount: number = 2
+): TopKeysWithCount {
+  const entries = Object.entries(count).filter(([, c]) => c >= minCount);
+  if (entries.length === 0) return { items: [] };
+  entries.sort((a, b) => b[1] - a[1]);
+  const byCount = new Map<number, string[]>();
+  for (const [key, c] of entries) {
+    if (!byCount.has(c)) byCount.set(c, []);
+    byCount.get(c)!.push(key);
+  }
+  const distinctCounts = [...byCount.keys()].sort((a, b) => b - a).slice(0, 3);
+  const items: Array<{ key: string; count: number }> = [];
+  let note: string | undefined;
+  for (const c of distinctCounts) {
+    const keys = byCount.get(c) ?? [];
+    if (keys.length >= 5) {
+      note = note ? `${note}、略（${c}）` : `略（${c}）`;
+      continue;
+    }
+    for (const key of keys) items.push({ key, count: c });
+  }
+  return { items, note };
 }
 
 const HOUSE_LABELS: Record<string, string> = {

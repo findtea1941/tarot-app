@@ -24,8 +24,9 @@ export function getFlyTargets(card: Card): FlyNode[] {
     const node = elementToNode(card.element ?? undefined);
     return node ? [node] : [];
   }
-  const houses = card.houses;
-  if (houses?.length) return houses.map((h) => String(h));
+  const raw = card.houses;
+  const houses = Array.isArray(raw) ? raw : raw != null ? [Number(raw)] : [];
+  if (houses.length > 0) return houses.map((h) => String(h));
   return [];
 }
 
@@ -179,7 +180,6 @@ export function buildFlyChainForStart(
       queue.push({ path: newPath, visited: new Set(visited), current: next });
       continue;
     }
-    const newPath = [...path, { node: current, isTurningPoint: isElementFlight(current, nextTargets[0]) }];
     for (const next of nextTargets) {
       if (next === current) {
         branches.push({
@@ -189,8 +189,9 @@ export function buildFlyChainForStart(
         });
         continue;
       }
+      const branchPath = [...path, { node: current, isTurningPoint: isElementFlight(current, next) }];
       queue.push({
-        path: [...newPath],
+        path: branchPath,
         visited: new Set(visited),
         current: next,
       });
@@ -249,12 +250,17 @@ export function buildFlyChainTable(
   return { rows, missingMapping };
 }
 
-/** 飞宫链统计：分支最多的起点、出现最多的停止点、最多被标红的点、出现最多的转折点 */
+/** 带数量的节点列表与可选说明（并列过多时省略并说明） */
+export type TopNodesWithCount = { items: Array<{ node: string; count: number }>; note?: string };
+
+const FLY_CHAIN_TOP_DISPLAY_MAX = 5;
+
+/** 飞宫链统计：四项统一按「名称（数量）」展示；并列档若加入会超 5 项则整档不显示并用 略（该档数量） */
 export function flyChainStats(rows: FlyChainRow[]): {
-  topStartSlots: string[];
-  topStopNodes: string[];
-  topRedNodes: string[];
-  topTurningNodes: string[];
+  topStartSlots: TopNodesWithCount;
+  topStopNodes: TopNodesWithCount;
+  topRedNodes: TopNodesWithCount;
+  topTurningNodes: TopNodesWithCount;
 } {
   const startCount: Record<string, number> = {};
   const stopCount: Record<string, number> = {};
@@ -275,17 +281,36 @@ export function flyChainStats(rows: FlyChainRow[]): {
     }
   }
 
-  const topN = (count: Record<string, number>, n: number): string[] => {
-    const sorted = Object.entries(count).sort((a, b) => b[1] - a[1]);
-    if (sorted.length === 0) return [];
-    const max = sorted[0][1];
-    return sorted.filter(([, c]) => c === max).slice(0, n).map(([k]) => k);
+  /**
+   * 最多展示 5 项；按数量从高到低逐档加入。
+   * 若某档全部加入会超过 5 项，则该档整档不显示，并在 note 中写 略（该档数量）。
+   */
+  const topNodesWithCount = (count: Record<string, number>): TopNodesWithCount => {
+    const entries = Object.entries(count).sort((a, b) => b[1] - a[1]);
+    if (entries.length === 0) return { items: [] };
+    const byCount = new Map<number, string[]>();
+    for (const [node, c] of entries) {
+      if (!byCount.has(c)) byCount.set(c, []);
+      byCount.get(c)!.push(node);
+    }
+    const distinctCounts = [...byCount.keys()].sort((a, b) => b - a);
+    const items: Array<{ node: string; count: number }> = [];
+    let note: string | undefined;
+    for (const c of distinctCounts) {
+      const nodes = byCount.get(c) ?? [];
+      if (items.length + nodes.length > FLY_CHAIN_TOP_DISPLAY_MAX) {
+        note = `略（${c}）`;
+        break;
+      }
+      for (const node of nodes) items.push({ node, count: c });
+    }
+    return { items, note };
   };
 
   return {
-    topStartSlots: topN(startCount, 3),
-    topStopNodes: topN(stopCount, 3),
-    topRedNodes: topN(redCount, 3),
-    topTurningNodes: topN(turningCount, 3),
+    topStartSlots: topNodesWithCount(startCount),
+    topStopNodes: topNodesWithCount(stopCount),
+    topRedNodes: topNodesWithCount(redCount),
+    topTurningNodes: topNodesWithCount(turningCount),
   };
 }

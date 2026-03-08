@@ -40,10 +40,10 @@ export function TimeFlowEntryBoard({
                 <span className="whitespace-nowrap">{slot.name}</span>
               </div>
               <div
-                className={`rounded-2xl border bg-white/95 p-2 shadow-sm transition-shadow ${
-                  center
-                    ? "border-[#b7e6d2] shadow-[0_10px_24px_rgba(5,150,105,0.12)]"
-                    : "border-[#cfeee0]"
+className={`rounded-2xl border-2 bg-white/95 p-2 transition-shadow ${
+                center
+                    ? "border-[#a8d9c8] shadow-[0_10px_24px_rgba(5,150,105,0.12)]"
+                    : "border-[#a8d9c8]"
                 }`}
               >
                 <input

@@ -43,7 +43,7 @@ export function FourElementsReviewBoard({
           return (
             <div
               key={slotId}
-              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-2xl border border-[#c8e9d9] bg-white px-3 py-2.5 shadow-sm"
+              className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-2xl border-2 border-[#a8d9c8] bg-white px-3 py-2.5 shadow-[0_4px_10px_rgba(5,150,105,0.10)]"
               style={{
                 left: `${px}%`,
                 top: `${py}%`,
