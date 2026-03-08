@@ -742,15 +742,13 @@ export default function ResultPageContent() {
               {flyChainTable && !flyChainTable.missingMapping && matrixContext && (
                 <section className="shrink-0">
                   <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">飞宫链</h2>
-                  <div className="-mt-0">
-                    <FlyChainGraphBoundary>
-                      <AnnualFlyChainGraph
-                        rows={flyChainTable.rows}
-                        slotCards={matrixContext.slotCards}
-                        houseDates={annualHouseDates}
-                      />
-                    </FlyChainGraphBoundary>
-                  </div>
+                  <FlyChainGraphBoundary>
+                    <AnnualFlyChainGraph
+                      rows={flyChainTable.rows}
+                      slotCards={matrixContext.slotCards}
+                      houseDates={annualHouseDates}
+                    />
+                  </FlyChainGraphBoundary>
                 </section>
               )}
           <section className="flex min-h-[420px] flex-1 flex-col">

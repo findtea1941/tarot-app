@@ -1,12 +1,11 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useMemo } from "react";
 import {
   Background,
   Handle,
   MarkerType,
   ReactFlow,
-  type ReactFlowInstance,
   type NodeProps,
   Position,
   type Edge,
@@ -32,12 +31,11 @@ type TreeNode = {
   isRoot?: boolean;
 };
 
-const NODE_WIDTH = 78;
-const NODE_HEIGHT = 52;
-const X_GAP = 104;
-const ROW_GAP = 40;
-const BRANCH_GAP = 18;
-const GRAPH_VIEWPORT_SHIFT_Y = 150;
+const NODE_WIDTH = 72;
+const NODE_HEIGHT = 48;
+const X_GAP = 96;
+const ROW_GAP = 38;
+const BRANCH_GAP = 16;
 
 type AnnualFlyData = {
   label: string;
@@ -59,7 +57,7 @@ function AnnualFlyNode({
         style={{ opacity: 0, pointerEvents: "none" }}
       />
       <div
-        className="rounded-xl px-2 py-1.5 text-center text-xs leading-4 text-slate-800 flex items-center justify-center"
+        className="rounded-xl px-2 py-1 text-center text-[11px] leading-[14px] text-slate-800 flex items-center justify-center"
         style={{
           width: NODE_WIDTH,
           height: NODE_HEIGHT,
@@ -188,7 +186,7 @@ function buildFlow(tree: TreeNode, rowTopY: number): { nodes: Node[]; edges: Edg
     nodes.push({
       id: node.id,
       type: "annualFly",
-      position: { x: depth * X_GAP, y: rowTopY + centerLeafIndex * leafGap },
+      position: { x: 16 + depth * X_GAP, y: rowTopY + centerLeafIndex * leafGap },
       sourcePosition: Position.Right,
       targetPosition: Position.Left,
       draggable: false,
@@ -223,10 +221,8 @@ function buildFlow(tree: TreeNode, rowTopY: number): { nodes: Node[]; edges: Edg
 }
 
 function AnnualFlyChainGraphInner({ rows, slotCards, houseDates }: AnnualFlyChainGraphProps) {
-  const [flowInstance, setFlowInstance] = useState<ReactFlowInstance | null>(null);
-
   const { nodes, edges } = useMemo(() => {
-    let rowTopY = 0;
+    let rowTopY = 20; // 顶部留白 20px，直接烘焙进节点坐标
     const allNodes: Node[] = [];
     const allEdges: Edge[] = [];
 
@@ -253,21 +249,6 @@ function AnnualFlyChainGraphInner({ rows, slotCards, houseDates }: AnnualFlyChai
     return Math.max(546, maxX + NODE_WIDTH + 104);
   }, [nodes]);
 
-  const alignViewport = useCallback((instance: ReactFlowInstance) => {
-    requestAnimationFrame(() => {
-      void instance.fitView({ padding: 0.12 });
-      requestAnimationFrame(() => {
-        const { x, y, zoom } = instance.getViewport();
-        void instance.setViewport({ x, y: y - GRAPH_VIEWPORT_SHIFT_Y, zoom });
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!flowInstance) return;
-    alignViewport(flowInstance);
-  }, [flowInstance, alignViewport, nodes, edges, graphHeight, graphWidth]);
-
   return (
     <div className="w-full">
       <div className="flex flex-wrap items-center justify-between gap-3 py-2">
@@ -288,10 +269,7 @@ function AnnualFlyChainGraphInner({ rows, slotCards, houseDates }: AnnualFlyChai
               nodes={nodes}
               edges={edges}
               nodeTypes={NODE_TYPES}
-              onInit={(instance) => {
-                setFlowInstance(instance);
-                alignViewport(instance);
-              }}
+              defaultViewport={{ x: 8, y: 0, zoom: 1 }}
               nodesConnectable={false}
               nodesDraggable={false}
               elementsSelectable={false}
