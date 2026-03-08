@@ -1,0 +1,73 @@
+---
+description: 多步骤表单（塔罗/雷诺曼）基础信息与草稿持久化约定，防止「牌阵页返回后丢失」复发；含同类问题排查清单
+globs: app/tarot/page.tsx, app/tarot/**/spread/page.tsx, app/lenormand/**/entry/*.tsx, lib/tarotDraftStorage.ts, lib/lenormandStorage.ts
+alwaysApply: false
+---
+
+# 多步骤表单草稿持久化约定
+
+以下约定用于保证「基础信息 → 下一步（牌阵/录入）→ 返回」时表单不丢失。返回有两种路径，**都必须**能正确恢复：
+
+- **按键返回**：牌阵页左下角「返回修改案例信息」→ `router.push(/tarot?caseId=xxx)`
+- **浏览器后退**：用户在牌阵页点击浏览器后退键 → 回到 `/tarot?caseId=xxx`（popstate 可能早于组件挂载）
+
+**不得削弱或绕过**下列约定。
+
+---
+
+## 1. sessionStorage 写入方式
+
+- **必须**：基础信息/录入页对 sessionStorage 的写入为 **即时保存**（每次受控字段变化即写），**禁止**对 sessionStorage 使用防抖/节流。
+- 原因：用户点击「下一步」后若在牌阵页点击「返回」，返回时若依赖防抖未触发的最后一次写入，会导致数据丢失。
+- 参考：雷诺曼 `LenormandEntryClient` 中「立即保存到 sessionStorage（每次输入变化）」；塔罗 `app/tarot/page.tsx` 中「立即写入 sessionStorage（每次输入变化）」。
+
+## 2. 返回时的 caseId 与 effectiveId
+
+- 基础信息页的 **effectiveId**（用于加载草稿、决定是否清空表单）**必须**按以下优先级计算，且 **每次渲染** 都要考虑当前地址栏：
+  - **优先** 用 **当前 `window.location.search`** 解析出的 caseId（`idFromWindow`）。原因：浏览器后退时 popstate 可能早于组件挂载，若只依赖 React state 的 `urlKey` 会首屏拿不到 caseId 导致误清空。
+  - 其次用 state 同步的 `urlKey` 解析出的 `idFromUrl`。
+  - 再其次用「返回中的草稿」一次性标记（如 `returnDraftId` / `consumeTarotReturnDraftId()`）。
+  - 最后用 sessionStorage 中「最近一次保存的 caseId」兜底（如 `getLastTarotDraftId()`），且仅当 URL 已含 `caseId=` 时使用。
+- 加载草稿时 **必须**：优先从 sessionStorage 恢复，若无再请求 DB/IndexedDB。
+
+## 3. 何时清空表单
+
+- **仅当**「没有 effectiveId」**且**「没有最近一次草稿 id（如 `getLastTarotDraftId()`）」时，才执行清空表单逻辑。
+- 避免：浏览器后退时首帧 URL 未同步，effectiveId 暂时为空就清空表单，导致已填内容丢失。
+
+## 4. 浏览器后退时的 URL 同步
+
+- 挂载时 **必须** 执行一次 `setUrlKey(window.location.search)`。
+- **必须** 监听 `popstate` 与 **每次** `pageshow`（不限于 `e.persisted`）并同步 `window.location.search` 到 state，以便后退后若首屏未拿到 caseId 能在后续一次更新中恢复。
+
+## 5. 牌阵页/下一步页的「返回」逻辑
+
+- 点击「返回修改」时 **必须**：在 `router.push` 回基础信息页 **之前**，先同步把当前案例的基础信息写入 sessionStorage（并更新「最近一次 caseId」），再跳转。塔罗还可设置「返回中的草稿」标记（如 `markTarotReturnDraftId(caseId)`）以便基础信息页用一次性 id 兜底。
+
+---
+
+## 同类问题排查清单（返回后表单丢失）
+
+当再次出现「从牌阵/下一步返回后基础信息丢失」时，按下面顺序排查并对照修改：
+
+| 现象 | 可能原因 | 排查/修改位置 |
+|------|----------|----------------|
+| 按键返回丢失 | 牌阵页返回前未写 sessionStorage，或基础信息页 effectiveId 拿不到 | `app/tarot/[caseId]/spread/page.tsx` 的 `handleReturn`：先 `saveTarotDraftToStorage` + `markTarotReturnDraftId` 再 `router.push`；基础信息页 `effectiveId` 是否包含 `returnDraftId` / `getLastTarotDraftId()` |
+| 浏览器后退丢失 | 首屏 effectiveId 为空导致误清空；或只依赖 state 的 urlKey，未用 `window.location.search` | `app/tarot/page.tsx`：effectiveId 是否 **优先** 用 `window.location.search` 解析的 `idFromWindow`；清空条件是否包含「无 getLastTarotDraftId 才清空」；`pageshow` 是否每次均同步 URL |
+| 两种返回都丢失 | sessionStorage 未即时写（防抖导致）；或 loadDraft 未优先读 sessionStorage | 基础信息页：sessionStorage 是否每次输入变化即写；`loadDraft` 是否先 `loadTarotDraftFromStorage(id)` 再 fallback DB |
+
+**关键文件**：
+
+- 塔罗基础信息：`app/tarot/page.tsx`（effectiveId、清空条件、urlKey/pageshow、即时写 sessionStorage）
+- 塔罗牌阵返回：`app/tarot/[caseId]/spread/page.tsx`（`handleReturn` 内写 storage + 标记再跳转）
+- 塔罗 storage：`lib/tarotDraftStorage.ts`（`getLastTarotDraftId`、`markTarotReturnDraftId` / `consumeTarotReturnDraftId`）
+
+修改上述文件中的「保存时机」「caseId 解析」「返回跳转」「清空条件」后，请对照本规则全文再检查一遍，并回归：**按键返回** + **浏览器后退** 两条路径是否都能保留表单。
+
+---
+
+## 例外：从顶部 banner 进入塔罗基础信息
+
+- **约定**：从顶部导航点击「塔罗」进入时，**必须**进入空白基础信息页，不恢复上次草稿。
+- **实现**：banner 链接为 `/tarot?new=1`。塔罗页检测到 `new=1` 时：① 不参与 effectiveId（视为无草稿）；② 清空表单；③ `router.replace('/tarot')` 去掉参数。不影响「浏览器后退」与「返回修改」按键，二者仍回到 `/tarot?caseId=xxx` 并恢复已填信息。
+- **涉及**：`components/TopTabs.tsx`（塔罗 href）、`app/tarot/page.tsx`（isFromBanner、new=1 的 effect）。

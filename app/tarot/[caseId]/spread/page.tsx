@@ -36,6 +36,7 @@ import { getSlotInputId } from "@/components/SlotStack";
 import { getCategoryPillStyle } from "@/lib/categoryTagStyles";
 import {
   loadTarotDraftFromStorage,
+  markTarotReturnDraftId,
   saveTarotDraftToStorage,
 } from "@/lib/tarotDraftStorage";
 
@@ -190,6 +191,7 @@ export default function SpreadPage() {
       ? (caseData.extra as { annual?: { clientBirthday?: string; readingStartMonth?: string } }).annual
       : undefined;
 
+    markTarotReturnDraftId(caseId);
     saveTarotDraftToStorage(caseId, {
       question: caseData.question ?? "",
       background: caseData.background ?? "",

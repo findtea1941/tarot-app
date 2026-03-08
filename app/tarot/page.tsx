@@ -1,13 +1,13 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import {
   createTarotDraft,
   getCaseById,
   updateTarotDraft,
 } from "@/lib/repo/caseRepo";
-import type { Case, Location, SpreadType } from "@/lib/db";
+import type { Location, SpreadType } from "@/lib/db";
 import {
   getProvinces,
   getCities,
@@ -15,7 +15,11 @@ import {
   DEFAULT_CITY_CODE,
 } from "@/lib/region";
 import {
+  consumeTarotReturnDraftId,
+  getTarotReturnDraftId,
+  getLastTarotDraftId,
   loadTarotDraftFromStorage,
+  markTarotReturnDraftId,
   saveTarotDraftToStorage,
 } from "@/lib/tarotDraftStorage";
 import {
@@ -31,6 +35,7 @@ const CATEGORIES = [
   "健康",
   "灵性",
   "运势",
+  "动物",
   "其他",
   "开放式问题",
   "封闭式问题",
@@ -49,8 +54,6 @@ const SPREAD_TYPES = [
 
 function TarotNewPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const caseId = searchParams?.get("caseId") ?? null;
 
   const [question, setQuestion] = useState("");
   const [background, setBackground] = useState("");
@@ -70,7 +73,17 @@ function TarotNewPageContent() {
     () => (typeof window !== "undefined" ? window.location.search : "")
   );
   const [loadingDraft, setLoadingDraft] = useState(() =>
-    typeof window !== "undefined" ? window.location.search.includes("caseId=") : false
+    typeof window !== "undefined"
+      ? !window.location.search.includes("new=1") &&
+        (window.location.search.includes("caseId=") || !!getTarotReturnDraftId())
+      : false
+  );
+  const [returnDraftId] = useState(() =>
+    typeof window !== "undefined" &&
+      !window.location.search.includes("caseId=") &&
+      !window.location.search.includes("new=1")
+      ? consumeTarotReturnDraftId()
+      : null
   );
 
   // 地点（中国省市）：默认 上海市 / 上海市(市辖区)
@@ -150,22 +163,37 @@ function TarotNewPageContent() {
     }
   }, []);
 
-  // 始终从当前 URL 取 caseId 并加载草稿，避免 useSearchParams 在浏览器后退后不更新
-  const searchForId =
-    urlKey || (typeof window !== "undefined" ? window.location.search : "");
+  // 优先从当前 URL 取 caseId。浏览器后退时 popstate 可能早于组件挂载，故每次渲染都读 window.location 作首要来源
+  const searchFromWindow =
+    typeof window !== "undefined" ? window.location.search : "";
+  const isFromBanner =
+    typeof window !== "undefined" && searchFromWindow.includes("new=1");
+  const searchForId = searchFromWindow || urlKey;
   const idFromUrl = searchForId
     ? new URLSearchParams(searchForId).get("caseId")
     : null;
-  const effectiveId = idFromUrl || caseId;
+  const idFromWindow = searchFromWindow
+    ? new URLSearchParams(searchFromWindow).get("caseId")
+    : null;
+  // URL 含 caseId 但 state 未同步时用最近一次保存的 caseId 再兜底
+  const fallbackId =
+    typeof window !== "undefined" && window.location.search.includes("caseId=")
+      ? getLastTarotDraftId()
+      : null;
+  // 从顶部 banner 进入（new=1）时不恢复草稿，强制空白页
+  const effectiveId = isFromBanner
+    ? null
+    : idFromWindow || idFromUrl || returnDraftId || fallbackId || null;
 
   useEffect(() => {
     if (!effectiveId) return;
     loadDraft(effectiveId);
   }, [effectiveId, loadDraft]);
 
-  // 从顶部导航直接进入 /tarot 时，始终打开一个全新的基础信息页，不保留上一份录入内容
+  // 仅当确定不是「从牌阵页返回」时才清空表单（有 effectiveId 或最近有草稿都不清），避免浏览器后退时 URL 未同步就清空
   useEffect(() => {
     if (effectiveId) return;
+    if (typeof window !== "undefined" && getLastTarotDraftId()) return;
     setLoadingDraft(false);
     setQuestion("");
     setBackground("");
@@ -181,46 +209,61 @@ function TarotNewPageContent() {
     setError("");
   }, [effectiveId]);
 
-  // 浏览器后退/前进时同步 urlKey，使上面的 effect 用最新 URL 再拉草稿
+  // 挂载时同步一次 URL，避免从牌阵页 router.push 返回时 urlKey 未更新
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const onPopState = () => setUrlKey(window.location.search);
-    const onPageShow = (e: PageTransitionEvent) => {
-      if (e.persisted) setUrlKey(window.location.search);
-    };
-    window.addEventListener("popstate", onPopState);
-    window.addEventListener("pageshow", onPageShow);
+    setUrlKey(window.location.search);
+  }, []);
+
+  // 从顶部 banner 进入（?new=1）：清空表单并去掉 URL 参数，进入空白页；不影响后退/返回修改的恢复
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.location.search.includes("new=1")) return;
+    setLoadingDraft(false);
+    setQuestion("");
+    setBackground("");
+    setCategories([]);
+    setDrawDate("");
+    setDrawTime("");
+    setSpreadType("");
+    setTimeAxisVariant(DEFAULT_TIME_AXIS_VARIANT);
+    setClientBirthday("");
+    setReadingStartMonth("");
+    setProvinceCode(DEFAULT_PROVINCE_CODE);
+    setCityCode(DEFAULT_CITY_CODE);
+    setError("");
+    router.replace("/tarot");
+  }, [router]);
+
+  // 浏览器后退/前进时同步 urlKey；pageshow 每次均同步，避免后退时漏掉（popstate 可能早于组件挂载）
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const syncUrl = () => setUrlKey(window.location.search);
+    window.addEventListener("popstate", syncUrl);
+    window.addEventListener("pageshow", syncUrl);
     return () => {
-      window.removeEventListener("popstate", onPopState);
-      window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("popstate", syncUrl);
+      window.removeEventListener("pageshow", syncUrl);
     };
   }, []);
 
-  // 有 caseId 时把表单写入 sessionStorage（防抖），与雷诺曼一致，浏览器后退时能恢复
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // 立即写入 sessionStorage（每次输入变化），与雷诺曼一致，确保牌阵页返回时能恢复
   useEffect(() => {
-    const id = idFromUrl || caseId;
+    const id = effectiveId;
     if (!id || loadingDraft) return;
-    saveTimerRef.current = setTimeout(() => {
-      saveTarotDraftToStorage(id, {
-        question,
-        background,
-        categories,
-        drawDate,
-        drawTime,
-        spreadType,
-        timeAxisVariant,
-        provinceCode,
-        cityCode,
-        ...(spreadType === "年运" || spreadType === "星运" ? { clientBirthday, readingStartMonth } : {}),
-      });
-    }, 400);
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
+    saveTarotDraftToStorage(id, {
+      question,
+      background,
+      categories,
+      drawDate,
+      drawTime,
+      spreadType,
+      timeAxisVariant,
+      provinceCode,
+      cityCode,
+      ...(spreadType === "年运" || spreadType === "星运" ? { clientBirthday, readingStartMonth } : {}),
+    });
   }, [
-    idFromUrl,
-    caseId,
+    effectiveId,
     loadingDraft,
     question,
     background,
@@ -231,7 +274,6 @@ function TarotNewPageContent() {
     timeAxisVariant,
     provinceCode,
     cityCode,
-    spreadType,
     clientBirthday,
     readingStartMonth,
   ]);
@@ -322,7 +364,7 @@ function TarotNewPageContent() {
               return { clientBirthday: clientBirthdayStored, readingStartMonth: readingStartMonthStored };
             })()
           : undefined;
-      const currentCaseId = idFromUrl || caseId;
+      const currentCaseId = effectiveId;
       let nextCaseId: string;
       const existingCase = currentCaseId ? await getCaseById(currentCaseId) : undefined;
       if (existingCase?.type === "tarot" && currentCaseId) {
@@ -366,6 +408,7 @@ function TarotNewPageContent() {
         cityCode,
         ...(annual ? { clientBirthday: annual.clientBirthday, readingStartMonth: annual.readingStartMonth } : {}),
       });
+      markTarotReturnDraftId(nextCaseId);
       // 用带 caseId 的地址替换当前历史，这样浏览器后退时会回到 /tarot?caseId=xxx 并加载草稿
       router.replace(`/tarot?caseId=${nextCaseId}`);
       router.push(`/tarot/${nextCaseId}/spread`);

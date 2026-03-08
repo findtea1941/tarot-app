@@ -134,11 +134,18 @@ export function LenormandAnalysisClient() {
   );
   const [loading, setLoading] = useState(false);
   const [loadingCase, setLoadingCase] = useState(true);
+  const [toast, setToast] = useState("");
   const [reviewFeedback, setReviewFeedback] = useState("");
   const reviewFeedbackRef = useRef(reviewFeedback);
   reviewFeedbackRef.current = reviewFeedback;
   const fromLibrary = getQueryParam("from") === "library";
   const fromDraft = getQueryParam("from") === "draft";
+
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(""), 2000);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const loadCase = useCallback(async (id: string) => {
     setLoadingCase(true);
@@ -302,6 +309,7 @@ export function LenormandAnalysisClient() {
     return () => clearTimeout(t);
   }, [caseId, analysisEntries, loadingCase]);
 
+  /** 保存：停留本页，与塔罗对齐 */
   const handleSave = async () => {
     setLoading(true);
     try {
@@ -309,7 +317,23 @@ export function LenormandAnalysisClient() {
       if (fromLibrary) await updateCaseReviewFeedback(caseId, reviewFeedback);
       await saveLenormandCase(caseId);
       clearLenormandDraftStorage(caseId);
-      router.push("/cases");
+      setToast("保存成功");
+    } catch {
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /** 保存并返回案例库（雷诺曼 tab），与塔罗对齐 */
+  const handleSaveAndBack = async () => {
+    setLoading(true);
+    try {
+      await updateLenormandAnalysis(caseId, analysisEntries);
+      if (fromLibrary) await updateCaseReviewFeedback(caseId, reviewFeedback);
+      await saveLenormandCase(caseId);
+      clearLenormandDraftStorage(caseId);
+      router.push("/cases?tab=lenormand");
     } catch {
       setLoading(false);
     } finally {
@@ -322,7 +346,11 @@ export function LenormandAnalysisClient() {
     try {
       await updateLenormandAnalysis(caseId, analysisEntries);
       if (fromLibrary) await updateCaseReviewFeedback(caseId, reviewFeedback);
-      router.push(fromDraft ? "/cases?view=drafts" : `/lenormand/${caseId}/entry`);
+      if (fromDraft) {
+        router.push("/cases?view=drafts");
+      } else {
+        router.push(`/lenormand/${caseId}/entry`);
+      }
     } catch {
       setLoading(false);
     } finally {
@@ -594,20 +622,39 @@ export function LenormandAnalysisClient() {
               disabled={loading}
               className="text-sm text-slate-500 transition hover:text-tarot-green disabled:opacity-60"
             >
-              {fromDraft ? "← 返回草稿箱" : "← 返回修改"}
+              {fromDraft ? "← 返回草稿箱" : "← 返回修改案例"}
             </button>
           </div>
           <div className="flex items-center justify-end gap-3 pt-3 sm:pt-0">
             <button
+              type="button"
               onClick={handleSave}
+              disabled={loading}
+              className="rounded-xl border border-[#dfe7e3] bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-60"
+            >
+              {loading ? "处理中…" : "保存"}
+            </button>
+            <button
+              type="button"
+              onClick={handleSaveAndBack}
               disabled={loading}
               className="rounded-xl bg-tarot-green px-5 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-60"
             >
-              {loading ? "处理中…" : "保存案例"}
+              保存并返回案例库
             </button>
           </div>
         </div>
       </footer>
+
+      {toast && (
+        <div
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-lg border border-tarot-green-light bg-white px-4 py-2 text-sm text-slate-800 shadow-lg"
+          role="status"
+          aria-live="polite"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

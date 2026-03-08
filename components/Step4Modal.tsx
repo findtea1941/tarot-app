@@ -150,7 +150,8 @@ export function Step4Modal({
             </section>
           )}
 
-          {layout.id !== "annual-17" && (
+          {/* 年运、星运不显示补充指示牌，仅其他牌阵显示 */}
+          {layout.id !== "annual-17" && layout.id !== "starfortune-23" && (
             <section>
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-tarot-green">
                 <span className="text-base">▤</span> 指示牌

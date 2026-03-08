@@ -15,6 +15,11 @@ function getShowDrafts(): boolean {
   return new URLSearchParams(window.location.search).get("view") === "drafts";
 }
 
+function getInitialTab(): CaseTab {
+  if (typeof window === "undefined") return "tarot";
+  return new URLSearchParams(window.location.search).get("tab") === "lenormand" ? "lenormand" : "tarot";
+}
+
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     p,
@@ -29,7 +34,7 @@ function CasesPageContent() {
   const requestIdRef = useRef(0);
   const [isMounted, setIsMounted] = useState(false);
   const [showDrafts, setShowDrafts] = useState(false);
-  const [tab, setTab] = useState<CaseTab>("tarot");
+  const [tab, setTab] = useState<CaseTab>(getInitialTab);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [items, setItems] = useState<Case[]>([]);
@@ -40,10 +45,25 @@ function CasesPageContent() {
 
   useEffect(() => {
     setShowDrafts(getShowDrafts());
+    setTab(getInitialTab());
     setIsMounted(true);
-    const onPopState = () => setShowDrafts(getShowDrafts());
+    // 客户端导航（如雷诺曼保存后 router.push）可能先于 URL 更新，延迟再同步一次 tab
+    const syncId = setTimeout(() => {
+      setShowDrafts(getShowDrafts());
+      setTab(getInitialTab());
+    }, 0);
+    const syncFromUrl = () => {
+      setShowDrafts(getShowDrafts());
+      setTab(getInitialTab());
+    };
+    const onPopState = syncFromUrl;
     window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
+    window.addEventListener("pageshow", syncFromUrl);
+    return () => {
+      clearTimeout(syncId);
+      window.removeEventListener("popstate", onPopState);
+      window.removeEventListener("pageshow", syncFromUrl);
+    };
   }, []);
 
   useEffect(() => {
@@ -109,6 +129,8 @@ function CasesPageContent() {
                     setShowDrafts(false);
                     setLoadError(null);
                     router.push("/cases");
+                  } else {
+                    router.replace("/cases");
                   }
                 }}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
@@ -126,7 +148,9 @@ function CasesPageContent() {
                   if (showDrafts) {
                     setShowDrafts(false);
                     setLoadError(null);
-                    router.push("/cases");
+                    router.push("/cases?tab=lenormand");
+                  } else {
+                    router.replace("/cases?tab=lenormand");
                   }
                 }}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${

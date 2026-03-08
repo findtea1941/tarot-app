@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
 const tabs = [
-  { href: "/tarot", label: "塔罗" },
+  { href: "/tarot?new=1", label: "塔罗" },
   { href: "/lenormand", label: "雷诺曼" },
   { href: "/cases", label: "案例库" },
 ] as const;
@@ -23,12 +23,13 @@ export function TopTabs({ children }: { children: ReactNode }) {
           </div>
           <nav className="flex gap-2 text-sm">
             {tabs.map((tab) => {
+              const pathOnly = tab.href.split("?")[0];
               const active =
-                currentPath === tab.href ||
-                currentPath.startsWith(tab.href + "/");
+                currentPath === pathOnly ||
+                currentPath.startsWith(pathOnly + "/");
               return (
                 <Link
-                  key={tab.href}
+                  key={pathOnly}
                   href={tab.href}
                   className={`px-3 py-1.5 rounded-full border-0 transition-colors ${
                     active
