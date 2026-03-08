@@ -22,7 +22,8 @@ export type SpreadType =
   | "圣三角"
   | "时间流"
   | "无牌阵"
-  | "年运";
+  | "年运"
+  | "星运";
 
 /** 中国省市地点（code + name + label；区县字段仅兼容旧数据） */
 export interface Location {

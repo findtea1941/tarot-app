@@ -8,6 +8,7 @@ import { fourElementsLayout } from "./fourElements";
 import { holyTriangleLayout } from "./holyTriangle";
 import { hexagramLayout } from "./hexagram";
 import { noSpreadLayout } from "./noSpread";
+import { starFortuneLayout } from "./starFortune";
 import { timeflowLayout } from "./timeflow";
 
 const layoutMap: Record<SpreadType, SpreadLayout | null> = {
@@ -19,6 +20,7 @@ const layoutMap: Record<SpreadType, SpreadLayout | null> = {
   "时间流": timeflowLayout,
   "无牌阵": noSpreadLayout,
   "年运": annualLayout,
+  "星运": starFortuneLayout,
 };
 
 /** 根据牌阵类型取 layout，未接入的返回 null */
@@ -44,4 +46,4 @@ export function getLayoutWithTimeAxisVariant(
   return { ...layout, slots };
 }
 
-export { annualLayout, bodyMindSpiritLayout, chooseOneLayout, fourElementsLayout, hexagramLayout, holyTriangleLayout, noSpreadLayout, timeflowLayout };
+export { annualLayout, bodyMindSpiritLayout, chooseOneLayout, fourElementsLayout, hexagramLayout, holyTriangleLayout, noSpreadLayout, starFortuneLayout, timeflowLayout };

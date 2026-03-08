@@ -44,6 +44,7 @@ const SPREAD_TYPES = [
   "时间流",
   "无牌阵",
   "年运",
+  "星运",
 ] as const;
 
 function TarotNewPageContent() {
@@ -211,7 +212,7 @@ function TarotNewPageContent() {
         timeAxisVariant,
         provinceCode,
         cityCode,
-        ...(spreadType === "年运" ? { clientBirthday, readingStartMonth } : {}),
+        ...(spreadType === "年运" || spreadType === "星运" ? { clientBirthday, readingStartMonth } : {}),
       });
     }, 400);
     return () => {
@@ -264,7 +265,7 @@ function TarotNewPageContent() {
     if (!provinceCode) return "请选择省/直辖市";
     if (!cityCode) return "请选择市";
     if (!spreadType) return "请选择牌阵类型";
-    if (spreadType === "年运") {
+    if (spreadType === "年运" || spreadType === "星运") {
       const mmdd = /^(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])$/;
       if (!clientBirthday.trim()) return "请输入案主出生日期（MMDD）";
       if (!mmdd.test(clientBirthday.trim())) return "案主出生日期格式为 MMDD，如 0117";
@@ -312,7 +313,7 @@ function TarotNewPageContent() {
       const timeAxis =
         st === "六芒星" || st === "时间流" ? timeAxisVariant : undefined;
       const annual =
-        st === "年运" && clientBirthday.trim() && readingStartMonth.trim()
+        (st === "年运" || st === "星运") && clientBirthday.trim() && readingStartMonth.trim()
           ? (() => {
               const b = clientBirthday.trim();
               const r = readingStartMonth.trim();
@@ -483,7 +484,7 @@ function TarotNewPageContent() {
                 </select>
               </div>
               <div className="space-y-2 min-w-0">
-                {spreadType === "年运" && (
+                {(spreadType === "年运" || spreadType === "星运") && (
                   <div className="flex gap-2">
                     <div className="w-1/2 min-w-0 space-y-2">
                       <label className="block text-sm font-medium text-slate-700">案主出生日期 <span className="text-red-400">*</span></label>
@@ -497,7 +498,9 @@ function TarotNewPageContent() {
                       />
                     </div>
                     <div className="w-1/2 min-w-0 space-y-2">
-                      <label className="block text-sm font-medium text-slate-700">年运起始月 <span className="text-red-400">*</span></label>
+                      <label className="block text-sm font-medium text-slate-700">
+                        {spreadType === "年运" ? "年运起始月" : "看盘起始月"} <span className="text-red-400">*</span>
+                      </label>
                       <input
                         type="text"
                         className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-3 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"

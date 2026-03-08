@@ -21,7 +21,8 @@ export type SpreadType =
   | "圣三角"
   | "时间流"
   | "无牌阵"
-  | "年运";
+  | "年运"
+  | "星运";
 
 export interface Card {
   id: string;

@@ -28,6 +28,7 @@ import { HolyTriangleEntryBoard } from "@/components/HolyTriangleEntryBoard";
 import { NoSpreadEntryBoard } from "@/components/NoSpreadEntryBoard";
 import { SpreadBoard } from "@/components/SpreadBoard";
 import { AnnualEntryBoard } from "@/components/AnnualEntryBoard";
+import { StarFortuneEntryBoard } from "@/components/StarFortuneEntryBoard";
 import { HexagramEntryBoard } from "@/components/HexagramEntryBoard";
 import { TimeFlowEntryBoard } from "@/components/TimeFlowEntryBoard";
 import { Step4Modal } from "@/components/Step4Modal";
@@ -94,7 +95,9 @@ export default function SpreadPage() {
             ? new Date(`${stored.drawDate}T${stored.drawTime || "00:00"}:00`)
             : null;
           const annual =
-            stored.spreadType === "年运" && stored.clientBirthday && stored.readingStartMonth
+            (stored.spreadType === "年运" || stored.spreadType === "星运") &&
+            stored.clientBirthday &&
+            stored.readingStartMonth
               ? { clientBirthday: stored.clientBirthday, readingStartMonth: stored.readingStartMonth }
               : undefined;
           const repaired = await restoreTarotDraft(caseId, {
@@ -183,6 +186,9 @@ export default function SpreadPage() {
   const handleReturn = useCallback(async () => {
     if (!caseId || !caseData) return;
     const { drawDate, drawTime } = parseDraftDrawTime(caseData.drawTime);
+    const extra = caseData.extra && typeof caseData.extra === "object" && "annual" in caseData.extra
+      ? (caseData.extra as { annual?: { clientBirthday?: string; readingStartMonth?: string } }).annual
+      : undefined;
 
     saveTarotDraftToStorage(caseId, {
       question: caseData.question ?? "",
@@ -194,6 +200,7 @@ export default function SpreadPage() {
       timeAxisVariant: caseData.timeAxisVariant,
       provinceCode: caseData.location?.provinceCode || DEFAULT_PROVINCE_CODE,
       cityCode: caseData.location?.cityCode || DEFAULT_CITY_CODE,
+      ...(extra ? { clientBirthday: extra.clientBirthday, readingStartMonth: extra.readingStartMonth } : {}),
     });
 
     try {
@@ -293,14 +300,19 @@ export default function SpreadPage() {
     : "—";
 
   const isAnnual = layout?.id === "annual-17";
+  const isStarFortune = layout?.id === "starfortune-23";
   const annualExtra =
     caseData.extra && typeof caseData.extra === "object" && "annual" in caseData.extra
       ? (caseData.extra as { annual?: { clientBirthday?: string; readingStartMonth?: string } }).annual
       : undefined;
 
+  const isModalEntry = isAnnual || isStarFortune;
+  const modalTitle = isAnnual ? "年运牌阵录入" : isStarFortune ? "星运牌阵录入" : "";
+  const ModalEntryBoard = isAnnual ? AnnualEntryBoard : isStarFortune ? StarFortuneEntryBoard : null;
+
   return (
     <div className="min-h-screen w-full">
-      {isAnnual ? (
+      {isModalEntry && ModalEntryBoard ? (
         <div className="min-h-screen bg-white">
           <div
             className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/35 p-4 backdrop-blur-[2px]"
@@ -308,19 +320,19 @@ export default function SpreadPage() {
             aria-labelledby="annual-entry-title"
             aria-modal="true"
           >
-            <div className="max-h-[92vh] w-[min(96vw,1520px)] overflow-y-auto rounded-[28px] border border-[#d7ebe2] bg-[#edf8f2] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
+            <div className="max-h-[92vh] w-[min(96vw,1600px)] overflow-y-auto rounded-[28px] border border-[#d7ebe2] bg-[#edf8f2] shadow-[0_24px_60px_rgba(15,23,42,0.18)]">
               <div className="sticky top-0 z-10 border-b border-[#deebe5] bg-[#edf8f2]/95 px-6 py-5 text-center backdrop-blur">
                 <h2
                   id="annual-entry-title"
                   className="text-2xl font-semibold tracking-tight text-slate-900 lg:text-3xl"
                 >
-                  年运牌阵录入
+                  {modalTitle}
                 </h2>
                 <p className="mt-1.5 text-sm text-slate-500">支持从 Excel 多选表格粘贴导入</p>
               </div>
               <div className="px-6 py-6">
                 {layout ? (
-                  <AnnualEntryBoard
+                  <ModalEntryBoard
                     layout={layout}
                     slotInputs={slotInputs}
                     onSlotInputChange={setSlotValue}
@@ -435,7 +447,7 @@ export default function SpreadPage() {
         </section>
       )}
 
-      {!isAnnual && (
+      {!isModalEntry && (
       <>
       {/* 中部：牌阵录入区域 */}
       <section className="w-full bg-white pt-0 pb-0">

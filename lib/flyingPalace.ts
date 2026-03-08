@@ -116,12 +116,19 @@ function flyOneBranch(
   return { path, stopNode, branchCount: 1 };
 }
 
-/** 从起点开始飞行，支持大阿双落点分叉；每分支独立 visited */
+/**
+ * 从起点开始飞行，支持大阿双落点分叉；每分支独立 visited。
+ * 规则摘要：飞入落点→判重/判止→未止则落点加入本分支 visited→若落点为双行星大阿则分叉→否则继续。
+ * 7.1 自回环：下一落点=当前节点 → 停止点=当前节点，不写 A→A，标红 A。
+ * 7.2 重复访问：下一落点已在 visited → 停止点=当前节点（飞入重复前的那格），重复落点不写入路径，标红重复点首次出现。
+ * 可选 isTurningPoint 用于星运（飞入四元素或七星打圈标记转折点）。
+ */
 export function buildFlyChainForStart(
   startSlotId: string,
   slotCards: Map<string, SlotCardEntry>,
   cardByNode: Map<FlyNode, SlotCardEntry>,
-  getTargetsForCard: (card: Card) => FlyNode[]
+  getTargetsForCard: (card: Card) => FlyNode[],
+  isTurningPoint?: (from: FlyNode, to: FlyNode) => boolean
 ): { branches: FlyBranchResult[]; missingMapping: string | null } {
   const entry = slotCards.get(startSlotId);
   if (!entry) return { branches: [], missingMapping: null };
@@ -129,8 +136,8 @@ export function buildFlyChainForStart(
   if (initialTargets.length === 0)
     return { branches: [], missingMapping: `${entry.card.name} 缺少飞宫/元素映射` };
 
-  const isElementFlight = (_from: FlyNode, to: FlyNode): boolean =>
-    ["fire", "earth", "air", "water"].includes(to);
+  const isElementFlight = isTurningPoint ?? ((_from: FlyNode, to: FlyNode): boolean =>
+    ["fire", "earth", "air", "water"].includes(to));
 
   type State = { path: PathStep[]; visited: Set<FlyNode>; current: FlyNode };
   const branches: FlyBranchResult[] = [];
@@ -143,10 +150,13 @@ export function buildFlyChainForStart(
   while (queue.length > 0) {
     const state = queue.shift()!;
     const { path, visited, current } = state;
+    // 规则 7.2：飞入的落点已在 visited → 重复访问，停止点 = 飞入重复落点之前的节点（path 末），不把重复落点写入路径，标红重复点第一次出现
     if (visited.has(current)) {
-      const firstIdx = path.findIndex((p) => p.node === current);
-      if (firstIdx >= 0) path[firstIdx] = { ...path[firstIdx], isRed: true };
-      branches.push({ path: [...path], stopNode: current, branchCount: 1 });
+      const pathCopy = [...path];
+      const firstIdx = pathCopy.findIndex((p) => p.node === current);
+      if (firstIdx >= 0) pathCopy[firstIdx] = { ...pathCopy[firstIdx], isRed: true };
+      const stopNode = pathCopy.length > 0 ? pathCopy[pathCopy.length - 1].node : current;
+      branches.push({ path: pathCopy, stopNode, branchCount: 1 });
       continue;
     }
     visited.add(current);
@@ -180,6 +190,7 @@ export function buildFlyChainForStart(
       queue.push({ path: newPath, visited: new Set(visited), current: next });
       continue;
     }
+    // 多目标（如双行星大阿）：每一个 next 都单独入队，确保「每次」碰到双星都分叉；已访问的 next 记为止点分支
     for (const next of nextTargets) {
       if (next === current) {
         branches.push({
@@ -187,6 +198,13 @@ export function buildFlyChainForStart(
           stopNode: current,
           branchCount: 1,
         });
+        continue;
+      }
+      if (visited.has(next)) {
+        const branchPath = [...path, { node: current, isTurningPoint: isElementFlight(current, next) }];
+        const firstIdx = branchPath.findIndex((p) => p.node === next);
+        if (firstIdx >= 0) branchPath[firstIdx] = { ...branchPath[firstIdx], isRed: true };
+        branches.push({ path: branchPath, stopNode: current, branchCount: 1 });
         continue;
       }
       const branchPath = [...path, { node: current, isTurningPoint: isElementFlight(current, next) }];

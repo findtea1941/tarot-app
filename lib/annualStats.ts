@@ -4,6 +4,7 @@
 
 import type { Card } from "@/spec/data_models";
 import type { SlotCardEntry } from "./flyingPalace";
+import { STARFORTUNE_SLOT_ORDER } from "@/layouts/starFortune";
 
 const ANNUAL_SLOT_ORDER = [
   "significator", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12",
@@ -26,6 +27,19 @@ const STAGE_KEYS = ["开创", "固定", "变动", "转化"] as const;
 const TRAIT_KEYS = ["角", "续", "果", "蛋"] as const;
 
 export function buildAnnualStats(slotCards: Map<string, SlotCardEntry>): AnnualStats {
+  return buildAnnualStatsFromOrder(slotCards, ANNUAL_SLOT_ORDER);
+}
+
+/** 星运牌阵统计：与年运逻辑一致，按 23 个 slot 顺序（七星、十二宫、四元素） */
+export function buildStarFortuneStats(slotCards: Map<string, SlotCardEntry>): AnnualStats {
+  return buildAnnualStatsFromOrder(slotCards, [...STARFORTUNE_SLOT_ORDER]);
+}
+
+/** 按给定 slot 顺序统计（供年运/星运复用） */
+function buildAnnualStatsFromOrder(
+  slotCards: Map<string, SlotCardEntry>,
+  slotOrder: string[]
+): AnnualStats {
   const elements = { 火: 0, 土: 0, 风: 0, 水: 0 };
   const stages = { 开创: 0, 固定: 0, 变动: 0, 转化: 0 };
   const traits = { 角: 0, 续: 0, 果: 0, 蛋: 0 };
@@ -36,7 +50,7 @@ export function buildAnnualStats(slotCards: Map<string, SlotCardEntry>): AnnualS
   let numberSumAbsolute = 0;
   let numberSumSigned = 0;
 
-  for (const slotId of ANNUAL_SLOT_ORDER) {
+  for (const slotId of slotOrder) {
     const entry = slotCards.get(slotId);
     if (!entry) continue;
     const card = entry.card;

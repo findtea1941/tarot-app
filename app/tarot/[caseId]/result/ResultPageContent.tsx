@@ -26,6 +26,7 @@ import {
 import { PlanetOptions } from "@/lib/planetOptions";
 import { getCategoryPillStyle, SPREAD_TYPE_PILL_CLASS } from "@/lib/categoryTagStyles";
 import { AnnualReviewBoard } from "@/components/AnnualReviewBoard";
+import { StarFortuneReviewBoard } from "@/components/StarFortuneReviewBoard";
 import { BodyMindSpiritReviewBoard } from "@/components/BodyMindSpiritReviewBoard";
 import { ChooseOneReviewBoard } from "@/components/ChooseOneReviewBoard";
 import { FourElementsReviewBoard } from "@/components/FourElementsReviewBoard";
@@ -35,6 +36,7 @@ import { NoSpreadReviewBoard } from "@/components/NoSpreadReviewBoard";
 import { TimeFlowReviewBoard } from "@/components/TimeFlowReviewBoard";
 import {
   buildAnnualStats,
+  buildStarFortuneStats,
   formatElementLine,
   formatStageLine,
   formatTraitLine,
@@ -47,6 +49,10 @@ import {
   flyChainStats,
   getSlotName as getFlySlotName,
 } from "@/lib/flyingPalace";
+import {
+  buildFlyChainTableStarFortune,
+  getSlotNameStarFortune,
+} from "@/lib/flyingPalaceStarFortune";
 
 const AnnualFlyChainGraph = dynamic(
   () => import("@/components/AnnualFlyChainGraph").then((m) => ({ default: m.AnnualFlyChainGraph })),
@@ -253,21 +259,21 @@ export default function ResultPageContent() {
     };
   }, [matrixContext, layout]);
 
-  /** 年运：案主生日、看盘起始月（来自 extra.annual） */
+  /** 年运/星运：案主生日、看盘起始月（来自 extra.annual） */
   const annualExtra = useMemo(() => {
-    if (layout?.id !== "annual-17" || !caseData?.extra) return null;
+    if ((layout?.id !== "annual-17" && layout?.id !== "starfortune-23") || !caseData?.extra) return null;
     const ex = caseData.extra as { annual?: { clientBirthday?: string; readingStartMonth?: string } };
     return ex.annual ?? null;
   }, [caseData?.extra, layout?.id]);
 
-  /** 年运：十二宫对应年-月-日（一宫=出生月日轮转，看盘起始月定年起宫） */
+  /** 年运/星运：十二宫对应年-月-日（一宫=出生月日轮转，看盘起始月定年起宫） */
   const annualHouseDates = useMemo(() => {
-    if (layout?.id !== "annual-17" || !annualExtra?.clientBirthday || !annualExtra?.readingStartMonth)
+    if ((layout?.id !== "annual-17" && layout?.id !== "starfortune-23") || !annualExtra?.clientBirthday || !annualExtra?.readingStartMonth)
       return undefined;
     return getAnnualHouseDates(annualExtra.clientBirthday, annualExtra.readingStartMonth);
   }, [layout?.id, annualExtra?.clientBirthday, annualExtra?.readingStartMonth]);
 
-  /** 年运：统计与飞宫链（依赖 matrixContext.slotCards） */
+  /** 年运：统计（依赖 matrixContext.slotCards） */
   const annualStats = useMemo(() => {
     if (layout?.id !== "annual-17" || !matrixContext) return null;
     try {
@@ -278,6 +284,18 @@ export default function ResultPageContent() {
     }
   }, [layout?.id, matrixContext]);
 
+  /** 星运：统计（23 张牌，逻辑与年运一致） */
+  const starFortuneStats = useMemo(() => {
+    if (layout?.id !== "starfortune-23" || !matrixContext) return null;
+    try {
+      return buildStarFortuneStats(matrixContext.slotCards);
+    } catch (error) {
+      console.error("buildStarFortuneStats failed:", error);
+      return null;
+    }
+  }, [layout?.id, matrixContext]);
+
+  /** 年运飞宫链 */
   const flyChainResult = useMemo(() => {
     if (layout?.id !== "annual-17" || !matrixContext) return null;
     try {
@@ -297,9 +315,33 @@ export default function ResultPageContent() {
     }
   }, [layout?.id, matrixContext]);
 
-  const flyChainTable = flyChainResult?.table ?? null;
-  const flyChainStatsResult = flyChainResult?.stats ?? null;
-  const flyChainError = flyChainResult?.error ?? null;
+  /** 星运飞宫链 */
+  const flyChainResultStarFortune = useMemo(() => {
+    if (layout?.id !== "starfortune-23" || !matrixContext) return null;
+    try {
+      const table = buildFlyChainTableStarFortune(matrixContext.slotCards);
+      return {
+        table,
+        stats: flyChainStats(table.rows),
+        error: null as string | null,
+      };
+    } catch (error) {
+      console.error("buildFlyChainTableStarFortune failed:", error);
+      return {
+        table: null,
+        stats: null,
+        error: "飞宫链数据异常，已跳过链路图显示。",
+      };
+    }
+  }, [layout?.id, matrixContext]);
+
+  const flyChainTable = flyChainResult?.table ?? flyChainResultStarFortune?.table ?? null;
+  const flyChainStatsResult = flyChainResult?.stats ?? flyChainResultStarFortune?.stats ?? null;
+  const flyChainError = flyChainResult?.error ?? flyChainResultStarFortune?.error ?? null;
+  const isStarFortune = layout?.id === "starfortune-23";
+  const flyChainMissingMapping = (flyChainResult?.table ?? flyChainResultStarFortune?.table)?.missingMapping ?? null;
+  const getFlySlotNameResolved = isStarFortune ? getSlotNameStarFortune : getFlySlotName;
+  const statsForDisplay = annualStats ?? starFortuneStats;
 
   const chooseOneNumberSummary = useMemo(() => {
     if (!groupSummaries || !matrixContext || layout?.id !== "choose-one-5") return null;
@@ -391,6 +433,12 @@ export default function ResultPageContent() {
   /** 年运牌阵回顾/大图用：合并 planetSupplements 与 supplements，保证行星符号能显示 */
   const annualSupplements = useMemo(() => {
     if (layout?.id !== "annual-17" || !caseData) return undefined;
+    return buildSupplements(caseData);
+  }, [layout?.id, caseData, buildSupplements]);
+
+  /** 星运牌阵回顾/大图用：同上 */
+  const starFortuneSupplements = useMemo(() => {
+    if (layout?.id !== "starfortune-23" || !caseData) return undefined;
     return buildSupplements(caseData);
   }, [layout?.id, caseData, buildSupplements]);
 
@@ -605,24 +653,33 @@ export default function ResultPageContent() {
           {/* 横线 1px，与竖线粗细一致 */}
           <div className="h-px shrink-0 bg-slate-200" />
 
-          {/* 牌阵回顾：横线下淡绿色背景区隔；年运时整块淡绿区可点击打开大图 */}
+          {/* 牌阵回顾：横线下淡绿色背景区隔；年运/星运时整块淡绿区可点击打开大图 */}
           <section
-            role={layout?.id === "annual-17" ? "button" : undefined}
-            tabIndex={layout?.id === "annual-17" ? 0 : undefined}
-            onClick={layout?.id === "annual-17" ? () => setAnnualReviewDetailOpen(true) : undefined}
+            role={layout?.id === "annual-17" || layout?.id === "starfortune-23" ? "button" : undefined}
+            tabIndex={layout?.id === "annual-17" || layout?.id === "starfortune-23" ? 0 : undefined}
+            onClick={layout?.id === "annual-17" || layout?.id === "starfortune-23" ? () => setAnnualReviewDetailOpen(true) : undefined}
             onKeyDown={
-              layout?.id === "annual-17"
+              layout?.id === "annual-17" || layout?.id === "starfortune-23"
                 ? (e) => e.key === "Enter" && setAnnualReviewDetailOpen(true)
                 : undefined
             }
             className={`min-h-0 flex-1 bg-[#edf8f2] ${
               layout?.id === "choose-one-5" ? "p-5" : "p-4"
-            } ${layout?.id === "annual-17" ? "cursor-pointer" : ""}`}
-            aria-label={layout?.id === "annual-17" ? "点击查看牌阵详图" : undefined}
+            } ${layout?.id === "annual-17" || layout?.id === "starfortune-23" ? "cursor-pointer" : ""}`}
+            aria-label={layout?.id === "annual-17" || layout?.id === "starfortune-23" ? "点击查看牌阵详图" : undefined}
           >
             <h2 className="mb-2 text-[22px] font-semibold text-tarot-green">牌阵回顾</h2>
             {layout ? (
-              layout.id === "hexagram-7" ? (
+              layout.id === "starfortune-23" ? (
+                <StarFortuneReviewBoard
+                  slotStates={slotStates}
+                  clientBirthday={annualExtra?.clientBirthday}
+                  readingStartMonth={annualExtra?.readingStartMonth}
+                  supplements={starFortuneSupplements ?? caseData?.supplements}
+                  detailOpen={annualReviewDetailOpen}
+                  onClose={() => setAnnualReviewDetailOpen(false)}
+                />
+              ) : layout.id === "hexagram-7" ? (
                 <HexagramReviewBoard layout={layout} slotStates={slotStates} />
               ) : layout.id === "choose-one-5" ? (
                 <ChooseOneReviewBoard layout={layout} slotStates={slotStates} />
@@ -671,33 +728,33 @@ export default function ResultPageContent() {
 
         {/* 右侧列：统筹表格/年运统计+飞宫链、数字、案例解读；flex-1 min-h-0 使底部与左侧平齐 */}
         <div className="flex min-h-0 flex-1 w-max flex-col gap-10 overflow-visible pl-8 pr-4 pt-4 pb-4 xl:gap-12 xl:pl-10">
-          {layout?.id === "annual-17" ? (
+          {(layout?.id === "annual-17" || layout?.id === "starfortune-23") ? (
             <>
-              {flyChainTable?.missingMapping && (
+              {flyChainMissingMapping && (
                 <section className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
                   <p className="font-medium">缺少飞宫数据</p>
-                  <p className="mt-1">{flyChainTable.missingMapping}</p>
+                  <p className="mt-1">{flyChainMissingMapping}</p>
                   <Link href={`/tarot/${caseId}/spread`} className="mt-2 inline-block text-tarot-green hover:underline">
                     返回牌阵录入修改
                   </Link>
                 </section>
               )}
-              {annualStats && (
+              {statsForDisplay && (
                 <section className="shrink-0 w-max max-w-full">
                   <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">统计表格</h2>
                   <div className="flex flex-wrap gap-x-12 gap-y-4 rounded-xl border border-[#e2ebe7] bg-[#fbfdfc] p-4 text-sm [&>div]:pr-5 [&>div:last-child]:pr-0">
                     <div className="space-y-3 min-w-0">
-                      <div><span className="text-slate-500">元素：</span><span className="font-medium text-slate-800">{formatElementLine(annualStats)}</span></div>
-                      <div><span className="text-slate-500">阶段：</span><span className="font-medium text-slate-800">{formatStageLine(annualStats)}</span></div>
-                      <div><span className="text-slate-500">性状：</span><span className="font-medium text-slate-800">{formatTraitLine(annualStats)}</span></div>
-                      <div><span className="text-slate-500">牌型比例：</span><span className="font-medium text-slate-800">{formatCardTypeLine(annualStats)}</span></div>
+                      <div><span className="text-slate-500">元素：</span><span className="font-medium text-slate-800">{formatElementLine(statsForDisplay)}</span></div>
+                      <div><span className="text-slate-500">阶段：</span><span className="font-medium text-slate-800">{formatStageLine(statsForDisplay)}</span></div>
+                      <div><span className="text-slate-500">性状：</span><span className="font-medium text-slate-800">{formatTraitLine(statsForDisplay)}</span></div>
+                      <div><span className="text-slate-500">牌型比例：</span><span className="font-medium text-slate-800">{formatCardTypeLine(statsForDisplay)}</span></div>
                     </div>
                     <div className="space-y-3 min-w-0">
                       <div>
                         <span className="text-slate-500">星座（≥2 前三）：</span>
                         <span className="font-medium text-slate-800">
                           {(() => {
-                            const { items, note } = topKeysWithCount(annualStats.zodiacCount);
+                            const { items, note } = topKeysWithCount(statsForDisplay.zodiacCount);
                             if (!items.length) return "—";
                             return items.map(({ key, count }) => `${key}（${count}）`).join("、") + (note ? `、${note}` : "");
                           })()}
@@ -707,7 +764,7 @@ export default function ResultPageContent() {
                         <span className="text-slate-500">宫位（≥2 前三）：</span>
                         <span className="font-medium text-slate-800">
                           {(() => {
-                            const { items, note } = topKeysWithCount(annualStats.houseCount);
+                            const { items, note } = topKeysWithCount(statsForDisplay.houseCount);
                             if (!items.length) return "—";
                             return items.map(({ key, count }) => `${formatHouseLabel(key)}（${count}）`).join("、") + (note ? `、${note}` : "");
                           })()}
@@ -716,19 +773,19 @@ export default function ResultPageContent() {
                       <div>
                         <span className="text-slate-500">行星（含补录）：</span>
                         <span className="font-medium text-slate-800">
-                          {Object.entries(annualStats.planetCount)
+                          {Object.entries(statsForDisplay.planetCount)
                             .sort((a, b) => b[1] - a[1])
                             .map(([k, v]) => `${k}${v}`)
                             .join(" ") || "—"}
                         </span>
                       </div>
-                      <div><span className="text-slate-500">飞宫分支最多起点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topStartSlots ? (flyChainStatsResult.topStartSlots.items.length ? flyChainStatsResult.topStartSlots.items.map(({ node, count }) => `${getFlySlotName(node)}（${count}）`).join("、") + (flyChainStatsResult.topStartSlots.note ? `、${flyChainStatsResult.topStartSlots.note}` : "") : (flyChainStatsResult.topStartSlots.note ?? "—")) : "—"}</span></div>
+                      <div><span className="text-slate-500">飞宫分支最多起点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topStartSlots ? (flyChainStatsResult.topStartSlots.items.length ? flyChainStatsResult.topStartSlots.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topStartSlots.note ? `、${flyChainStatsResult.topStartSlots.note}` : "") : (flyChainStatsResult.topStartSlots.note ?? "—")) : "—"}</span></div>
                     </div>
                     <div className="space-y-3 min-w-0">
-                      <div><span className="text-slate-500">最多停止点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topStopNodes ? (flyChainStatsResult.topStopNodes.items.length ? flyChainStatsResult.topStopNodes.items.map(({ node, count }) => `${getFlySlotName(node)}（${count}）`).join("、") + (flyChainStatsResult.topStopNodes.note ? `、${flyChainStatsResult.topStopNodes.note}` : "") : (flyChainStatsResult.topStopNodes.note ?? "—")) : "—"}</span></div>
-                      <div><span className="text-slate-500">最多触停点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topRedNodes ? (flyChainStatsResult.topRedNodes.items.length ? flyChainStatsResult.topRedNodes.items.map(({ node, count }) => `${getFlySlotName(node)}（${count}）`).join("、") + (flyChainStatsResult.topRedNodes.note ? `、${flyChainStatsResult.topRedNodes.note}` : "") : (flyChainStatsResult.topRedNodes.note ?? "—")) : "—"}</span></div>
-                      <div><span className="text-slate-500">最多转折点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topTurningNodes ? (flyChainStatsResult.topTurningNodes.items.length ? flyChainStatsResult.topTurningNodes.items.map(({ node, count }) => `${getFlySlotName(node)}（${count}）`).join("、") + (flyChainStatsResult.topTurningNodes.note ? `、${flyChainStatsResult.topTurningNodes.note}` : "") : (flyChainStatsResult.topTurningNodes.note ?? "—")) : "—"}</span></div>
-                      <div><span className="text-slate-500">数字绝对值加和 / 直接加和：</span><span className="font-medium text-slate-800">{(annualStats.numberSumAbsolute % 22 + 22) % 22} / {(annualStats.numberSumSigned % 22 + 22) % 22}</span></div>
+                      <div><span className="text-slate-500">最多停止点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topStopNodes ? (flyChainStatsResult.topStopNodes.items.length ? flyChainStatsResult.topStopNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topStopNodes.note ? `、${flyChainStatsResult.topStopNodes.note}` : "") : (flyChainStatsResult.topStopNodes.note ?? "—")) : "—"}</span></div>
+                      <div><span className="text-slate-500">最多触停点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topRedNodes ? (flyChainStatsResult.topRedNodes.items.length ? flyChainStatsResult.topRedNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topRedNodes.note ? `、${flyChainStatsResult.topRedNodes.note}` : "") : (flyChainStatsResult.topRedNodes.note ?? "—")) : "—"}</span></div>
+                      <div><span className="text-slate-500">最多转折点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topTurningNodes ? (flyChainStatsResult.topTurningNodes.items.length ? flyChainStatsResult.topTurningNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topTurningNodes.note ? `、${flyChainStatsResult.topTurningNodes.note}` : "") : (flyChainStatsResult.topTurningNodes.note ?? "—")) : "—"}</span></div>
+                      <div><span className="text-slate-500">数字绝对值加和 / 直接加和：</span><span className="font-medium text-slate-800">{(statsForDisplay.numberSumAbsolute % 22 + 22) % 22} / {(statsForDisplay.numberSumSigned % 22 + 22) % 22}</span></div>
                     </div>
                   </div>
                 </section>
@@ -739,16 +796,55 @@ export default function ResultPageContent() {
                   <p className="mt-1">{flyChainError}</p>
                 </section>
               )}
-              {flyChainTable && !flyChainTable.missingMapping && matrixContext && (
-                <section className="shrink-0">
+              {flyChainTable && !flyChainMissingMapping && matrixContext && (
+                <section className="shrink-0 space-y-3">
                   <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">飞宫链</h2>
                   <FlyChainGraphBoundary>
                     <AnnualFlyChainGraph
                       rows={flyChainTable.rows}
                       slotCards={matrixContext.slotCards}
                       houseDates={annualHouseDates}
+                      getSlotName={isStarFortune ? getSlotNameStarFortune : undefined}
                     />
                   </FlyChainGraphBoundary>
+                  <div className="overflow-x-auto rounded-xl border border-[#e2ebe7] bg-[#fbfdfc]">
+                    <table className="w-full min-w-[640px] border-collapse text-sm">
+                      <thead>
+                        <tr className="border-b border-[#d7ebe2] bg-[#f5fbf8]">
+                          <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-tarot-green">起点（牌面）</th>
+                          <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-tarot-green">飞宫链路</th>
+                          <th className="whitespace-nowrap px-3 py-2 text-center font-semibold text-tarot-green">分支数</th>
+                          <th className="whitespace-nowrap px-3 py-2 text-left font-semibold text-tarot-green">停止点</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {flyChainTable.rows.map((row) => {
+                          const pathText = row.branches.length
+                            ? row.branches.map((b) =>
+                                b.path.map((s) => {
+                                  const pos = getFlySlotNameResolved(s.node);
+                                  const entry = matrixContext.slotCards.get(s.node);
+                                  const name = entry ? `${entry.card.name}${entry.reversed ? "-" : ""}` : "—";
+                                  let t = `${pos}（${name}）`;
+                                  if (s.isTurningPoint) t = `【${t}】`;
+                                  if (s.isRed) t = `*${t}*`;
+                                  return t;
+                                }).join(" → ")
+                              ).join(" | ")
+                            : "—";
+                          const branchCount = row.branches.length;
+                          return (
+                            <tr key={row.startSlotId} className="border-b border-[#e5f3f0]">
+                              <td className="px-3 py-2 text-slate-800">{row.startLabel}</td>
+                              <td className="max-w-[480px] break-words px-3 py-2 text-slate-700">{pathText}</td>
+                              <td className="px-3 py-2 text-center text-slate-800">{branchCount}</td>
+                              <td className="px-3 py-2 text-slate-800">{row.stopLabel}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 </section>
               )}
           <section className="flex min-h-[420px] flex-1 flex-col">

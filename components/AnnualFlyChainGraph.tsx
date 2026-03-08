@@ -18,6 +18,8 @@ type AnnualFlyChainGraphProps = {
   rows: FlyChainRow[];
   slotCards: Map<string, SlotCardEntry>;
   houseDates?: Record<string, string>;
+  /** 星运牌阵时传入，用于七星位等 slot 名称 */
+  getSlotName?: (slotId: string) => string;
 };
 
 type TreeNode = {
@@ -101,9 +103,11 @@ const NODE_TYPES = { annualFly: AnnualFlyNode };
 function buildNodeLabel(
   step: PathStep,
   slotCards: Map<string, SlotCardEntry>,
-  houseDates?: Record<string, string>
+  houseDates?: Record<string, string>,
+  getSlotNameFn?: (slotId: string) => string
 ): string {
-  const pos = getFlySlotName(step.node);
+  const getName = getSlotNameFn ?? getFlySlotName;
+  const pos = getName(step.node);
   const entry = slotCards.get(step.node);
   const name = entry ? `${entry.card.name}${entry.reversed ? "-" : ""}` : "—";
   const raw = houseDates && /^\d+$/.test(step.node) ? houseDates[step.node] : "";
@@ -114,7 +118,8 @@ function buildNodeLabel(
 function buildTree(
   row: FlyChainRow,
   slotCards: Map<string, SlotCardEntry>,
-  houseDates?: Record<string, string>
+  houseDates?: Record<string, string>,
+  getSlotNameFn?: (slotId: string) => string
 ): TreeNode {
   const spaceIdx = row.startLabel.indexOf(" ");
   let rootLabel =
@@ -124,6 +129,7 @@ function buildTree(
   const rawStart = houseDates && /^\d+$/.test(row.startSlotId) ? houseDates[row.startSlotId] : "";
   const startDate = rawStart.length >= 7 ? `${rawStart.slice(2, 4)}-${rawStart.slice(5, 7)}` : rawStart;
   if (startDate) rootLabel += `\n${startDate}`;
+  const getName = getSlotNameFn ?? getFlySlotName;
   const root: TreeNode = {
     id: `${row.startSlotId}-root`,
     key: row.startSlotId,
@@ -143,7 +149,7 @@ function buildTree(
         child = {
           id: `${row.startSlotId}-${branchIndex}-${stepIndex}-${step.node}-${current.children.length}`,
           key,
-          label: buildNodeLabel(step, slotCards, houseDates),
+          label: buildNodeLabel(step, slotCards, houseDates, getName),
           children: [],
           isTurningPoint: step.isTurningPoint,
           isRed: step.isRed,
@@ -220,14 +226,14 @@ function buildFlow(tree: TreeNode, rowTopY: number): { nodes: Node[]; edges: Edg
   return { nodes, edges, height };
 }
 
-function AnnualFlyChainGraphInner({ rows, slotCards, houseDates }: AnnualFlyChainGraphProps) {
+function AnnualFlyChainGraphInner({ rows, slotCards, houseDates, getSlotName }: AnnualFlyChainGraphProps) {
   const { nodes, edges } = useMemo(() => {
     let rowTopY = 20; // 顶部留白 20px，直接烘焙进节点坐标
     const allNodes: Node[] = [];
     const allEdges: Edge[] = [];
 
     rows.forEach((row) => {
-      const tree = buildTree(row, slotCards, houseDates);
+      const tree = buildTree(row, slotCards, houseDates, getSlotName);
       const flow = buildFlow(tree, rowTopY);
       allNodes.push(...flow.nodes);
       allEdges.push(...flow.edges);
@@ -235,7 +241,7 @@ function AnnualFlyChainGraphInner({ rows, slotCards, houseDates }: AnnualFlyChai
     });
 
     return { nodes: allNodes, edges: allEdges };
-  }, [rows, slotCards, houseDates]);
+  }, [rows, slotCards, houseDates, getSlotName]);
 
   const graphHeight = useMemo(() => {
     if (nodes.length === 0) return 160;
