@@ -8,6 +8,7 @@ export const LENORMAND_CATEGORIES = [
   "学业",
   "健康",
   "灵性",
+  "运势",
   "其他",
   "开放式问题",
   "封闭式问题",

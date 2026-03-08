@@ -500,7 +500,7 @@ export function LenormandAnalysisClient() {
     <div className="min-h-[calc(100vh-96px)] bg-white pb-24">
       <div className={`mx-auto grid w-full max-w-[1400px] grid-cols-1 px-4 ${layoutGridClass}`}>
         <div className="flex min-w-0 shrink-0 flex-col" style={{ width: leftColumnWidthPx }}>
-          <section className="shrink-0 border-b border-slate-200 bg-white px-0 py-5">
+          <section className="shrink-0 border-b border-slate-50 bg-white px-0 pt-0 pb-4">
             <div className="space-y-3 text-left">
               <div>
                 <p className="text-xs font-semibold text-tarot-green">问题</p>
@@ -544,7 +544,7 @@ export function LenormandAnalysisClient() {
             </div>
           </section>
 
-          <section className="flex flex-1 flex-col items-start border-t border-slate-200 bg-white px-0 py-5">
+          <section className="flex flex-1 flex-col items-start border-t border-slate-50 bg-white px-0 py-4">
             <div className={spreadBoardOffsetClass}>
               <div className={`flex min-h-10 ${spreadBoardWidthClass} flex-col justify-center`}>
                 <p className="w-full text-center text-xs font-medium text-slate-500">牌型：{displaySpreadLabel}</p>
@@ -554,10 +554,10 @@ export function LenormandAnalysisClient() {
           </section>
         </div>
 
-        <div className="hidden w-px shrink-0 self-stretch bg-slate-200 xl:block" aria-hidden />
+        <div className="hidden w-px shrink-0 self-stretch bg-slate-50 xl:block" aria-hidden />
 
         <div className="min-w-0 overflow-hidden pl-0 xl:pl-8">
-          <section className="max-h-[calc(100vh-220px)] overflow-y-auto py-5 pr-1 xl:pr-4">
+          <section className="max-h-[calc(100vh-160px)] overflow-y-auto pt-4 pb-4 pr-1 xl:pr-4">
             {analysisContent}
             {fromLibrary && (
               <div className="mt-6 space-y-1.5">
@@ -579,7 +579,7 @@ export function LenormandAnalysisClient() {
         </div>
       </div>
 
-      <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 bg-white py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
+      <footer className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-50 bg-white py-4 shadow-[0_-4px_12px_rgba(0,0,0,0.04)]">
         <div
           className={`mx-auto grid w-full max-w-[1400px] grid-cols-1 items-center gap-4 px-4 sm:grid-cols-2 ${footerGridClass}`}
         >
