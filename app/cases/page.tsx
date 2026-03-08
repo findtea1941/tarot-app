@@ -1,47 +1,98 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import type { Case } from "@/lib/db";
 import { deleteCase, listCasesByType, listDrafts, searchCases } from "@/lib/repo/caseRepo";
 
 type CaseTab = "tarot" | "lenormand";
 
-export default function CasesPage() {
+const LOAD_TIMEOUT_MS = 5000;
+
+function getShowDrafts(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("view") === "drafts";
+}
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) => {
+      setTimeout(() => reject(new Error("加载超时，请重试")), ms);
+    }),
+  ]);
+}
+
+function CasesPageContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const requestIdRef = useRef(0);
+  const [isMounted, setIsMounted] = useState(false);
+  const [showDrafts, setShowDrafts] = useState(false);
   const [tab, setTab] = useState<CaseTab>("tarot");
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [items, setItems] = useState<Case[]>([]);
   const [drafts, setDrafts] = useState<Case[]>([]);
   const [loading, setLoading] = useState(true);
-  const showDrafts = searchParams.get("view") === "drafts";
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      if (showDrafts) {
-        setDrafts(await listDrafts());
-      } else if (searchQuery.trim()) {
-        setItems(await searchCases(searchQuery));
-      } else {
-        setItems(await listCasesByType(tab));
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [tab, searchQuery, showDrafts]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    const t = setTimeout(() => refresh(), searchQuery && !showDrafts ? 200 : 0);
+    setShowDrafts(getShowDrafts());
+    setIsMounted(true);
+    const onPopState = () => setShowDrafts(getShowDrafts());
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
+  useEffect(() => {
+    if (showDrafts) {
+      setDebouncedQuery("");
+      return;
+    }
+    const t = setTimeout(() => setDebouncedQuery(searchQuery.trim()), 200);
     return () => clearTimeout(t);
-  }, [refresh, searchQuery, showDrafts]);
+  }, [searchQuery, showDrafts]);
+
+  useEffect(() => {
+    if (!isMounted) return;
+    const requestId = ++requestIdRef.current;
+    const draftView = showDrafts;
+    const activeQuery = draftView ? "" : debouncedQuery;
+
+    setLoading(true);
+    setLoadError(null);
+
+    void (async () => {
+      try {
+        const result = draftView
+          ? await withTimeout(listDrafts(), LOAD_TIMEOUT_MS)
+          : activeQuery
+            ? await withTimeout(searchCases(activeQuery), LOAD_TIMEOUT_MS)
+            : await withTimeout(listCasesByType(tab), LOAD_TIMEOUT_MS);
+
+        if (requestId !== requestIdRef.current) return;
+        if (draftView) {
+          setDrafts(result);
+        } else {
+          setItems(result);
+        }
+      } catch (e) {
+        if (requestId !== requestIdRef.current) return;
+        setLoadError(e instanceof Error ? e.message : "加载失败，请重试");
+        setItems([]);
+        setDrafts([]);
+      } finally {
+        if (requestId === requestIdRef.current) {
+          setLoading(false);
+        }
+      }
+    })();
+  }, [isMounted, showDrafts, tab, debouncedQuery, reloadKey]);
 
   const isSearchMode = !!searchQuery.trim();
-  const displayItems = showDrafts
-    ? drafts
-    : items;
+  const displayItems = showDrafts ? drafts : items;
 
   return (
     <div className="space-y-4">
@@ -54,7 +105,11 @@ export default function CasesPage() {
                 type="button"
                 onClick={() => {
                   setTab("tarot");
-                  if (showDrafts) router.push("/cases");
+                  if (showDrafts) {
+                    setShowDrafts(false);
+                    setLoadError(null);
+                    router.push("/cases");
+                  }
                 }}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
                   tab === "tarot"
@@ -68,7 +123,11 @@ export default function CasesPage() {
                 type="button"
                 onClick={() => {
                   setTab("lenormand");
-                  if (showDrafts) router.push("/cases");
+                  if (showDrafts) {
+                    setShowDrafts(false);
+                    setLoadError(null);
+                    router.push("/cases");
+                  }
                 }}
                 className={`rounded-full px-2.5 py-1 text-xs font-medium transition ${
                   tab === "lenormand"
@@ -83,7 +142,12 @@ export default function CasesPage() {
         </div>
         <button
           type="button"
-          onClick={() => router.push(showDrafts ? "/cases" : "/cases?view=drafts")}
+          onClick={() => {
+            const next = !showDrafts;
+            setShowDrafts(next);
+            setLoadError(null);
+            router.push(next ? "/cases?view=drafts" : "/cases");
+          }}
           className={`pb-0.5 text-sm font-normal text-tarot-green hover:underline ${showDrafts ? "underline" : ""}`}
         >
           草稿箱
@@ -101,7 +165,18 @@ export default function CasesPage() {
         </div>
       )}
 
-      {loading ? (
+      {loadError ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <p>{loadError}</p>
+          <button
+            type="button"
+            onClick={() => setReloadKey((n) => n + 1)}
+            className="mt-2 rounded-xl bg-tarot-green px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700"
+          >
+            重试
+          </button>
+        </div>
+      ) : loading ? (
         <p className="text-sm text-slate-500">加载中…</p>
       ) : displayItems.length === 0 ? (
         <p className="text-sm text-slate-500">
@@ -140,7 +215,7 @@ export default function CasesPage() {
                 onClick={async () => {
                   if (confirm("确定删除该案例？")) {
                     await deleteCase(c.id);
-                    await refresh();
+                    setReloadKey((n) => n + 1);
                   }
                 }}
               >
@@ -152,4 +227,8 @@ export default function CasesPage() {
       )}
     </div>
   );
+}
+
+export default function CasesPage() {
+  return <CasesPageContent />;
 }

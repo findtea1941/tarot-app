@@ -25,7 +25,8 @@ const SPREAD_LABELS: Record<LenormandSpreadType, string> = {
 export function LenormandEntryClient() {
   const params = useParams();
   const router = useRouter();
-  const caseId = params.caseId as string;
+  const caseIdParam = params?.caseId;
+  const caseId = Array.isArray(caseIdParam) ? caseIdParam[0] : caseIdParam ?? "";
 
   const [question, setQuestion] = useState("");
   const [background, setBackground] = useState("");

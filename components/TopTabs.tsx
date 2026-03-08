@@ -4,19 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
 
-interface TabItem {
-  href: string;
-  label: string;
-}
-
-const tabs: TabItem[] = [
+const tabs = [
   { href: "/tarot", label: "塔罗" },
   { href: "/lenormand", label: "雷诺曼" },
-  { href: "/cases", label: "案例库" }
-];
+  { href: "/cases", label: "案例库" },
+] as const;
 
 export function TopTabs({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const currentPath = pathname ?? "";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -28,8 +24,8 @@ export function TopTabs({ children }: { children: ReactNode }) {
           <nav className="flex gap-2 text-sm">
             {tabs.map((tab) => {
               const active =
-                pathname === tab.href ||
-                (tab.href !== "/" && pathname.startsWith(tab.href));
+                currentPath === tab.href ||
+                currentPath.startsWith(tab.href + "/");
               return (
                 <Link
                   key={tab.href}
@@ -48,9 +44,9 @@ export function TopTabs({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="min-h-[calc(100vh-56px)] w-full flex-1 bg-gradient-to-b from-white via-[#fafdfc] to-[#f5faf9]">
-        {pathname?.match(/^\/tarot\/[^/]+\/spread$/)
+        {currentPath.match(/^\/tarot\/[^/]+\/spread$/)
           ? <div className="w-full">{children}</div>
-          : pathname?.match(/^\/tarot\/[^/]+\/result$/)
+          : currentPath.match(/^\/tarot\/[^/]+\/result$/)
             ? <div className="mx-auto max-w-[1800px] px-4 pt-0 pb-6">{children}</div>
             : (
               <div className="mx-auto max-w-[1800px] px-4 py-6">

@@ -20,6 +20,12 @@ export async function createCase(input: { title: string; question?: string }) {
   return item;
 }
 
+/** 年运牌阵专用：案主生日、看盘起始月 */
+export type AnnualExtra = {
+  clientBirthday: string; // MM-DD
+  readingStartMonth: string; // YYYY-MM
+};
+
 /** 创建塔罗案例草稿，仅当用户点击「下一步：进入牌阵」时调用 */
 export async function createTarotDraft(input: {
   question: string;
@@ -29,6 +35,7 @@ export async function createTarotDraft(input: {
   spreadType: SpreadType;
   timeAxisVariant?: string;
   location: Location;
+  annual?: AnnualExtra;
 }): Promise<Case> {
   const now = Date.now();
   const dateStr = input.drawTime.slice(0, 10); // YYYY-MM-DD
@@ -48,7 +55,7 @@ export async function createTarotDraft(input: {
     location: input.location,
     locationLabel: input.location.label,
     cards: [],
-    extra: undefined,
+    extra: input.annual ? { annual: input.annual } : undefined,
     analysis: undefined,
     userInterpretation: "",
     createdAt: now,
@@ -72,6 +79,7 @@ export async function restoreTarotDraft(
     spreadType: SpreadType;
     timeAxisVariant?: string;
     location: Location;
+    annual?: AnnualExtra;
   }
 ): Promise<Case> {
   const now = Date.now();
@@ -92,7 +100,7 @@ export async function restoreTarotDraft(
     location: input.location,
     locationLabel: input.location.label,
     cards: [],
-    extra: undefined,
+    extra: input.annual ? { annual: input.annual } : undefined,
     analysis: undefined,
     userInterpretation: "",
     createdAt: now,
@@ -116,6 +124,7 @@ export async function updateTarotDraft(
     spreadType: SpreadType;
     timeAxisVariant: string;
     location: Location;
+    extra: Case["extra"];
   }>
 ): Promise<void> {
   const now = Date.now();
@@ -134,6 +143,9 @@ export async function updateTarotDraft(
   }
   if (input.location !== undefined) {
     merged.locationLabel = input.location.label;
+  }
+  if (input.extra !== undefined) {
+    merged.extra = input.extra;
   }
   await db.cases.put(merged);
 }
@@ -210,7 +222,11 @@ export async function updateCaseStep5Partial(
       : existing.supplements;
   const analysis =
     patch.analysis != null
-      ? { ...(existing.analysis ?? {}), ...patch.analysis }
+      ? {
+          ...(existing.analysis ?? {}),
+          ...patch.analysis,
+          userNotes: patch.analysis.userNotes ?? existing.analysis?.userNotes ?? "",
+        }
       : existing.analysis;
   const merged: Case = {
     ...existing,

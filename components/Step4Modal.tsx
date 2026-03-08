@@ -117,7 +117,7 @@ export function Step4Modal({
           {cardsToSupplement.length > 0 && (
             <section>
               <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-tarot-green">
-                <span className="text-base">✦</span> 对应行星（ACE/宫廷牌）
+                <span className="text-base">✦</span> 补充 ACE 与宫廷牌行星
               </h3>
               <ul className="space-y-3">
                 {cardsToSupplement.map((item) => (
@@ -150,22 +150,24 @@ export function Step4Modal({
             </section>
           )}
 
-          <section>
-            <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-tarot-green">
-              <span className="text-base">▤</span> 指示牌
-            </h3>
-            <label htmlFor="step4-significator" className="mb-2 block text-xs leading-5 text-slate-500">
-              可选输入，若有多张请用分号 ; 分隔，逆位请在牌名末尾添加减号
-            </label>
-            <input
-              id="step4-significator"
-              type="text"
-              className="w-full rounded-2xl border border-[#d8ebe3] bg-white px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
-              value={significatorInput}
-              onChange={(e) => setSignificatorInput(e.target.value)}
-              placeholder="例：愚者; 女祭司-"
-            />
-          </section>
+          {layout.id !== "annual-17" && (
+            <section>
+              <h3 className="mb-3 flex items-center gap-1.5 text-sm font-semibold text-tarot-green">
+                <span className="text-base">▤</span> 指示牌
+              </h3>
+              <label htmlFor="step4-significator" className="mb-2 block text-xs leading-5 text-slate-500">
+                可选输入，若有多张请用分号 ; 分隔，逆位请在牌名末尾添加减号
+              </label>
+              <input
+                id="step4-significator"
+                type="text"
+                className="w-full rounded-2xl border border-[#d8ebe3] bg-white px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                value={significatorInput}
+                onChange={(e) => setSignificatorInput(e.target.value)}
+                placeholder="例：愚者; 女祭司-"
+              />
+            </section>
+          )}
         </div>
         <div className="flex gap-3 border-t border-[#e7f3ee] p-5">
           <button

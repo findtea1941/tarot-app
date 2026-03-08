@@ -1,6 +1,7 @@
 import type { SpreadType } from "@/lib/db";
 import type { SpreadLayout, SlotDef } from "@/lib/spreadTypes";
 import { getTimeAxisSlotNames } from "@/lib/timeAxisVariant";
+import { annualLayout } from "./annual";
 import { bodyMindSpiritLayout } from "./bodyMindSpirit";
 import { chooseOneLayout } from "./chooseOne";
 import { fourElementsLayout } from "./fourElements";
@@ -17,6 +18,7 @@ const layoutMap: Record<SpreadType, SpreadLayout | null> = {
   "圣三角": holyTriangleLayout,
   "时间流": timeflowLayout,
   "无牌阵": noSpreadLayout,
+  "年运": annualLayout,
 };
 
 /** 根据牌阵类型取 layout，未接入的返回 null */
@@ -42,4 +44,4 @@ export function getLayoutWithTimeAxisVariant(
   return { ...layout, slots };
 }
 
-export { bodyMindSpiritLayout, chooseOneLayout, fourElementsLayout, hexagramLayout, holyTriangleLayout, noSpreadLayout, timeflowLayout };
+export { annualLayout, bodyMindSpiritLayout, chooseOneLayout, fourElementsLayout, hexagramLayout, holyTriangleLayout, noSpreadLayout, timeflowLayout };

@@ -12,6 +12,10 @@ export type TarotDraftStored = {
   timeAxisVariant?: string;
   provinceCode: string;
   cityCode: string;
+  /** 年运牌阵：案主出生日期 MM-DD */
+  clientBirthday?: string;
+  /** 年运牌阵：看盘起始月 YYYY-MM */
+  readingStartMonth?: string;
 };
 
 export function loadTarotDraftFromStorage(caseId: string): TarotDraftStored | null {

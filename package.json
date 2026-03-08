@@ -10,6 +10,7 @@
     "verify:deck": "tsx scripts/verify_deck.ts"
   },
   "dependencies": {
+    "@xyflow/react": "^12.10.1",
     "dexie": "^4.3.0",
     "element-china-area-data": "^5.0.2",
     "next": "14.2.3",

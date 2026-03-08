@@ -20,7 +20,8 @@ export type SpreadType =
   | "身心灵"
   | "圣三角"
   | "时间流"
-  | "无牌阵";
+  | "无牌阵"
+  | "年运";
 
 export interface Card {
   id: string;
@@ -122,7 +123,8 @@ export type Category =
   | "开放式问题"
   | "封闭式问题";
 
-export type SpreadType =
+/** 与上方 SpreadType 区分：此处为带「牌阵」后缀的规格用命名 */
+export type SpreadTypeSpec =
   | "六芒星牌阵"
   | "四元素牌阵"
   | "二择一牌阵"
@@ -139,7 +141,8 @@ export interface CardDraw {
   reversed: boolean;          // true if rawInput endsWith "-"
 }
 
-export interface ExtraInfo {
+/** 与上方 ExtraInfo 区分：规格用扩展信息 */
+export interface ExtraInfoSpec {
   // key 用 positionIndex，最简单不出错
   planetOverrideByPosition?: Record<number, string>;
 
@@ -171,7 +174,8 @@ export interface AnalysisSummary {
   dominantYinYang?: string | null;
 }
 
-export interface AnalysisResult {
+/** 与上方 AnalysisResult 区分：规格用分析结果 */
+export interface AnalysisResultSpec {
   generatedAt: string; // ISO datetime
   tableRows: AnalysisRow[];
   summary: AnalysisSummary;
@@ -186,13 +190,13 @@ export interface CaseRecord {
   background?: string;
   category: Category;
   drawTime: string; // ISO datetime
-  spreadType: SpreadType;
+  spreadType: SpreadTypeSpec;
   spreadVariant?: string;
 
   cards: CardDraw[];
-  extra?: ExtraInfo;
+  extra?: ExtraInfoSpec;
 
-  analysis?: AnalysisResult;
+  analysis?: AnalysisResultSpec;
   userInterpretation: string;
 
   createdAt: string; // ISO datetime

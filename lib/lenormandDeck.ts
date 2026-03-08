@@ -60,10 +60,10 @@ export function parseLenormandCard(input: string): string | null {
   // 编号
   const n = parseInt(s, 10);
   if (!isNaN(n) && n >= 1 && n <= 40) {
-    return BY_ID.get(n) ?? null;
+    return (BY_ID as Map<number, string>).get(n) ?? null;
   }
   // 牌名
-  return BY_NAME.has(s) ? s : null;
+  return (BY_NAME as Map<string, number>).has(s) ? s : null;
 }
 
 /**
@@ -91,8 +91,8 @@ export function parseLenormandCards(input: string): {
 /** 获取牌名（用于展示） */
 export function getLenormandCardName(idOrName: string): string {
   const n = parseInt(idOrName, 10);
-  if (!isNaN(n) && n >= 1 && n <= 40) return BY_ID.get(n) ?? idOrName;
-  return BY_NAME.has(idOrName) ? idOrName : idOrName;
+  if (!isNaN(n) && n >= 1 && n <= 40) return (BY_ID as Map<number, string>).get(n) ?? idOrName;
+  return (BY_NAME as Map<string, number>).has(idOrName) ? idOrName : idOrName;
 }
 
 /** 格式化编号为 01、02、03…（系统中统一使用两位编号） */
@@ -103,12 +103,12 @@ export function formatLenormandCardId(id: number): string {
 
 /** 获取牌的系统编号（1-40），未知牌返回 undefined */
 export function getLenormandCardId(name: string): number | undefined {
-  return BY_NAME.get(name);
+  return (BY_NAME as Map<string, number>).get(name);
 }
 
 /** 获取牌的系统展示格式：如 "01 骑士" */
 export function getLenormandCardDisplay(name: string): string {
-  const id = BY_NAME.get(name);
+  const id = (BY_NAME as Map<string, number>).get(name);
   if (id) return `${formatLenormandCardId(id)} ${name}`;
   return name;
 }

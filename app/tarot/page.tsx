@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createTarotDraft,
   getCaseById,
@@ -43,12 +43,13 @@ const SPREAD_TYPES = [
   "圣三角",
   "时间流",
   "无牌阵",
+  "年运",
 ] as const;
 
-export default function TarotNewPage() {
+function TarotNewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const caseId = searchParams.get("caseId");
+  const caseId = searchParams?.get("caseId") ?? null;
 
   const [question, setQuestion] = useState("");
   const [background, setBackground] = useState("");
@@ -57,6 +58,10 @@ export default function TarotNewPage() {
   const [drawTime, setDrawTime] = useState("");
   const [spreadType, setSpreadType] = useState<typeof SPREAD_TYPES[number] | "">("");
   const [timeAxisVariant, setTimeAxisVariant] = useState(DEFAULT_TIME_AXIS_VARIANT);
+  /** 年运牌阵：案主出生日期 MM-DD */
+  const [clientBirthday, setClientBirthday] = useState("");
+  /** 年运牌阵：看盘起始月 YYYY-MM */
+  const [readingStartMonth, setReadingStartMonth] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   // 用 URL 同步 state，解决 Next 在浏览器后退时 useSearchParams 不更新导致 caseId 为空的问题
@@ -108,6 +113,8 @@ export default function TarotNewPage() {
         setTimeAxisVariant(stored.timeAxisVariant || DEFAULT_TIME_AXIS_VARIANT);
         setProvinceCode(stored.provinceCode || DEFAULT_PROVINCE_CODE);
         setCityCode(stored.cityCode || DEFAULT_CITY_CODE);
+        setClientBirthday(stored.clientBirthday ?? "");
+        setReadingStartMonth(stored.readingStartMonth ?? "");
         setLoadingDraft(false);
         return;
       }
@@ -126,6 +133,9 @@ export default function TarotNewPage() {
         }
         setSpreadType((c.spreadType as typeof SPREAD_TYPES[number]) ?? "");
         setTimeAxisVariant(c.timeAxisVariant || DEFAULT_TIME_AXIS_VARIANT);
+        const annual = c.extra && typeof c.extra === "object" && "annual" in c.extra ? (c.extra as { annual?: { clientBirthday?: string; readingStartMonth?: string } }).annual : undefined;
+        setClientBirthday(annual?.clientBirthday ?? "");
+        setReadingStartMonth(annual?.readingStartMonth ?? "");
         if (c.location) {
           setProvinceCode(c.location.provinceCode);
           setCityCode(c.location.cityCode);
@@ -163,6 +173,8 @@ export default function TarotNewPage() {
     setDrawTime("");
     setSpreadType("");
     setTimeAxisVariant(DEFAULT_TIME_AXIS_VARIANT);
+    setClientBirthday("");
+    setReadingStartMonth("");
     setProvinceCode(DEFAULT_PROVINCE_CODE);
     setCityCode(DEFAULT_CITY_CODE);
     setError("");
@@ -199,6 +211,7 @@ export default function TarotNewPage() {
         timeAxisVariant,
         provinceCode,
         cityCode,
+        ...(spreadType === "年运" ? { clientBirthday, readingStartMonth } : {}),
       });
     }, 400);
     return () => {
@@ -217,6 +230,9 @@ export default function TarotNewPage() {
     timeAxisVariant,
     provinceCode,
     cityCode,
+    spreadType,
+    clientBirthday,
+    readingStartMonth,
   ]);
 
   function parseDrawTime(isoOrLocal: string): { date: string; time: string } {
@@ -248,6 +264,14 @@ export default function TarotNewPage() {
     if (!provinceCode) return "请选择省/直辖市";
     if (!cityCode) return "请选择市";
     if (!spreadType) return "请选择牌阵类型";
+    if (spreadType === "年运") {
+      const mmdd = /^(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
+      if (!clientBirthday.trim()) return "请输入案主出生日期（MM-DD）";
+      if (!mmdd.test(clientBirthday.trim())) return "案主出生日期格式为 MM-DD，如 01-17";
+      if (!readingStartMonth.trim()) return "请输入看盘起始月（YYYY-MM）";
+      const yyyymm = /^\d{4}-(0[1-9]|1[0-2])$/;
+      if (!yyyymm.test(readingStartMonth.trim())) return "看盘起始月格式为 YYYY-MM，如 2025-03";
+    }
     return "";
   }
 
@@ -287,10 +311,14 @@ export default function TarotNewPage() {
 
       const timeAxis =
         st === "六芒星" || st === "时间流" ? timeAxisVariant : undefined;
+      const annual =
+        st === "年运" && clientBirthday.trim() && readingStartMonth.trim()
+          ? { clientBirthday: clientBirthday.trim(), readingStartMonth: readingStartMonth.trim() }
+          : undefined;
       const currentCaseId = idFromUrl || caseId;
       let nextCaseId: string;
       const existingCase = currentCaseId ? await getCaseById(currentCaseId) : undefined;
-      if (existingCase?.type === "tarot") {
+      if (existingCase?.type === "tarot" && currentCaseId) {
         await updateTarotDraft(currentCaseId, {
           question: question.trim(),
           background: background.trim() || undefined,
@@ -299,6 +327,7 @@ export default function TarotNewPage() {
           spreadType: st,
           timeAxisVariant: timeAxis,
           location,
+          ...(annual ? { extra: { ...(existingCase.extra as object || {}), annual } } : {}),
         });
         nextCaseId = currentCaseId;
       } else {
@@ -310,6 +339,7 @@ export default function TarotNewPage() {
           spreadType: st,
           ...(timeAxis != null && timeAxis !== "" ? { timeAxisVariant: timeAxis } : {}),
           location,
+          ...(annual ? { annual } : {}),
         });
         nextCaseId = draft.id;
         await new Promise((r) => setTimeout(r, 0));
@@ -327,6 +357,7 @@ export default function TarotNewPage() {
         timeAxisVariant: timeAxis,
         provinceCode,
         cityCode,
+        ...(annual ? { clientBirthday: annual.clientBirthday, readingStartMonth: annual.readingStartMonth } : {}),
       });
       // 用带 caseId 的地址替换当前历史，这样浏览器后退时会回到 /tarot?caseId=xxx 并加载草稿
       router.replace(`/tarot?caseId=${nextCaseId}`);
@@ -462,6 +493,32 @@ export default function TarotNewPage() {
                   </select>
                 </div>
               )}
+              {spreadType === "年运" && (
+                <>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-slate-700">案主出生日期 <span className="text-red-400">*</span></label>
+                    <input
+                      type="text"
+                      className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                      value={clientBirthday}
+                      onChange={(e) => setClientBirthday(e.target.value)}
+                      placeholder="MM-DD，如 01-17"
+                      maxLength={5}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-slate-700">看盘起始月 <span className="text-red-400">*</span></label>
+                    <input
+                      type="text"
+                      className="w-full rounded-2xl border border-[#dfebe5] bg-[#f8fbfa] px-4 py-3 text-slate-800 placeholder-slate-400 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                      value={readingStartMonth}
+                      onChange={(e) => setReadingStartMonth(e.target.value)}
+                      placeholder="YYYY-MM，如 2025-03"
+                      maxLength={7}
+                    />
+                  </div>
+                </>
+              )}
             </div>
             <div className="space-y-3 rounded-[24px] border border-[#e1ece8] bg-[#fbfdfc] p-5">
               <h3 className="text-sm font-medium text-slate-700">地点（省-市） <span className="text-red-400">*</span></h3>
@@ -508,5 +565,13 @@ export default function TarotNewPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function TarotNewPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[calc(100vh-96px)] items-center justify-center text-sm text-slate-500">加载中…</div>}>
+      <TarotNewPageContent />
+    </Suspense>
   );
 }

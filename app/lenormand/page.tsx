@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { getCaseById } from "@/lib/repo/caseRepo";
 import {
   createLenormandDraft,
@@ -20,10 +20,10 @@ const SPREAD_OPTIONS: {
   { type: "nine-grid", label: "九宫格", placeholder: false },
 ];
 
-export default function LenormandPage() {
+function LenormandPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const caseIdFromUrl = searchParams.get("caseId");
+  const caseIdFromUrl = searchParams?.get("caseId") ?? null;
   const [spreadType, setSpreadType] = useState<LenormandSpreadType | null>(null);
   const [isChoice, setIsChoice] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -173,5 +173,13 @@ export default function LenormandPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LenormandPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[200px] items-center justify-center text-sm text-slate-500">加载中…</div>}>
+      <LenormandPageContent />
+    </Suspense>
   );
 }

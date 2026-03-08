@@ -27,6 +27,7 @@ import { FourElementsEntryBoard } from "@/components/FourElementsEntryBoard";
 import { HolyTriangleEntryBoard } from "@/components/HolyTriangleEntryBoard";
 import { NoSpreadEntryBoard } from "@/components/NoSpreadEntryBoard";
 import { SpreadBoard } from "@/components/SpreadBoard";
+import { AnnualEntryBoard } from "@/components/AnnualEntryBoard";
 import { HexagramEntryBoard } from "@/components/HexagramEntryBoard";
 import { TimeFlowEntryBoard } from "@/components/TimeFlowEntryBoard";
 import { Step4Modal } from "@/components/Step4Modal";
@@ -40,7 +41,8 @@ import {
 export default function SpreadPage() {
   const params = useParams();
   const router = useRouter();
-  const caseId = params.caseId as string;
+  const caseIdParam = params?.caseId;
+  const caseId = Array.isArray(caseIdParam) ? caseIdParam[0] : caseIdParam ?? "";
   const [caseData, setCaseData] = useState<Case | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -91,6 +93,10 @@ export default function SpreadPage() {
           const drawTimeValue = stored.drawDate
             ? new Date(`${stored.drawDate}T${stored.drawTime || "00:00"}:00`)
             : null;
+          const annual =
+            stored.spreadType === "年运" && stored.clientBirthday && stored.readingStartMonth
+              ? { clientBirthday: stored.clientBirthday, readingStartMonth: stored.readingStartMonth }
+              : undefined;
           const repaired = await restoreTarotDraft(caseId, {
             question: stored.question,
             background: stored.background || undefined,
@@ -110,6 +116,7 @@ export default function SpreadPage() {
               districtName: "",
               label: [provinceName, cityDisplay].filter(Boolean).join("-"),
             },
+            ...(annual ? { annual } : {}),
           });
           if (cancelled) return;
           setCaseData(repaired);
@@ -421,6 +428,23 @@ export default function SpreadPage() {
                     slotInputs={slotInputs}
                     onSlotInputChange={setSlotValue}
                     slotErrors={slotErrors}
+                  />
+                ) : layout.id === "annual-17" ? (
+                  <AnnualEntryBoard
+                    layout={layout}
+                    slotInputs={slotInputs}
+                    onSlotInputChange={setSlotValue}
+                    slotErrors={slotErrors}
+                    clientBirthday={
+                      caseData.extra && typeof caseData.extra === "object" && "annual" in caseData.extra
+                        ? (caseData.extra as { annual?: { clientBirthday?: string } }).annual?.clientBirthday
+                        : undefined
+                    }
+                    readingStartMonth={
+                      caseData.extra && typeof caseData.extra === "object" && "annual" in caseData.extra
+                        ? (caseData.extra as { annual?: { readingStartMonth?: string } }).annual?.readingStartMonth
+                        : undefined
+                    }
                   />
                 ) : (
                   <SpreadBoard

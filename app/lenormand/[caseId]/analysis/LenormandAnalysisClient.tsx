@@ -111,7 +111,12 @@ export function LenormandAnalysisClient() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const caseId = params.caseId as string;
+  const caseIdParam = params?.caseId;
+  const caseId = Array.isArray(caseIdParam) ? caseIdParam[0] : caseIdParam ?? "";
+  const getQueryParam = useCallback(
+    (key: string) => searchParams?.get(key) ?? null,
+    [searchParams]
+  );
 
   const [question, setQuestion] = useState("");
   const [background, setBackground] = useState("");
@@ -132,21 +137,21 @@ export function LenormandAnalysisClient() {
   const [reviewFeedback, setReviewFeedback] = useState("");
   const reviewFeedbackRef = useRef(reviewFeedback);
   reviewFeedbackRef.current = reviewFeedback;
-  const fromLibrary = searchParams.get("from") === "library";
-  const fromDraft = searchParams.get("from") === "draft";
+  const fromLibrary = getQueryParam("from") === "library";
+  const fromDraft = getQueryParam("from") === "draft";
 
   const loadCase = useCallback(async (id: string) => {
     setLoadingCase(true);
     try {
-      const spreadFromUrl = searchParams.get("spread") as LenormandSpreadType | null;
-      const choiceFromUrl = searchParams.get("choice") === "1";
-      const qFromUrl = searchParams.get("q");
-      const bgFromUrl = searchParams.get("bg");
+      const spreadFromUrl = getQueryParam("spread") as LenormandSpreadType | null;
+      const choiceFromUrl = getQueryParam("choice") === "1";
+      const qFromUrl = getQueryParam("q");
+      const bgFromUrl = getQueryParam("bg");
 
       // 1. 二择一：从 URL 读取两组牌
       if (choiceFromUrl) {
-        const cardsAStr = searchParams.get("cardsA");
-        const cardsBStr = searchParams.get("cardsB");
+        const cardsAStr = getQueryParam("cardsA");
+        const cardsBStr = getQueryParam("cardsB");
         if (cardsAStr && cardsBStr) {
           try {
             const parsedA = JSON.parse(cardsAStr) as string[];
@@ -165,8 +170,8 @@ export function LenormandAnalysisClient() {
             ) {
               setCardsA(parsedA);
               setCardsB(parsedB);
-              setOptionALabel(searchParams.get("labelA") ?? "");
-              setOptionBLabel(searchParams.get("labelB") ?? "");
+              setOptionALabel(getQueryParam("labelA") ?? "");
+              setOptionBLabel(getQueryParam("labelB") ?? "");
               setIsChoice(true);
               setSpreadType(spreadFromUrl ?? "nine-grid");
               setQuestion(qFromUrl ?? "");
@@ -190,7 +195,7 @@ export function LenormandAnalysisClient() {
       }
 
       // 2. 单牌阵：从 URL 读取
-      const cardsFromUrl = searchParams.get("cards");
+      const cardsFromUrl = getQueryParam("cards");
       if (cardsFromUrl && !choiceFromUrl) {
         try {
           const parsed = JSON.parse(cardsFromUrl) as string[];

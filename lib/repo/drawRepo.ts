@@ -10,5 +10,6 @@ export async function createDraw(input: Omit<Draw, "id" | "createdAt">) {
   return item;
 }
 
-export async function listDrawsByCase(caseId: string) {
+export async function listDrawsByCase(caseId: string): Promise<Draw[]> {
   return db.draws.where("caseId").equals(caseId).reverse().sortBy("createdAt");
+}
