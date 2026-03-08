@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createTarotDraft,
   getCaseById,
@@ -14,9 +14,9 @@ import {
   DEFAULT_PROVINCE_CODE,
   DEFAULT_CITY_CODE,
 } from "@/lib/region";
+import type { TarotDraftStored } from "@/lib/tarotDraftStorage";
 import {
   consumeTarotReturnDraftId,
-  getTarotReturnDraftId,
   getLastTarotDraftId,
   loadTarotDraftFromStorage,
   markTarotReturnDraftId,
@@ -72,19 +72,19 @@ function TarotNewPageContent() {
   const [urlKey, setUrlKey] = useState(
     () => (typeof window !== "undefined" ? window.location.search : "")
   );
-  const [loadingDraft, setLoadingDraft] = useState(() =>
-    typeof window !== "undefined"
-      ? !window.location.search.includes("new=1") &&
-        (window.location.search.includes("caseId=") || !!getTarotReturnDraftId())
-      : false
-  );
-  const [returnDraftId] = useState(() =>
-    typeof window !== "undefined" &&
-      !window.location.search.includes("caseId=") &&
-      !window.location.search.includes("new=1")
-      ? consumeTarotReturnDraftId()
-      : null
-  );
+  // 仅在实际执行 loadDraft 时置 true，避免从顶端进入或 replace 后重挂载时因 returnDraftId 误显「加载中…」
+  const [loadingDraft, setLoadingDraft] = useState(false);
+  /** 挂载时同步从 sessionStorage 读出的草稿（规则：返回后不依赖 effect/URL 时机，首帧即恢复） */
+  const [mountSnapshot] = useState<{ id: string; data: TarotDraftStored | null } | null>(() => {
+    if (typeof window === "undefined") return null;
+    const q = window.location.search;
+    if (q.includes("new=1")) return null;
+    const idFromQ = q ? new URLSearchParams(q).get("caseId") : null;
+    const id = idFromQ || consumeTarotReturnDraftId() || getLastTarotDraftId();
+    if (!id) return null;
+    const data = loadTarotDraftFromStorage(id);
+    return { id, data };
+  });
 
   // 地点（中国省市）：默认 上海市 / 上海市(市辖区)
   const [provinceCode, setProvinceCode] = useState(DEFAULT_PROVINCE_CODE);
@@ -163,7 +163,29 @@ function TarotNewPageContent() {
     }
   }, []);
 
-  // 优先从当前 URL 取 caseId。浏览器后退时 popstate 可能早于组件挂载，故每次渲染都读 window.location 作首要来源
+  const loadDraftRef = useRef(loadDraft);
+  useEffect(() => {
+    loadDraftRef.current = loadDraft;
+  }, [loadDraft]);
+
+  // 挂载时同步读到的草稿立即应用到表单（规则：不依赖 effect 顺序与 URL 时机）
+  useEffect(() => {
+    const data = mountSnapshot?.data;
+    if (!data) return;
+    setQuestion(data.question);
+    setBackground(data.background);
+    setCategories(data.categories ?? []);
+    setDrawDate(data.drawDate ?? "");
+    setDrawTime(data.drawTime ?? "");
+    setSpreadType((data.spreadType as typeof SPREAD_TYPES[number]) || "");
+    setTimeAxisVariant(data.timeAxisVariant || DEFAULT_TIME_AXIS_VARIANT);
+    setProvinceCode(data.provinceCode || DEFAULT_PROVINCE_CODE);
+    setCityCode(data.cityCode || DEFAULT_CITY_CODE);
+    setClientBirthday(data.clientBirthday ? data.clientBirthday.replace(/-/g, "").slice(0, 4) : "");
+    setReadingStartMonth(data.readingStartMonth ? (data.readingStartMonth.length === 7 ? data.readingStartMonth.slice(2, 4) + data.readingStartMonth.slice(5, 7) : data.readingStartMonth.replace(/-/g, "").slice(0, 4)) : "");
+  }, [mountSnapshot]);
+
+  // 优先从当前 URL 取 caseId；effectiveId 含 mountSnapshot.id（规则 2）浏览器后退时 popstate 可能早于组件挂载，故每次渲染都读 window.location 作首要来源
   const searchFromWindow =
     typeof window !== "undefined" ? window.location.search : "";
   const isFromBanner =
@@ -180,20 +202,27 @@ function TarotNewPageContent() {
     typeof window !== "undefined" && window.location.search.includes("caseId=")
       ? getLastTarotDraftId()
       : null;
-  // 从顶部 banner 进入（new=1）时不恢复草稿，强制空白页
+  // 返回时 URL 可能尚未更新，用 sessionStorage 最近一次 caseId 兜底；仅当非 new=1 时用，避免顶端 tab 进入被误恢复
+  const lastDraftIdWhenNotNew =
+    typeof window !== "undefined" && !searchFromWindow.includes("new=1")
+      ? getLastTarotDraftId()
+      : null;
+  // 从顶部 banner 进入（new=1）时不恢复草稿，强制空白页；其余情况优先 URL 再兜底 lastDraftId
   const effectiveId = isFromBanner
     ? null
-    : idFromWindow || idFromUrl || returnDraftId || fallbackId || null;
+    : mountSnapshot?.id ?? idFromWindow ?? idFromUrl ?? fallbackId ?? lastDraftIdWhenNotNew ?? null;
 
   useEffect(() => {
     if (!effectiveId) return;
     loadDraft(effectiveId);
   }, [effectiveId, loadDraft]);
 
-  // 仅当确定不是「从牌阵页返回」时才清空表单（有 effectiveId 或最近有草稿都不清），避免浏览器后退时 URL 未同步就清空
+  // 仅当确定不是「从牌阵页返回」且不是「从顶端 new=1」时才清空；有 effectiveId / 有 mountSnapshot / 有最近草稿 / URL 含 new=1 都不清空
   useEffect(() => {
     if (effectiveId) return;
+    if (mountSnapshot?.id) return;
     if (typeof window !== "undefined" && getLastTarotDraftId()) return;
+    if (searchFromWindow.includes("new=1")) return;
     setLoadingDraft(false);
     setQuestion("");
     setBackground("");
@@ -207,17 +236,21 @@ function TarotNewPageContent() {
     setProvinceCode(DEFAULT_PROVINCE_CODE);
     setCityCode(DEFAULT_CITY_CODE);
     setError("");
-  }, [effectiveId]);
+  }, [effectiveId, searchFromWindow, mountSnapshot?.id]);
 
-  // 挂载时同步一次 URL，避免从牌阵页 router.push 返回时 urlKey 未更新
+  // 挂载时同步 URL；延迟再同步一次（与先前修复一致），避免 router.push 返回时首帧 URL 未更新
   useEffect(() => {
     if (typeof window === "undefined") return;
     setUrlKey(window.location.search);
+    const tid = setTimeout(() => setUrlKey(window.location.search), 0);
+    return () => clearTimeout(tid);
   }, []);
 
-  // 从顶部 banner 进入（?new=1）：清空表单并去掉 URL 参数，进入空白页；不影响后退/返回修改的恢复
+  // 仅当「从顶端进入」且 URL 只有 new=1（无 caseId）时清空，避免返回时误清；顶部 tab 仅受此条件影响
   useEffect(() => {
-    if (typeof window === "undefined" || !window.location.search.includes("new=1")) return;
+    if (typeof window === "undefined") return;
+    const q = window.location.search;
+    if (!q.includes("new=1") || q.includes("caseId=")) return;
     setLoadingDraft(false);
     setQuestion("");
     setBackground("");
@@ -231,18 +264,25 @@ function TarotNewPageContent() {
     setProvinceCode(DEFAULT_PROVINCE_CODE);
     setCityCode(DEFAULT_CITY_CODE);
     setError("");
-    router.replace("/tarot");
-  }, [router]);
+  }, []);
 
-  // 浏览器后退/前进时同步 urlKey；pageshow 每次均同步，避免后退时漏掉（popstate 可能早于组件挂载）
+  // 浏览器后退/前进时同步 urlKey；pageshow 时再强制按当前 URL 或 lastDraftId 加载一次（与规则「返回后能恢复」一致）
   useEffect(() => {
     if (typeof window === "undefined") return;
     const syncUrl = () => setUrlKey(window.location.search);
+    const onPageShow = () => {
+      syncUrl();
+      const q = window.location.search;
+      if (q.includes("new=1")) return;
+      const idFromQ = q ? new URLSearchParams(q).get("caseId") : null;
+      const idToLoad = idFromQ || getLastTarotDraftId();
+      if (idToLoad) loadDraftRef.current(idToLoad);
+    };
     window.addEventListener("popstate", syncUrl);
-    window.addEventListener("pageshow", syncUrl);
+    window.addEventListener("pageshow", onPageShow);
     return () => {
       window.removeEventListener("popstate", syncUrl);
-      window.removeEventListener("pageshow", syncUrl);
+      window.removeEventListener("pageshow", onPageShow);
     };
   }, []);
 
