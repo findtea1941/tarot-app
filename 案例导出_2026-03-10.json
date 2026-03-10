@@ -1,0 +1,942 @@
+{
+  "cases": [
+    {
+      "id": "a9c3ee66-5cd3-4a6c-bb88-0bdef47d999e",
+      "type": "lenormand",
+      "status": "completed",
+      "title": "2026年我是否能有10个以上400元的来访？",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [
+        "事业",
+        "封闭式问题"
+      ],
+      "lenormandCards": [
+        "鞭子",
+        "鸟",
+        "镰刀",
+        "信",
+        "狐狸",
+        "市场",
+        "树",
+        "骑士",
+        "山"
+      ],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "lenormandOptionALabel": "",
+      "lenormandOptionBLabel": "",
+      "createdAt": 1773126508381,
+      "updatedAt": 1773126622346,
+      "question": "2026年我是否能有10个以上400元的来访？",
+      "lenormandDrawDate": "2026-01-28",
+      "lenormandAnalysis": {},
+      "reviewFeedback": "3月10日反馈，靠口口相传已经招到5个400的来访了（包含2个200的算1个400的）"
+    },
+    {
+      "id": "c71a7e55-6995-4abf-964d-375f1c2f4572",
+      "type": "tarot",
+      "status": "completed",
+      "title": "2025-12-31 | 运势 | 我的星运26.1",
+      "question": "我的星运26.1",
+      "category": "运势",
+      "tarotCategories": [
+        "运势"
+      ],
+      "drawTime": "2025-12-31T16:00:00.000Z",
+      "spreadType": "星运",
+      "location": {
+        "provinceCode": "310000",
+        "provinceName": "上海市",
+        "cityCode": "310100",
+        "cityName": "市辖区",
+        "districtCode": "",
+        "districtName": "",
+        "label": "上海市-上海市"
+      },
+      "locationLabel": "上海市-上海市",
+      "cards": [
+        {
+          "slotId": "sun",
+          "cardId": "cups-8",
+          "reversed": false
+        },
+        {
+          "slotId": "moon",
+          "cardId": "major-9",
+          "reversed": false
+        },
+        {
+          "slotId": "mercury",
+          "cardId": "swords-king",
+          "reversed": false
+        },
+        {
+          "slotId": "venus",
+          "cardId": "pentacles-ace",
+          "reversed": false
+        },
+        {
+          "slotId": "mars",
+          "cardId": "wands-5",
+          "reversed": false
+        },
+        {
+          "slotId": "jupiter",
+          "cardId": "wands-ace",
+          "reversed": false
+        },
+        {
+          "slotId": "saturn",
+          "cardId": "pentacles-9",
+          "reversed": false
+        },
+        {
+          "slotId": "1",
+          "cardId": "pentacles-knight",
+          "reversed": false
+        },
+        {
+          "slotId": "2",
+          "cardId": "cups-4",
+          "reversed": false
+        },
+        {
+          "slotId": "3",
+          "cardId": "cups-5",
+          "reversed": false
+        },
+        {
+          "slotId": "4",
+          "cardId": "pentacles-4",
+          "reversed": false
+        },
+        {
+          "slotId": "5",
+          "cardId": "pentacles-3",
+          "reversed": false
+        },
+        {
+          "slotId": "6",
+          "cardId": "cups-2",
+          "reversed": false
+        },
+        {
+          "slotId": "7",
+          "cardId": "pentacles-queen",
+          "reversed": false
+        },
+        {
+          "slotId": "8",
+          "cardId": "pentacles-6",
+          "reversed": false
+        },
+        {
+          "slotId": "9",
+          "cardId": "cups-7",
+          "reversed": false
+        },
+        {
+          "slotId": "10",
+          "cardId": "wands-9",
+          "reversed": false
+        },
+        {
+          "slotId": "11",
+          "cardId": "major-1",
+          "reversed": false
+        },
+        {
+          "slotId": "12",
+          "cardId": "pentacles-8",
+          "reversed": false
+        },
+        {
+          "slotId": "fire",
+          "cardId": "wands-knight",
+          "reversed": false
+        },
+        {
+          "slotId": "earth",
+          "cardId": "major-13",
+          "reversed": true
+        },
+        {
+          "slotId": "air",
+          "cardId": "major-5",
+          "reversed": true
+        },
+        {
+          "slotId": "water",
+          "cardId": "cups-king",
+          "reversed": false
+        }
+      ],
+      "extra": {
+        "annual": {
+          "clientBirthday": "04-10",
+          "readingStartMonth": "2026-01"
+        }
+      },
+      "analysis": {
+        "userNotes": "宝剑国王天蝎火；星币ACE水瓶土；权杖ACE金牛金；星币骑士双子水；星币王后天秤金；权杖骑士处女水",
+        "manualNumberNote": ""
+      },
+      "userInterpretation": "宝剑国王天蝎火；星币ACE水瓶土；权杖ACE金牛金；星币骑士双子水；星币王后天秤金；权杖骑士处女水",
+      "createdAt": 1773126246609,
+      "updatedAt": 1773126370628,
+      "slotInputs": {
+        "1": "星币骑士",
+        "2": "圣杯4",
+        "3": "圣杯5",
+        "4": "星币4",
+        "5": "星币3",
+        "6": "圣杯2",
+        "7": "星币王后",
+        "8": "星币6",
+        "9": "圣杯7",
+        "10": "权杖9",
+        "11": "魔术师",
+        "12": "星币8",
+        "sun": "圣杯8",
+        "moon": "隐士",
+        "mercury": "宝剑国王",
+        "venus": "星币ACE",
+        "mars": "权杖5",
+        "jupiter": "权杖ACE",
+        "saturn": "星币9",
+        "fire": "权杖骑士",
+        "earth": "死神-",
+        "air": "教皇-",
+        "water": "圣杯国王"
+      },
+      "planetSupplements": {
+        "1": "☿",
+        "7": "♀",
+        "mercury": "♂",
+        "venus": "♄",
+        "jupiter": "♀",
+        "fire": "☿",
+        "water": "☉"
+      },
+      "significatorInput": "",
+      "slotCards": {
+        "1": {
+          "cardId": "pentacles-knight",
+          "cardKey": "星币骑士",
+          "reversed": false
+        },
+        "2": {
+          "cardId": "cups-4",
+          "cardKey": "圣杯4",
+          "reversed": false
+        },
+        "3": {
+          "cardId": "cups-5",
+          "cardKey": "圣杯5",
+          "reversed": false
+        },
+        "4": {
+          "cardId": "pentacles-4",
+          "cardKey": "星币4",
+          "reversed": false
+        },
+        "5": {
+          "cardId": "pentacles-3",
+          "cardKey": "星币3",
+          "reversed": false
+        },
+        "6": {
+          "cardId": "cups-2",
+          "cardKey": "圣杯2",
+          "reversed": false
+        },
+        "7": {
+          "cardId": "pentacles-queen",
+          "cardKey": "星币王后",
+          "reversed": false
+        },
+        "8": {
+          "cardId": "pentacles-6",
+          "cardKey": "星币6",
+          "reversed": false
+        },
+        "9": {
+          "cardId": "cups-7",
+          "cardKey": "圣杯7",
+          "reversed": false
+        },
+        "10": {
+          "cardId": "wands-9",
+          "cardKey": "权杖9",
+          "reversed": false
+        },
+        "11": {
+          "cardId": "major-1",
+          "cardKey": "魔术师",
+          "reversed": false
+        },
+        "12": {
+          "cardId": "pentacles-8",
+          "cardKey": "星币8",
+          "reversed": false
+        },
+        "sun": {
+          "cardId": "cups-8",
+          "cardKey": "圣杯8",
+          "reversed": false
+        },
+        "moon": {
+          "cardId": "major-9",
+          "cardKey": "隐士",
+          "reversed": false
+        },
+        "mercury": {
+          "cardId": "swords-king",
+          "cardKey": "宝剑国王",
+          "reversed": false
+        },
+        "venus": {
+          "cardId": "pentacles-ace",
+          "cardKey": "星币ACE",
+          "reversed": false
+        },
+        "mars": {
+          "cardId": "wands-5",
+          "cardKey": "权杖5",
+          "reversed": false
+        },
+        "jupiter": {
+          "cardId": "wands-ace",
+          "cardKey": "权杖ACE",
+          "reversed": false
+        },
+        "saturn": {
+          "cardId": "pentacles-9",
+          "cardKey": "星币9",
+          "reversed": false
+        },
+        "fire": {
+          "cardId": "wands-knight",
+          "cardKey": "权杖骑士",
+          "reversed": false
+        },
+        "earth": {
+          "cardId": "major-13",
+          "cardKey": "死神",
+          "reversed": true
+        },
+        "air": {
+          "cardId": "major-5",
+          "cardKey": "教皇",
+          "reversed": true
+        },
+        "water": {
+          "cardId": "cups-king",
+          "cardKey": "圣杯国王",
+          "reversed": false
+        }
+      },
+      "supplements": {
+        "planetBySlotId": {
+          "1": "☿",
+          "7": "♀",
+          "mercury": "♂",
+          "venus": "♄",
+          "jupiter": "♀",
+          "fire": "☿",
+          "water": "☉"
+        },
+        "planetByCardKey": {
+          "宝剑国王": "♂",
+          "星币ACE": "♄",
+          "权杖ACE": "♀",
+          "星币骑士": "☿",
+          "星币王后": "♀",
+          "权杖骑士": "☿",
+          "圣杯国王": "☉"
+        }
+      }
+    },
+    {
+      "id": "cb60ae31-36a7-48d2-84a8-14084d295732",
+      "type": "tarot",
+      "status": "completed",
+      "title": "2026-02-28 | 运势 | 我的年运25.9",
+      "question": "我的年运25.9",
+      "category": "运势",
+      "tarotCategories": [
+        "运势"
+      ],
+      "drawTime": "2026-02-28T16:00:00.000Z",
+      "spreadType": "年运",
+      "location": {
+        "provinceCode": "310000",
+        "provinceName": "上海市",
+        "cityCode": "310100",
+        "cityName": "市辖区",
+        "districtCode": "",
+        "districtName": "",
+        "label": "上海市-上海市"
+      },
+      "locationLabel": "上海市-上海市",
+      "cards": [
+        {
+          "slotId": "significator",
+          "cardId": "swords-8",
+          "reversed": false
+        },
+        {
+          "slotId": "1",
+          "cardId": "wands-page",
+          "reversed": false
+        },
+        {
+          "slotId": "2",
+          "cardId": "cups-2",
+          "reversed": true
+        },
+        {
+          "slotId": "3",
+          "cardId": "major-7",
+          "reversed": true
+        },
+        {
+          "slotId": "4",
+          "cardId": "pentacles-ace",
+          "reversed": false
+        },
+        {
+          "slotId": "5",
+          "cardId": "pentacles-page",
+          "reversed": false
+        },
+        {
+          "slotId": "6",
+          "cardId": "swords-6",
+          "reversed": false
+        },
+        {
+          "slotId": "7",
+          "cardId": "major-11",
+          "reversed": false
+        },
+        {
+          "slotId": "8",
+          "cardId": "pentacles-8",
+          "reversed": true
+        },
+        {
+          "slotId": "9",
+          "cardId": "major-16",
+          "reversed": false
+        },
+        {
+          "slotId": "10",
+          "cardId": "cups-queen",
+          "reversed": true
+        },
+        {
+          "slotId": "11",
+          "cardId": "wands-6",
+          "reversed": false
+        },
+        {
+          "slotId": "12",
+          "cardId": "major-0",
+          "reversed": false
+        },
+        {
+          "slotId": "fire",
+          "cardId": "major-2",
+          "reversed": false
+        },
+        {
+          "slotId": "earth",
+          "cardId": "major-10",
+          "reversed": true
+        },
+        {
+          "slotId": "air",
+          "cardId": "major-14",
+          "reversed": false
+        },
+        {
+          "slotId": "water",
+          "cardId": "major-20",
+          "reversed": true
+        }
+      ],
+      "extra": {
+        "annual": {
+          "clientBirthday": "04-10",
+          "readingStartMonth": "2025-09"
+        }
+      },
+      "analysis": {
+        "userNotes": "",
+        "manualNumberNote": ""
+      },
+      "userInterpretation": "",
+      "createdAt": 1773125877285,
+      "updatedAt": 1773126209387,
+      "slotInputs": {
+        "1": "权杖侍从",
+        "2": "圣杯2-",
+        "3": "战车-",
+        "4": "星币ACE",
+        "5": "星币侍从",
+        "6": "宝剑6",
+        "7": "力量",
+        "8": "星币8-",
+        "9": "高塔",
+        "10": "圣杯王后-",
+        "11": "权杖6",
+        "12": "愚者",
+        "significator": "宝剑8",
+        "fire": "女祭司",
+        "earth": "命轮-",
+        "air": "节制",
+        "water": "审判-"
+      },
+      "planetSupplements": {},
+      "significatorInput": "",
+      "slotCards": {
+        "1": {
+          "cardId": "wands-page",
+          "cardKey": "权杖侍从",
+          "reversed": false
+        },
+        "2": {
+          "cardId": "cups-2",
+          "cardKey": "圣杯2",
+          "reversed": true
+        },
+        "3": {
+          "cardId": "major-7",
+          "cardKey": "战车",
+          "reversed": true
+        },
+        "4": {
+          "cardId": "pentacles-ace",
+          "cardKey": "星币ACE",
+          "reversed": false
+        },
+        "5": {
+          "cardId": "pentacles-page",
+          "cardKey": "星币侍从",
+          "reversed": false
+        },
+        "6": {
+          "cardId": "swords-6",
+          "cardKey": "宝剑6",
+          "reversed": false
+        },
+        "7": {
+          "cardId": "major-11",
+          "cardKey": "力量",
+          "reversed": false
+        },
+        "8": {
+          "cardId": "pentacles-8",
+          "cardKey": "星币8",
+          "reversed": true
+        },
+        "9": {
+          "cardId": "major-16",
+          "cardKey": "高塔",
+          "reversed": false
+        },
+        "10": {
+          "cardId": "cups-queen",
+          "cardKey": "圣杯王后",
+          "reversed": true
+        },
+        "11": {
+          "cardId": "wands-6",
+          "cardKey": "权杖6",
+          "reversed": false
+        },
+        "12": {
+          "cardId": "major-0",
+          "cardKey": "愚者",
+          "reversed": false
+        },
+        "significator": {
+          "cardId": "swords-8",
+          "cardKey": "宝剑8",
+          "reversed": false
+        },
+        "fire": {
+          "cardId": "major-2",
+          "cardKey": "女祭司",
+          "reversed": false
+        },
+        "earth": {
+          "cardId": "major-10",
+          "cardKey": "命轮",
+          "reversed": true
+        },
+        "air": {
+          "cardId": "major-14",
+          "cardKey": "节制",
+          "reversed": false
+        },
+        "water": {
+          "cardId": "major-20",
+          "cardKey": "审判",
+          "reversed": true
+        }
+      },
+      "supplements": {}
+    },
+    {
+      "id": "07fe4762-0fa8-4f47-9d31-fc7ef7f7f652",
+      "type": "lenormand",
+      "status": "completed",
+      "title": "如果我想让年糕来陪我睡觉，我应该怎么办?",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [
+        "动物",
+        "开放式问题"
+      ],
+      "lenormandCards": [
+        "锚",
+        "星星",
+        "女人",
+        "山",
+        "书",
+        "狐狸",
+        "老鼠",
+        "棺材",
+        "狗"
+      ],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "lenormandOptionALabel": "",
+      "lenormandOptionBLabel": "",
+      "createdAt": 1773125813699,
+      "updatedAt": 1773125851156,
+      "question": "如果我想让年糕来陪我睡觉，我应该怎么办?",
+      "lenormandAnalysis": {
+        "overall": "爪老师：基本上这件事办不到"
+      }
+    },
+    {
+      "id": "1eafc34c-3fc3-48af-a155-7f3903e2b4a3",
+      "type": "lenormand",
+      "status": "completed",
+      "title": "为什么年糕最近不来陪我睡了",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [
+        "动物",
+        "开放式问题"
+      ],
+      "lenormandCards": [
+        "女人",
+        "狗",
+        "船",
+        "老鼠",
+        "鱼",
+        "钥匙",
+        "房子",
+        "百合",
+        "蛇"
+      ],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "lenormandOptionALabel": "",
+      "lenormandOptionBLabel": "",
+      "createdAt": 1773125740762,
+      "updatedAt": 1773126409101,
+      "question": "为什么年糕最近不来陪我睡了",
+      "background": "年糕是我的猫。之前每天都会在我躺下去关灯之后稳稳贴着我睡觉，最近一个多礼拜都不怎么来，而且在外面跟糯米(另一只猫)跑酷，有时候会把我吵到",
+      "lenormandDrawDate": "2026-03-09",
+      "lenormandAnalysis": {},
+      "reviewFeedback": "家里有脏东西（老鼠），他在用一种不同寻常的方式（蛇）帮我"
+    },
+    {
+      "id": "969d67a0-f0aa-4f02-901f-52308be9dae6",
+      "type": "lenormand",
+      "status": "completed",
+      "title": "具体什么事会给五小姐带来压力？（五张）",
+      "lenormandSpreadType": "linear-5",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [
+        "动物",
+        "开放式问题"
+      ],
+      "lenormandCards": [
+        "鞭子",
+        "市场",
+        "女人",
+        "百合",
+        "床"
+      ],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "lenormandOptionALabel": "",
+      "lenormandOptionBLabel": "",
+      "createdAt": 1773125613171,
+      "updatedAt": 1773125669013,
+      "question": "具体什么事会给五小姐带来压力？（五张）",
+      "lenormandDrawDate": "2026-03-08",
+      "lenormandAnalysis": {
+        "overall": "就是清理她的床，把床恢复到过去的样子"
+      }
+    },
+    {
+      "id": "c5a50972-698e-48ef-9908-489ea6f6529e",
+      "type": "lenormand",
+      "status": "completed",
+      "title": "具体什么事情会给五小姐带来压力（九宫格）",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [
+        "动物",
+        "其他"
+      ],
+      "lenormandCards": [
+        "花束",
+        "狗",
+        "信",
+        "钥匙",
+        "云",
+        "爱心",
+        "老鼠",
+        "太阳",
+        "鞭子"
+      ],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "lenormandOptionALabel": "",
+      "lenormandOptionBLabel": "",
+      "createdAt": 1773125531226,
+      "updatedAt": 1773125706176,
+      "question": "具体什么事情会给五小姐带来压力（九宫格）",
+      "lenormandDrawDate": "2026-03-08",
+      "lenormandAnalysis": {
+        "overall": "感觉就是外显出来的行为是希望传递得到帮助的信息，清理不好的东西。中间还抽了三张牌问如果要说一个压力源是什么，出现树 钥匙 老师；问是不是健康相关 出现男人 房子 第三张牌忘了是啥，鱼还是云（不重要）就感觉不是健康问题；然后问是不是跟环境相关 出现戒指 鸟 灵体。"
+      },
+      "reviewFeedback": "复盘，爪老师：家里不干净 字面意思 想催她主人清理\n案主：啊哈哈哈她的窝窝背靠书架，最近确实被我妈妈塞了好多乱七八糟的东西，各种零食啊什么的，她有点嫌弃。我去理一下。"
+    },
+    {
+      "id": "3e58c3fe-fc13-4414-aa8e-73e0a8f6bb13",
+      "type": "lenormand",
+      "status": "completed",
+      "title": "五小姐最近为什么如此反常?",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [
+        "动物",
+        "开放式问题"
+      ],
+      "lenormandCards": [
+        "十字架",
+        "月亮",
+        "鱼",
+        "山",
+        "太阳",
+        "戒指",
+        "百合",
+        "书",
+        "女人"
+      ],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "lenormandOptionALabel": "",
+      "lenormandOptionBLabel": "",
+      "createdAt": 1773124817521,
+      "updatedAt": 1773125526710,
+      "question": "五小姐最近为什么如此反常?",
+      "background": "五小姐是案主的猫，最近咬案主的妈妈，把桌上的茶壶\n茶杯都往地上推。咬妈妈的事去年也做过，还咬在同一\n个地方。",
+      "lenormandDrawDate": "2026-03-08",
+      "lenormandAnalysis": {
+        "overall": "猫猫是因为情绪压力积累，集中爆发，这个情况持续一段时间了或者过去页出现过，也可能是两者都有。发泄完她压力会减少一些，但是依然会藏在下面。"
+      }
+    },
+    {
+      "id": "1e9f6501-68b0-4d06-b5d2-ca16aae9275f",
+      "type": "lenormand",
+      "status": "completed",
+      "title": "给陆老师找钥匙",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [
+        "其他",
+        "开放式问题"
+      ],
+      "lenormandCards": [
+        "男人",
+        "爱心",
+        "路口",
+        "骑士",
+        "床",
+        "锚",
+        "棺材",
+        "树",
+        "星星"
+      ],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "lenormandOptionALabel": "",
+      "lenormandOptionBLabel": "",
+      "createdAt": 1773124653533,
+      "updatedAt": 1773124781117,
+      "question": "给陆老师找钥匙",
+      "background": "2个钥匙拴在一个乐高的积木上",
+      "lenormandDrawDate": "2026-03-09",
+      "lenormandAnalysis": {
+        "overall": "爪老师指导：路口比较像是柜子里（有通道）或者家里的过道，骑士=移动，锚=钩子、挂钩，棺材=封闭空间；树=木制的或者挂起来的；星星=经常黑，很少有亮光的地方\n综合下来应该是衣柜或者抽屉之类的地方，很像衣柜"
+      }
+    },
+    {
+      "id": "9dd8a5be-0800-4867-b1b6-42adc576a595",
+      "type": "lenormand",
+      "status": "completed",
+      "title": "我给爪老师净化成功了吗",
+      "lenormandSpreadType": "linear-5",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [
+        "灵性",
+        "封闭式问题"
+      ],
+      "lenormandCards": [
+        "鞭子",
+        "十字架",
+        "书",
+        "香炉",
+        "太阳"
+      ],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "lenormandOptionALabel": "",
+      "lenormandOptionBLabel": "",
+      "createdAt": 1773124495648,
+      "updatedAt": 1773124591885,
+      "question": "我给爪老师净化成功了吗",
+      "background": "这个阿飘搞得爪老师好几天睡不好觉，很痛苦，我今天去给爪老师身上+房间进行了净化",
+      "lenormandDrawDate": "2026-03-09",
+      "lenormandAnalysis": {
+        "overall": "反复操作把痛苦闭合了，清理爆发（成功、可见）"
+      }
+    },
+    {
+      "id": "6b818e56-f6aa-4f93-8129-eb578d84d5a5",
+      "type": "lenormand",
+      "status": "completed",
+      "title": "来访会答应我周四咨询吗",
+      "lenormandSpreadType": "linear-5",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [
+        "事业",
+        "封闭式问题"
+      ],
+      "lenormandCards": [
+        "山",
+        "房子",
+        "狗",
+        "锚",
+        "钥匙"
+      ],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "lenormandOptionALabel": "",
+      "lenormandOptionBLabel": "",
+      "createdAt": 1773124323778,
+      "updatedAt": 1773124475525,
+      "question": "来访会答应我周四咨询吗",
+      "background": "之前咨询时间一直不固定，有时周三有时周四，这回模糊口头答应周三咨询，但是我发现我周三已经约好了，所以要问她本周能不能周四咨询（其实不能算换，就是约）",
+      "lenormandDrawDate": "2026-03-10",
+      "lenormandAnalysis": {
+        "overall": "我觉得是在说来访对咨询建立安全感这件事非常坚定（狗代表咨询的帮助，山代表坚定），是关键的，所以能够很稳定地来，是可以同意的。反馈也是同意了。"
+      }
+    },
+    {
+      "id": "aeb8e6f8-dc25-404e-9102-26975bc72efe",
+      "type": "lenormand",
+      "status": "draft",
+      "title": "九宫格 | 草稿",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [],
+      "lenormandCards": [],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "createdAt": 1773124644375,
+      "updatedAt": 1773124644375
+    },
+    {
+      "id": "61113cce-c2c0-4c84-9908-f26b51900432",
+      "type": "lenormand",
+      "status": "draft",
+      "title": "九宫格 | 草稿",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [],
+      "lenormandCards": [],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "createdAt": 1773124639785,
+      "updatedAt": 1773124639785
+    },
+    {
+      "id": "920ecf7f-cfb3-40f9-9f75-50959345d215",
+      "type": "tarot",
+      "status": "draft",
+      "title": "2026-02-28 | 运势 | 我的年运",
+      "question": "我的年运",
+      "background": "",
+      "category": "运势",
+      "tarotCategories": [
+        "运势"
+      ],
+      "drawTime": "2026-02-28T16:00:00.000Z",
+      "spreadType": "年运",
+      "location": {
+        "provinceCode": "310000",
+        "provinceName": "上海市",
+        "cityCode": "310100",
+        "cityName": "市辖区",
+        "districtCode": "",
+        "districtName": "",
+        "label": "上海市-上海市"
+      },
+      "locationLabel": "上海市-上海市",
+      "cards": [],
+      "extra": {
+        "annual": {
+          "clientBirthday": "04-10",
+          "readingStartMonth": "2025-09"
+        }
+      },
+      "userInterpretation": "",
+      "createdAt": 1773124250578,
+      "updatedAt": 1773124298244,
+      "categories": [
+        "运势"
+      ],
+      "slotInputs": {
+        "1": "权杖侍从",
+        "2": "圣杯2-",
+        "3": "战车-",
+        "4": "星币ACE",
+        "5": "星币侍从",
+        "6": "宝剑6",
+        "7": "力量",
+        "8": "星币8-",
+        "9": "高塔",
+        "10": "圣杯王后",
+        "11": "权杖6",
+        "12": "愚者",
+        "significator": "宝剑8",
+        "fire": "女祭司",
+        "earth": "命轮-",
+        "air": "节制",
+        "water": "审判-"
+      }
+    }
+  ]
+}

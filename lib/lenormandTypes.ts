@@ -10,6 +10,7 @@ export const LENORMAND_CATEGORIES = [
   "灵性",
   "运势",
   "动物",
+  "寻物",
   "其他",
   "开放式问题",
   "封闭式问题",

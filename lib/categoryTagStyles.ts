@@ -18,6 +18,7 @@ const CATEGORY_COLORS: Record<
   灵性: { bg: "#e0f2fe", border: "#7dd3fc", text: "#0369a1" },     // 天蓝
   运势: { bg: "#fef3c7", border: "#fcd34d", text: "#b45309" },     // 金杏
   动物: { bg: "#ede9fe", border: "#c4b5fd", text: "#5b21b6" },     // 淡紫
+  寻物: { bg: "#fce7f3", border: "#f9a8d4", text: "#9d174d" },     // 粉玫
   其他: { bg: "#f1f5f9", border: "#cbd5e1", text: "#475569" },     // 灰
   开放式问题: { bg: "#cffafe", border: "#67e8f9", text: "#0e7490" }, // 青
   封闭式问题: { bg: "#e7e5e4", border: "#a8a29e", text: "#57534e" }, // 暖灰
