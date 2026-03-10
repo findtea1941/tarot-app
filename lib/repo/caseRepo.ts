@@ -322,3 +322,77 @@ export async function updateCaseReviewFeedback(
 export async function deleteCase(id: string) {
   return db.cases.delete(id);
 }
+
+/** 导出案例数据（仅使用现有 API，无 schema 变更） */
+export async function exportCasesByTypes(
+  types: ("tarot" | "lenormand")[]
+): Promise<Case[]> {
+  if (types.length === 0) return [];
+  const all = await listCases();
+  const drafts = await listDrafts();
+  const combined = [...all, ...drafts];
+  const seen = new Set<string>();
+  const unique = combined.filter((c) => {
+    if (seen.has(c.id)) return false;
+    seen.add(c.id);
+    return true;
+  });
+  return unique.filter((c) => {
+    const t = c.type ?? "tarot";
+    return types.includes(t);
+  });
+}
+
+/** 导入案例数据（逐条写入，生成新 ID 避免冲突，无 schema 变更） */
+export async function importCases(
+  raw: unknown,
+  options?: { types?: ("tarot" | "lenormand")[] }
+): Promise<{ success: number; failed: number; errors: string[] }> {
+  const arr = Array.isArray(raw)
+    ? raw
+    : raw && typeof raw === "object" && "cases" in raw
+      ? (raw as { cases: unknown }).cases
+      : null;
+  if (!Array.isArray(arr)) {
+    return { success: 0, failed: 0, errors: ["无效的导入数据格式"] };
+  }
+  const filterTypes = options?.types;
+  let success = 0;
+  const errors: string[] = [];
+
+  const toAdd: Case[] = [];
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i];
+    if (!item || typeof item !== "object") {
+      errors.push(`第 ${i + 1} 条：非对象`);
+      continue;
+    }
+    const c = item as Record<string, unknown>;
+    const title = typeof c.title === "string" ? c.title : "未命名";
+    const createdAt = typeof c.createdAt === "number" ? c.createdAt : Date.now();
+    const updatedAt = typeof c.updatedAt === "number" ? c.updatedAt : Date.now();
+    const type = (c.type === "tarot" || c.type === "lenormand" ? c.type : "tarot") as "tarot" | "lenormand";
+    if (filterTypes && filterTypes.length > 0 && !filterTypes.includes(type)) continue;
+
+    const newId = crypto.randomUUID();
+    const merged: Case = {
+      ...(c as unknown as Case),
+      id: newId,
+      title,
+      createdAt,
+      updatedAt,
+      type,
+    };
+    toAdd.push(merged);
+  }
+
+  for (const c of toAdd) {
+    try {
+      await db.cases.add(c);
+      success++;
+    } catch (e) {
+      errors.push(`导入失败 "${c.title}": ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  return { success, failed: toAdd.length - success, errors };
+}

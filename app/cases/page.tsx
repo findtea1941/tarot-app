@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Case } from "@/lib/db";
-import { deleteCase, listCasesByType, listDrafts, searchCases } from "@/lib/repo/caseRepo";
+import { CaseExportImportModal } from "@/components/CaseExportImportModal";
 
 type CaseTab = "tarot" | "lenormand";
 
@@ -32,9 +32,8 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 function CasesPageContent() {
   const router = useRouter();
   const requestIdRef = useRef(0);
-  const [isMounted, setIsMounted] = useState(false);
   const [showDrafts, setShowDrafts] = useState(false);
-  const [tab, setTab] = useState<CaseTab>(getInitialTab);
+  const [tab, setTab] = useState<CaseTab>("tarot");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [items, setItems] = useState<Case[]>([]);
@@ -42,28 +41,17 @@ function CasesPageContent() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [exportImportOpen, setExportImportOpen] = useState<"export" | "import" | null>(null);
 
   useEffect(() => {
-    setShowDrafts(getShowDrafts());
     setTab(getInitialTab());
-    setIsMounted(true);
-    // 客户端导航（如雷诺曼保存后 router.push）可能先于 URL 更新，延迟再同步一次 tab
-    const syncId = setTimeout(() => {
-      setShowDrafts(getShowDrafts());
-      setTab(getInitialTab());
-    }, 0);
+    setShowDrafts(getShowDrafts());
     const syncFromUrl = () => {
-      setShowDrafts(getShowDrafts());
       setTab(getInitialTab());
+      setShowDrafts(getShowDrafts());
     };
-    const onPopState = syncFromUrl;
-    window.addEventListener("popstate", onPopState);
-    window.addEventListener("pageshow", syncFromUrl);
-    return () => {
-      clearTimeout(syncId);
-      window.removeEventListener("popstate", onPopState);
-      window.removeEventListener("pageshow", syncFromUrl);
-    };
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
   }, []);
 
   useEffect(() => {
@@ -76,7 +64,11 @@ function CasesPageContent() {
   }, [searchQuery, showDrafts]);
 
   useEffect(() => {
-    if (!isMounted) return;
+    if (typeof indexedDB === "undefined") {
+      setLoadError("当前环境不支持本地存储，请使用现代浏览器访问");
+      setLoading(false);
+      return;
+    }
     const requestId = ++requestIdRef.current;
     const draftView = showDrafts;
     const activeQuery = draftView ? "" : debouncedQuery;
@@ -86,6 +78,7 @@ function CasesPageContent() {
 
     void (async () => {
       try {
+        const { listCasesByType, listDrafts, searchCases } = await import("@/lib/repo/caseRepo");
         const result = draftView
           ? await withTimeout(listDrafts(), LOAD_TIMEOUT_MS)
           : activeQuery
@@ -109,7 +102,7 @@ function CasesPageContent() {
         }
       }
     })();
-  }, [isMounted, showDrafts, tab, debouncedQuery, reloadKey]);
+  }, [showDrafts, tab, debouncedQuery, reloadKey]);
 
   const isSearchMode = !!searchQuery.trim();
   const displayItems = showDrafts ? drafts : items;
@@ -164,19 +157,33 @@ function CasesPageContent() {
             </div>
           ) : null}
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            const next = !showDrafts;
-            setShowDrafts(next);
-            setLoadError(null);
-            router.push(next ? "/cases?view=drafts" : "/cases");
-          }}
-          className={`pb-0.5 text-sm font-normal text-tarot-green hover:underline ${showDrafts ? "underline" : ""}`}
-        >
-          草稿箱
-        </button>
+        <div className="flex items-center gap-4 pb-0.5">
+          <Link
+            href={tab === "tarot" ? "/tarot?new=1" : "/lenormand"}
+            className="text-sm font-normal text-slate-600 hover:text-slate-800 hover:underline"
+          >
+            新建案例
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              const next = !showDrafts;
+              setShowDrafts(next);
+              setLoadError(null);
+              router.push(next ? "/cases?view=drafts" : "/cases");
+            }}
+            className={`text-sm font-normal text-tarot-green hover:underline ${showDrafts ? "underline" : ""}`}
+          >
+            草稿箱
+          </button>
+        </div>
       </div>
+      <CaseExportImportModal
+        open={exportImportOpen !== null}
+        initialMode={exportImportOpen}
+        onClose={() => setExportImportOpen(null)}
+        onImported={() => setReloadKey((n) => n + 1)}
+      />
       {!showDrafts && (
         <div className="flex gap-2">
           <input
@@ -238,6 +245,7 @@ function CasesPageContent() {
                 className="shrink-0 text-sm text-red-500 hover:text-red-600"
                 onClick={async () => {
                   if (confirm("确定删除该案例？")) {
+                    const { deleteCase } = await import("@/lib/repo/caseRepo");
                     await deleteCase(c.id);
                     setReloadKey((n) => n + 1);
                   }
@@ -249,6 +257,23 @@ function CasesPageContent() {
           ))}
         </ul>
       )}
+      <div className="flex justify-end items-center gap-1 pt-2">
+        <button
+          type="button"
+          onClick={() => setExportImportOpen("import")}
+          className="text-sm font-normal text-slate-600 hover:text-slate-800 hover:underline"
+        >
+          案例导入
+        </button>
+        <span className="text-sm font-normal text-slate-600">/</span>
+        <button
+          type="button"
+          onClick={() => setExportImportOpen("export")}
+          className="text-sm font-normal text-slate-600 hover:text-slate-800 hover:underline"
+        >
+          导出
+        </button>
+      </div>
     </div>
   );
 }

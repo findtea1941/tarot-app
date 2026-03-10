@@ -15,7 +15,7 @@ export function TopTabs({ children }: { children: ReactNode }) {
   const currentPath = pathname ?? "";
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen min-w-0 flex flex-col overflow-x-hidden bg-white">
       <header className="sticky top-0 z-50 border-b border-[#e4efe9] bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-[1800px] items-center justify-between px-4 py-3">
           <div className="text-lg font-semibold tracking-wide text-tarot-green">
@@ -44,13 +44,13 @@ export function TopTabs({ children }: { children: ReactNode }) {
           </nav>
         </div>
       </header>
-      <main className="min-h-[calc(100vh-56px)] w-full flex-1 bg-gradient-to-b from-white via-[#fafdfc] to-[#f5faf9]">
+      <main className="min-h-[calc(100vh-56px)] w-full min-w-0 flex-1 overflow-x-hidden bg-gradient-to-b from-white via-[#fafdfc] to-[#f5faf9]">
         {currentPath.match(/^\/tarot\/[^/]+\/spread$/)
-          ? <div className="w-full">{children}</div>
+          ? <div className="min-w-0 w-full">{children}</div>
           : currentPath.match(/^\/tarot\/[^/]+\/result$/)
-            ? <div className="mx-auto max-w-[1800px] px-4 pt-0 pb-6">{children}</div>
+            ? <div className="min-w-0 mx-auto max-w-[1800px] px-4 pt-0 pb-6">{children}</div>
             : (
-              <div className="mx-auto max-w-[1800px] px-4 py-6">
+              <div className="min-w-0 mx-auto max-w-[1800px] px-4 py-6">
                 {children}
               </div>
             )}

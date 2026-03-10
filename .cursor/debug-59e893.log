@@ -1,0 +1,50 @@
+{"sessionId":"59e893","location":"page.tsx","message":"HomePage before redirect","data":{},"timestamp":1773024943609,"hypothesisId":"H3"}
+{"sessionId":"59e893","location":"page.tsx","message":"HomePage before redirect","data":{},"timestamp":1773024944165,"hypothesisId":"H3"}
+{"sessionId":"59e893","location":"page.tsx","message":"HomePage before redirect","data":{},"timestamp":1773025145078,"hypothesisId":"H3"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025145079,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/"},"timestamp":1773025145095,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025145168,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/css/app/layout.css"},"timestamp":1773025145171,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025145285,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025145288,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/main-app.js"},"timestamp":1773025145292,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/app-pages-internals.js"},"timestamp":1773025145296,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025147951,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/tarot"},"timestamp":1773025147956,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025147998,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/css/app/layout.css"},"timestamp":1773025148001,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025148031,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025148033,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025148035,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/main-app.js"},"timestamp":1773025148037,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/app-pages-internals.js"},"timestamp":1773025148040,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/app/tarot/page.js"},"timestamp":1773025148042,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025234670,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/tarot"},"timestamp":1773025234721,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025235078,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025235084,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025235086,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025235088,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/css/app/layout.css"},"timestamp":1773025235123,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/main-app.js"},"timestamp":1773025235129,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/app-pages-internals.js"},"timestamp":1773025235131,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/app/tarot/page.js"},"timestamp":1773025235133,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025236717,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"page.tsx","message":"HomePage before redirect","data":{},"timestamp":1773025236714,"hypothesisId":"H3"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/"},"timestamp":1773025236754,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025236803,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/css/app/layout.css"},"timestamp":1773025236808,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025236832,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025236834,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/main-app.js"},"timestamp":1773025236838,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/app-pages-internals.js"},"timestamp":1773025236840,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025238132,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/tarot"},"timestamp":1773025238138,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025238180,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/css/app/layout.css"},"timestamp":1773025238184,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025238209,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025238216,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"layout.tsx","message":"RootLayout render start","data":{},"timestamp":1773025238212,"hypothesisId":"H1"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/main-app.js"},"timestamp":1773025238222,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/app-pages-internals.js"},"timestamp":1773025238225,"hypothesisId":"H4"}
+{"sessionId":"59e893","location":"TopTabs.tsx","message":"TopTabs render","data":{"pathname":"/_next/static/chunks/app/tarot/page.js"},"timestamp":1773025238227,"hypothesisId":"H4"}

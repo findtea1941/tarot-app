@@ -1,15 +1,16 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@import "@xyflow/react/dist/style.css";
 
 html,
 body {
   height: 100%;
-}
-
-body {
-  @apply bg-white text-slate-800 antialiased;
+  margin: 0;
+  background-color: #ffffff;
+  color: #1e293b;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 input,
