@@ -137,7 +137,7 @@ export function AnnualReviewBoard({
         <div className="flex h-[78px] w-[98px] flex-col items-center justify-center rounded-xl border-2 border-[#a8d9c8] bg-white px-2.5 py-2 shadow-[0_4px_10px_rgba(5,150,105,0.10)]">
           <span className="whitespace-nowrap text-xs font-semibold leading-tight text-tarot-green">{position}</span>
           <span className="mt-0.5 whitespace-nowrap text-center text-xs leading-tight text-slate-700">{cardName}</span>
-          {planet ? <span className="mt-0.5 whitespace-nowrap text-[11px] leading-tight text-slate-500">{planet}</span> : null}
+          {planet ? <span className="mt-0.5 whitespace-nowrap text-xs font-normal leading-tight text-slate-500">{planet}</span> : null}
           {dateStr ? <span className="mt-0.5 whitespace-nowrap text-[11px] leading-tight text-slate-500">{dateStr}</span> : null}
         </div>
       );

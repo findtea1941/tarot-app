@@ -754,7 +754,7 @@ export default function ResultPageContent() {
                     <div className="space-y-3 min-w-0">
                       <div className="flex min-w-0 items-start gap-1">
                         <span className="shrink-0 text-slate-500">行星（含补录）：</span>
-                        <span className="min-w-0 flex-1 break-words font-medium text-slate-800">
+                        <span className="min-w-0 flex-1 break-words text-sm font-normal text-slate-800">
                           {Object.entries(statsForDisplay.planetCount)
                             .sort((a, b) => b[1] - a[1])
                             .map(([k, v]) => `${k}${v}`)
@@ -787,9 +787,26 @@ export default function ResultPageContent() {
                       <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">最多停止点：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{flyChainStatsResult?.topStopNodes ? (flyChainStatsResult.topStopNodes.items.length ? flyChainStatsResult.topStopNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topStopNodes.note ? `、${flyChainStatsResult.topStopNodes.note}` : "") : (flyChainStatsResult.topStopNodes.note ?? "—")) : "—"}</span></div>
                       <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">最多触停点：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{flyChainStatsResult?.topRedNodes ? (flyChainStatsResult.topRedNodes.items.length ? flyChainStatsResult.topRedNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topRedNodes.note ? `、${flyChainStatsResult.topRedNodes.note}` : "") : (flyChainStatsResult.topRedNodes.note ?? "—")) : "—"}</span></div>
                       <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">最多转折点：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{flyChainStatsResult?.topTurningNodes ? (flyChainStatsResult.topTurningNodes.items.length ? flyChainStatsResult.topTurningNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topTurningNodes.note ? `、${flyChainStatsResult.topTurningNodes.note}` : "") : (flyChainStatsResult.topTurningNodes.note ?? "—")) : "—"}</span></div>
-                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">数字绝对值加和 / 直接加和：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{(statsForDisplay.numberSumAbsolute % 22 + 22) % 22} / {(statsForDisplay.numberSumSigned % 22 + 22) % 22}</span></div>
                     </div>
                   </div>
+                </section>
+              )}
+              {statsForDisplay && (
+                <section className="shrink-0 w-full min-w-0">
+                  <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">数字加和</h2>
+                  <p className="flex items-center gap-2 text-sm">
+                    <span>
+                      <span className="text-slate-500">绝对值 :</span>
+                      <span className="ml-1 font-semibold text-green-600">{((statsForDisplay.numberSumAbsolute % 22) + 22) % 22}</span>
+                    </span>
+                    <span className="h-4 w-px shrink-0 bg-slate-300" />
+                    <span>
+                      <span className="text-slate-500">直接加和 :</span>
+                      <span className="ml-1 font-semibold text-red-600">
+                        {((statsForDisplay.numberSumSigned % 22) + 22) % 22}
+                      </span>
+                    </span>
+                  </p>
                 </section>
               )}
               {flyChainError && (
@@ -933,8 +950,10 @@ export default function ResultPageContent() {
                         {matrixColumns.map((col) => (
                           <td
                             key={col.id}
-                            className={`border border-slate-200 px-2 py-1 whitespace-nowrap text-center align-middle ${
-                              col.kind === "summary" ? "font-semibold text-slate-800" : "text-slate-800"
+                            className={`border border-slate-200 px-2 py-1 whitespace-nowrap text-center align-middle text-sm ${
+                              col.kind === "summary" && row.id !== "planet"
+                                ? "font-semibold text-slate-800"
+                                : "font-normal text-slate-800"
                             }`}
                           >
                             {col.kind === "signifier" &&
@@ -954,7 +973,7 @@ export default function ResultPageContent() {
                                   <div className="flex justify-center">
                                     {isEditing ? (
                                       <select
-                                        className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-sm text-slate-800"
+                                        className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-sm font-normal text-slate-800"
                                         value={currentPlanet}
                                         onChange={(e) => {
                                           const v = e.target.value;
@@ -980,7 +999,7 @@ export default function ResultPageContent() {
                                     ) : (
                                       <button
                                         type="button"
-                                        className="min-w-[5.5rem] rounded border border-transparent px-1 py-0.5 text-center text-sm text-slate-800 hover:border-slate-300 hover:bg-slate-50"
+                                        className="min-w-[5.5rem] rounded border border-transparent px-1 py-0.5 text-center text-sm font-normal text-slate-800 hover:border-slate-300 hover:bg-slate-50"
                                         onClick={() =>
                                           setEditingPlanetSignifierIndex(col.signifierIndex!)
                                         }

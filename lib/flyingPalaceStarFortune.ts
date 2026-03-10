@@ -72,7 +72,7 @@ function isTurningPointStarFortune(_from: FlyNode, to: FlyNode): boolean {
 }
 
 const SLOT_NAMES_STAR: Record<string, string> = {
-  sun: "太阳", moon: "月亮", mercury: "水星", venus: "金星", mars: "火星", jupiter: "木星", saturn: "土星",
+  sun: "太阳位", moon: "月亮位", mercury: "水星位", venus: "金星位", mars: "火星位", jupiter: "木星位", saturn: "土星位",
   "1": "一宫", "2": "二宫", "3": "三宫", "4": "四宫", "5": "五宫", "6": "六宫",
   "7": "七宫", "8": "八宫", "9": "九宫", "10": "十宫", "11": "十一宫", "12": "十二宫",
   fire: "火元素", earth: "土元素", air: "风元素", water: "水元素",

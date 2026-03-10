@@ -133,7 +133,7 @@ export function Step4Modal({
                       {item.reversed ? "逆位" : "正位"}
                     </span>
                     <select
-                      className="ml-auto rounded-xl border border-[#d8ebe3] bg-white px-3 py-2 text-sm text-slate-700 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
+                      className="ml-auto rounded-xl border border-[#d8ebe3] bg-white px-3 py-2 text-sm font-normal text-slate-700 outline-none transition focus:border-tarot-green focus:ring-2 focus:ring-emerald-100"
                       value={planetSupplements[item.slotId] ?? ""}
                       onChange={(e) => handlePlanetChange(item.slotId, e.target.value)}
                       aria-label={`${item.slotName} ${item.cardName} 行星`}
