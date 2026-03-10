@@ -27,7 +27,7 @@
       "lenormandOptionALabel": "",
       "lenormandOptionBLabel": "",
       "createdAt": 1773126508381,
-      "updatedAt": 1773126622346,
+      "updatedAt": 1773126790591,
       "question": "2026年我是否能有10个以上400元的来访？",
       "lenormandDrawDate": "2026-01-28",
       "lenormandAnalysis": {},
@@ -184,7 +184,7 @@
       },
       "userInterpretation": "宝剑国王天蝎火；星币ACE水瓶土；权杖ACE金牛金；星币骑士双子水；星币王后天秤金；权杖骑士处女水",
       "createdAt": 1773126246609,
-      "updatedAt": 1773126370628,
+      "updatedAt": 1773127400141,
       "slotInputs": {
         "1": "星币骑士",
         "2": "圣杯4",
@@ -356,7 +356,8 @@
           "权杖骑士": "☿",
           "圣杯国王": "☉"
         }
-      }
+      },
+      "reviewFeedback": "26.2.10-26.3.10：很多人来看房，中介纷纷表示这个房子很有潜力马上卖掉。过年回来工作开始变得忙碌，一下子接了3个新来访。来访给我推荐了来访。做了静文的疗愈，看到了很深的创伤。开始上课，也还是继续报课，花了很多钱。"
     },
     {
       "id": "cb60ae31-36a7-48d2-84a8-14084d295732",
@@ -479,7 +480,7 @@
       },
       "userInterpretation": "",
       "createdAt": 1773125877285,
-      "updatedAt": 1773126209387,
+      "updatedAt": 1773127382145,
       "slotInputs": {
         "1": "权杖侍从",
         "2": "圣杯2-",
@@ -588,7 +589,8 @@
           "reversed": true
         }
       },
-      "supplements": {}
+      "supplements": {},
+      "reviewFeedback": "26.2.10-26.3.10：很多人来看房，中介纷纷表示这个房子很有潜力马上卖掉。过年回来工作开始变得忙碌，一下子接了3个新来访。来访给我推荐了来访。做了静文的疗愈，看到了很深的创伤。开始上课，也还是继续报课，花了很多钱。"
     },
     {
       "id": "07fe4762-0fa8-4f47-9d31-fc7ef7f7f652",
@@ -853,6 +855,34 @@
       "lenormandAnalysis": {
         "overall": "我觉得是在说来访对咨询建立安全感这件事非常坚定（狗代表咨询的帮助，山代表坚定），是关键的，所以能够很稳定地来，是可以同意的。反馈也是同意了。"
       }
+    },
+    {
+      "id": "fd56c183-5507-4d30-a8e3-6ece9a779cc5",
+      "type": "lenormand",
+      "status": "draft",
+      "title": "九宫格 | 草稿",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [],
+      "lenormandCards": [],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "createdAt": 1773126857314,
+      "updatedAt": 1773127273036
+    },
+    {
+      "id": "0bb640a3-fb8d-45db-88b9-e7e179ce493a",
+      "type": "lenormand",
+      "status": "draft",
+      "title": "九宫格 | 草稿",
+      "lenormandSpreadType": "nine-grid",
+      "lenormandIsChoice": false,
+      "lenormandCategories": [],
+      "lenormandCards": [],
+      "lenormandOptionACards": [],
+      "lenormandOptionBCards": [],
+      "createdAt": 1773126728224,
+      "updatedAt": 1773126729056
     },
     {
       "id": "aeb8e6f8-dc25-404e-9102-26975bc72efe",

@@ -135,8 +135,10 @@ export function topTwoKeys(count: Record<string, number>): string[] {
   return entries.filter(([, c]) => c === max).slice(0, 3).map(([k]) => k);
 }
 
-/** 星座/宫位：取数量≥minCount 的前三档，每项后括号标数量；若某档并列≥5 项则省略该档并说明 */
+/** 星座/宫位：取数量≥minCount 的前三档，最多展示 3 项；若某档并列≥5 项或加入会超 3 项则省略该档并说明 */
 export type TopKeysWithCount = { items: Array<{ key: string; count: number }>; note?: string };
+
+const ZODIAC_HOUSE_TOP_DISPLAY_MAX = 3;
 
 export function topKeysWithCount(
   count: Record<string, number>,
@@ -156,6 +158,10 @@ export function topKeysWithCount(
   for (const c of distinctCounts) {
     const keys = byCount.get(c) ?? [];
     if (keys.length >= 5) {
+      note = note ? `${note}、略（${c}）` : `略（${c}）`;
+      continue;
+    }
+    if (items.length + keys.length > ZODIAC_HOUSE_TOP_DISPLAY_MAX) {
       note = note ? `${note}、略（${c}）` : `略（${c}）`;
       continue;
     }
