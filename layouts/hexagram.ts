@@ -12,6 +12,6 @@ export const hexagramLayout: SpreadLayout = {
     { id: "4", name: "阻碍", meaning: "阻碍", at: { col: 4, row: 1 } },
     { id: "5", name: "环境", meaning: "环境", at: { col: 2, row: 5 } },
     { id: "6", name: "策略", meaning: "策略", at: { col: 6, row: 5 } },
-    { id: "7", name: "更好的结果", meaning: "更好的结果", at: { col: 4, row: 4 } },
+    { id: "7", name: "结果", meaning: "结果", at: { col: 4, row: 4 } },
   ],
 };

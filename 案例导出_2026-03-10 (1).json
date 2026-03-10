@@ -1,6 +1,143 @@
 {
   "cases": [
     {
+      "id": "d43cce50-3898-4005-ae5b-b36341638120",
+      "type": "tarot",
+      "status": "completed",
+      "title": "2026-03-10 | 情感 | 情感的发展",
+      "question": "情感的发展",
+      "background": "案主女，和老公在一起十几年，结婚也很多年，可能一直有一些争吵后情感处理的模式，案主想知道这种处理方式是对她好的吗，以及可以如何改进",
+      "category": "情感",
+      "tarotCategories": [
+        "情感",
+        "开放式问题"
+      ],
+      "drawTime": "2026-03-10T09:09:00.000Z",
+      "spreadType": "六芒星",
+      "location": {
+        "provinceCode": "310000",
+        "provinceName": "上海市",
+        "cityCode": "310100",
+        "cityName": "市辖区",
+        "districtCode": "",
+        "districtName": "",
+        "label": "上海市-上海市"
+      },
+      "locationLabel": "上海市-上海市",
+      "cards": [
+        {
+          "slotId": "1",
+          "cardId": "major-16",
+          "reversed": false
+        },
+        {
+          "slotId": "2",
+          "cardId": "swords-7",
+          "reversed": false
+        },
+        {
+          "slotId": "3",
+          "cardId": "swords-knight",
+          "reversed": false
+        },
+        {
+          "slotId": "4",
+          "cardId": "pentacles-4",
+          "reversed": true
+        },
+        {
+          "slotId": "5",
+          "cardId": "swords-8",
+          "reversed": false
+        },
+        {
+          "slotId": "6",
+          "cardId": "cups-7",
+          "reversed": true
+        },
+        {
+          "slotId": "7",
+          "cardId": "cups-4",
+          "reversed": true
+        }
+      ],
+      "analysis": {
+        "userNotes": "整体统筹看，湿品重，有灵活包容的部分。固定阶段重，目前的相处已经有雏形了，很难轻易动，整体固+变，双方的相处模式固化，只能做细节上的调整，没有那么容易发生突变。\n时间统筹：热品质重，发展变化快，比较临时。水瓶座重，跟理念相关的不和。月亮，冲突的内核是需求或者情绪",
+        "manualNumberNote": "指示牌相乘战车-；行星合日月魔术师"
+      },
+      "userInterpretation": "整体统筹看，湿品重，有灵活包容的部分。固定阶段重，目前的相处已经有雏形了，很难轻易动，整体固+变，双方的相处模式固化，只能做细节上的调整，没有那么容易发生突变。\n时间统筹：热品质重，发展变化快，比较临时。水瓶座重，跟理念相关的不和。月亮，冲突的内核是需求或者情绪",
+      "createdAt": 1773134034046,
+      "updatedAt": 1773140567944,
+      "timeAxisVariant": "past-present-future",
+      "slotInputs": {
+        "1": "高塔",
+        "2": "宝剑7",
+        "3": "宝剑骑士",
+        "4": "星币4-",
+        "5": "宝剑8",
+        "6": "圣杯7-",
+        "7": "圣杯4-"
+      },
+      "categories": [
+        "情感",
+        "开放式问题"
+      ],
+      "planetSupplements": {
+        "3": "☽"
+      },
+      "significatorInput": "圣杯王后-；权杖9",
+      "supplements": {
+        "planetBySlotId": {
+          "3": "☽"
+        },
+        "planetByCardKey": {
+          "宝剑骑士": "☽",
+          "圣杯王后": "☉"
+        },
+        "signifierTitles": [
+          "案主",
+          "案主老公"
+        ]
+      },
+      "slotCards": {
+        "1": {
+          "cardId": "major-16",
+          "cardKey": "高塔",
+          "reversed": false
+        },
+        "2": {
+          "cardId": "swords-7",
+          "cardKey": "宝剑7",
+          "reversed": false
+        },
+        "3": {
+          "cardId": "swords-knight",
+          "cardKey": "宝剑骑士",
+          "reversed": false
+        },
+        "4": {
+          "cardId": "pentacles-4",
+          "cardKey": "星币4",
+          "reversed": true
+        },
+        "5": {
+          "cardId": "swords-8",
+          "cardKey": "宝剑8",
+          "reversed": false
+        },
+        "6": {
+          "cardId": "cups-7",
+          "cardKey": "圣杯7",
+          "reversed": true
+        },
+        "7": {
+          "cardId": "cups-4",
+          "cardKey": "圣杯4",
+          "reversed": true
+        }
+      }
+    },
+    {
       "id": "c586ee88-d9f2-4502-a724-0c10ff76bef9",
       "type": "tarot",
       "status": "completed",

@@ -111,6 +111,8 @@ export default function ResultPageContent() {
   /** 指示牌列标题，与列一一对应；可点击表头编辑 */
   const [signifierTitleInputs, setSignifierTitleInputs] = useState<string[]>([]);
   const [editingSignifierTitleIndex, setEditingSignifierTitleIndex] = useState<number | null>(null);
+  /** 指示牌行星补录：正在编辑的行星格（signifierIndex），选完或点击别处即隐藏下拉框 */
+  const [editingPlanetSignifierIndex, setEditingPlanetSignifierIndex] = useState<number | null>(null);
   const [manualNumberNote, setManualNumberNote] = useState("");
   const [reviewFeedback, setReviewFeedback] = useState("");
   const [annualReviewDetailOpen, setAnnualReviewDetailOpen] = useState(false);
@@ -571,10 +573,10 @@ export default function ResultPageContent() {
     <div className="flex min-h-0 flex-1 flex-col items-center bg-white pb-16">
       {/* 竖线分左右，左侧横线+淡绿区隔牌阵回顾（无外框） */}
       <div
-        className={`mx-auto grid w-fit min-h-0 flex-1 grid-cols-1 items-stretch ${
+        className={`mx-auto grid min-h-0 w-full max-w-full flex-1 grid-cols-1 items-stretch ${
           layout?.id === "choose-one-5"
-            ? "max-w-none xl:grid-cols-[540px_1px_auto]"
-            : "max-w-none xl:grid-cols-[500px_1px_auto]"
+            ? "xl:w-fit xl:grid-cols-[540px_1px_auto]"
+            : "xl:w-fit xl:grid-cols-[500px_1px_auto]"
         }`}
       >
         {/* 左侧列：上为工作台，下为牌阵回顾 */}
@@ -726,8 +728,8 @@ export default function ResultPageContent() {
         {/* 竖线分隔左右：顶格贯通，与左侧横线相交 */}
         <div className="hidden w-px shrink-0 self-stretch bg-slate-200 xl:block" aria-hidden />
 
-        {/* 右侧列：统筹表格/年运统计+飞宫链、数字、案例解读；flex-1 min-h-0 使底部与左侧平齐 */}
-        <div className="flex min-h-0 flex-1 w-max flex-col gap-10 overflow-visible pl-8 pr-4 pt-4 pb-4 xl:gap-12 xl:pl-10">
+        {/* 右侧列：统筹表格/年运统计+飞宫链、数字、案例解读；min-w-0 使统计与飞宫链同宽并换行 */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-10 overflow-visible pl-8 pr-4 pt-4 pb-4 xl:gap-12 xl:pl-10">
           {(layout?.id === "annual-17" || layout?.id === "starfortune-23") ? (
             <>
               {flyChainMissingMapping && (
@@ -740,19 +742,28 @@ export default function ResultPageContent() {
                 </section>
               )}
               {statsForDisplay && (
-                <section className="shrink-0 w-max max-w-full">
+                <section className="shrink-0 w-full min-w-0">
                   <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">统计表格</h2>
-                  <div className="flex flex-wrap gap-x-12 gap-y-4 rounded-xl border border-[#e2ebe7] bg-[#fbfdfc] p-4 text-sm [&>div]:pr-5 [&>div:last-child]:pr-0">
+                  <div className="grid w-full grid-cols-[auto_1fr_1fr] gap-x-6 gap-y-4 rounded-xl border border-[#e2ebe7] bg-[#fbfdfc] p-4 text-sm [&>div]:min-w-0 [&>div]:pr-4 [&>div:last-child]:pr-0">
                     <div className="space-y-3 min-w-0">
-                      <div><span className="text-slate-500">元素：</span><span className="font-medium text-slate-800">{formatElementLine(statsForDisplay)}</span></div>
-                      <div><span className="text-slate-500">阶段：</span><span className="font-medium text-slate-800">{formatStageLine(statsForDisplay)}</span></div>
-                      <div><span className="text-slate-500">性状：</span><span className="font-medium text-slate-800">{formatTraitLine(statsForDisplay)}</span></div>
-                      <div><span className="text-slate-500">牌型比例：</span><span className="font-medium text-slate-800">{formatCardTypeLine(statsForDisplay)}</span></div>
+                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">元素：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{formatElementLine(statsForDisplay)}</span></div>
+                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">阶段：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{formatStageLine(statsForDisplay)}</span></div>
+                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">性状：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{formatTraitLine(statsForDisplay)}</span></div>
+                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">牌型比例：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{formatCardTypeLine(statsForDisplay)}</span></div>
                     </div>
                     <div className="space-y-3 min-w-0">
-                      <div>
-                        <span className="text-slate-500">星座（≥2 前三）：</span>
-                        <span className="font-medium text-slate-800">
+                      <div className="flex min-w-0 items-start gap-1">
+                        <span className="shrink-0 text-slate-500">行星（含补录）：</span>
+                        <span className="min-w-0 flex-1 break-words font-medium text-slate-800">
+                          {Object.entries(statsForDisplay.planetCount)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([k, v]) => `${k}${v}`)
+                            .join(" ") || "—"}
+                        </span>
+                      </div>
+                      <div className="flex min-w-0 items-start gap-1">
+                        <span className="shrink-0 text-slate-500">星座（≥2 前三）：</span>
+                        <span className="min-w-0 flex-1 break-words font-medium text-slate-800">
                           {(() => {
                             const { items, note } = topKeysWithCount(statsForDisplay.zodiacCount);
                             if (!items.length) return "—";
@@ -760,9 +771,9 @@ export default function ResultPageContent() {
                           })()}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-slate-500">宫位（≥2 前三）：</span>
-                        <span className="font-medium text-slate-800">
+                      <div className="flex min-w-0 items-start gap-1">
+                        <span className="shrink-0 text-slate-500">宫位（≥2 前三）：</span>
+                        <span className="min-w-0 flex-1 break-words font-medium text-slate-800">
                           {(() => {
                             const { items, note } = topKeysWithCount(statsForDisplay.houseCount);
                             if (!items.length) return "—";
@@ -770,22 +781,13 @@ export default function ResultPageContent() {
                           })()}
                         </span>
                       </div>
-                      <div>
-                        <span className="text-slate-500">行星（含补录）：</span>
-                        <span className="font-medium text-slate-800">
-                          {Object.entries(statsForDisplay.planetCount)
-                            .sort((a, b) => b[1] - a[1])
-                            .map(([k, v]) => `${k}${v}`)
-                            .join(" ") || "—"}
-                        </span>
-                      </div>
-                      <div><span className="text-slate-500">飞宫分支最多起点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topStartSlots ? (flyChainStatsResult.topStartSlots.items.length ? flyChainStatsResult.topStartSlots.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topStartSlots.note ? `、${flyChainStatsResult.topStartSlots.note}` : "") : (flyChainStatsResult.topStartSlots.note ?? "—")) : "—"}</span></div>
+                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">飞宫分支最多起点：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{flyChainStatsResult?.topStartSlots ? (flyChainStatsResult.topStartSlots.items.length ? flyChainStatsResult.topStartSlots.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topStartSlots.note ? `、${flyChainStatsResult.topStartSlots.note}` : "") : (flyChainStatsResult.topStartSlots.note ?? "—")) : "—"}</span></div>
                     </div>
                     <div className="space-y-3 min-w-0">
-                      <div><span className="text-slate-500">最多停止点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topStopNodes ? (flyChainStatsResult.topStopNodes.items.length ? flyChainStatsResult.topStopNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topStopNodes.note ? `、${flyChainStatsResult.topStopNodes.note}` : "") : (flyChainStatsResult.topStopNodes.note ?? "—")) : "—"}</span></div>
-                      <div><span className="text-slate-500">最多触停点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topRedNodes ? (flyChainStatsResult.topRedNodes.items.length ? flyChainStatsResult.topRedNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topRedNodes.note ? `、${flyChainStatsResult.topRedNodes.note}` : "") : (flyChainStatsResult.topRedNodes.note ?? "—")) : "—"}</span></div>
-                      <div><span className="text-slate-500">最多转折点：</span><span className="font-medium text-slate-800">{flyChainStatsResult?.topTurningNodes ? (flyChainStatsResult.topTurningNodes.items.length ? flyChainStatsResult.topTurningNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topTurningNodes.note ? `、${flyChainStatsResult.topTurningNodes.note}` : "") : (flyChainStatsResult.topTurningNodes.note ?? "—")) : "—"}</span></div>
-                      <div><span className="text-slate-500">数字绝对值加和 / 直接加和：</span><span className="font-medium text-slate-800">{(statsForDisplay.numberSumAbsolute % 22 + 22) % 22} / {(statsForDisplay.numberSumSigned % 22 + 22) % 22}</span></div>
+                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">最多停止点：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{flyChainStatsResult?.topStopNodes ? (flyChainStatsResult.topStopNodes.items.length ? flyChainStatsResult.topStopNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topStopNodes.note ? `、${flyChainStatsResult.topStopNodes.note}` : "") : (flyChainStatsResult.topStopNodes.note ?? "—")) : "—"}</span></div>
+                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">最多触停点：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{flyChainStatsResult?.topRedNodes ? (flyChainStatsResult.topRedNodes.items.length ? flyChainStatsResult.topRedNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topRedNodes.note ? `、${flyChainStatsResult.topRedNodes.note}` : "") : (flyChainStatsResult.topRedNodes.note ?? "—")) : "—"}</span></div>
+                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">最多转折点：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{flyChainStatsResult?.topTurningNodes ? (flyChainStatsResult.topTurningNodes.items.length ? flyChainStatsResult.topTurningNodes.items.map(({ node, count }) => `${getFlySlotNameResolved(node)}（${count}）`).join("、") + (flyChainStatsResult.topTurningNodes.note ? `、${flyChainStatsResult.topTurningNodes.note}` : "") : (flyChainStatsResult.topTurningNodes.note ?? "—")) : "—"}</span></div>
+                      <div className="flex min-w-0 items-start gap-1"><span className="shrink-0 text-slate-500">数字绝对值加和 / 直接加和：</span><span className="min-w-0 flex-1 break-words font-medium text-slate-800">{(statsForDisplay.numberSumAbsolute % 22 + 22) % 22} / {(statsForDisplay.numberSumSigned % 22 + 22) % 22}</span></div>
                     </div>
                   </div>
                 </section>
@@ -797,7 +799,7 @@ export default function ResultPageContent() {
                 </section>
               )}
               {flyChainTable && !flyChainMissingMapping && matrixContext && (
-                <section className="shrink-0 space-y-3">
+                <section className="shrink-0 min-w-0 space-y-3">
                   <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">飞宫链</h2>
                   <FlyChainGraphBoundary>
                     <AnnualFlyChainGraph
@@ -861,19 +863,23 @@ export default function ResultPageContent() {
                   </colgroup>
                   <thead>
                     <tr className="border-b border-slate-200">
-                      <th className="border border-slate-200 bg-tarot-panel px-2 py-1.5 text-slate-600 font-medium whitespace-nowrap text-center align-middle">
+                      <th className="border border-slate-200 bg-tarot-panel px-2 py-1.5 text-slate-600 font-semibold whitespace-nowrap text-center align-middle">
                         维度
                       </th>
                       {matrixColumns.map((col) => (
                         <th
                           key={col.id}
-                          className="border border-slate-200 bg-tarot-panel px-2 py-1.5 text-slate-700 font-medium whitespace-nowrap text-center align-middle"
+                          className={`border border-slate-200 bg-tarot-panel px-2 py-1.5 whitespace-nowrap text-center align-middle ${
+                            col.kind === "summary"
+                              ? "text-slate-700 font-semibold"
+                              : "text-slate-700 font-medium"
+                          }`}
                         >
                           {col.kind === "signifier" && col.signifierIndex != null ? (
                             editingSignifierTitleIndex === col.signifierIndex ? (
                               <input
                                 type="text"
-                                className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-xs text-slate-800"
+                                className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-sm text-slate-800"
                                 value={signifierTitleInputs[col.signifierIndex] ?? col.title}
                                 onChange={(e) => {
                                   const next = [...signifierTitleInputs];
@@ -890,7 +896,7 @@ export default function ResultPageContent() {
                             ) : (
                               <button
                                 type="button"
-                                className="w-full whitespace-nowrap px-0.5 text-center text-xs text-slate-700 hover:text-tarot-green"
+                                className="w-full whitespace-nowrap px-0.5 text-center text-sm text-slate-700 hover:text-tarot-green"
                                 onClick={() => setEditingSignifierTitleIndex(col.signifierIndex!)}
                               >
                                 {signifierTitleInputs[col.signifierIndex] ?? col.title}
@@ -905,13 +911,15 @@ export default function ResultPageContent() {
                   </thead>
                   <tbody>
                     <tr className="border-b border-slate-200">
-                      <td className="border border-slate-200 bg-slate-50 px-2 py-1 text-slate-600 whitespace-nowrap text-center align-middle">
+                      <td className="border border-slate-200 bg-slate-50 px-2 py-1 font-semibold text-slate-600 whitespace-nowrap text-center align-middle">
                         牌名
                       </td>
                       {matrixColumns.map((col) => (
                         <td
                           key={col.id}
-                          className="border border-slate-200 px-2 py-1 text-slate-800 whitespace-nowrap text-center align-middle"
+                          className={`border border-slate-200 px-2 py-1 whitespace-nowrap text-center align-middle ${
+                            col.kind === "summary" ? "font-semibold text-slate-800" : "text-slate-800"
+                          }`}
                         >
                           {getColumnCardText(col, matrixContext)}
                         </td>
@@ -919,13 +927,15 @@ export default function ResultPageContent() {
                     </tr>
                     {DIMENSION_ROWS.map((row) => (
                       <tr key={row.id} className="border-b border-slate-200">
-                        <td className="border border-slate-200 bg-slate-50 px-2 py-1 text-slate-600 whitespace-nowrap text-center align-middle">
+                        <td className="border border-slate-200 bg-slate-50 px-2 py-1 font-semibold text-slate-600 whitespace-nowrap text-center align-middle">
                           {row.label}
                         </td>
                         {matrixColumns.map((col) => (
                           <td
                             key={col.id}
-                            className="border border-slate-200 px-2 py-1 text-slate-800 whitespace-nowrap text-center align-middle"
+                            className={`border border-slate-200 px-2 py-1 whitespace-nowrap text-center align-middle ${
+                              col.kind === "summary" ? "font-semibold text-slate-800" : "text-slate-800"
+                            }`}
                           >
                             {col.kind === "signifier" &&
                             col.signifierIndex != null &&
@@ -938,27 +948,48 @@ export default function ResultPageContent() {
                                 const needsPlanet = entry.card.planetNeedsSupplement;
                                 const currentPlanet =
                                   caseData.supplements?.planetByCardKey?.[entry.card.name] ?? "";
+                                const isEditing = editingPlanetSignifierIndex === col.signifierIndex;
+                                const displayText = currentPlanet || "请选择";
                                 return needsPlanet ? (
-                                  <select
-                                    className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-xs text-slate-800"
-                                    value={currentPlanet}
-                                    onChange={(e) =>
-                                      handleSignifierPlanetBlur(entry.card.name, e.target.value)
-                                    }
-                                    onBlur={(e) =>
-                                      handleSignifierPlanetBlur(
-                                        entry.card.name,
-                                        e.currentTarget.value
-                                      )
-                                    }
-                                    aria-label={`${entry.card.name} 行星`}
-                                  >
-                                    {PlanetOptions.map((opt) => (
-                                      <option key={opt.value || "empty"} value={opt.value}>
-                                        {opt.label}
-                                      </option>
-                                    ))}
-                                  </select>
+                                  <div className="flex justify-center">
+                                    {isEditing ? (
+                                      <select
+                                        className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-sm text-slate-800"
+                                        value={currentPlanet}
+                                        onChange={(e) => {
+                                          const v = e.target.value;
+                                          handleSignifierPlanetBlur(entry.card.name, v);
+                                          setEditingPlanetSignifierIndex(null);
+                                        }}
+                                        onBlur={(e) => {
+                                          handleSignifierPlanetBlur(
+                                            entry.card.name,
+                                            e.currentTarget.value
+                                          );
+                                          setEditingPlanetSignifierIndex(null);
+                                        }}
+                                        autoFocus
+                                        aria-label={`${entry.card.name} 行星`}
+                                      >
+                                        {PlanetOptions.map((opt) => (
+                                          <option key={opt.value || "empty"} value={opt.value}>
+                                            {opt.label}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    ) : (
+                                      <button
+                                        type="button"
+                                        className="min-w-[5.5rem] rounded border border-transparent px-1 py-0.5 text-center text-sm text-slate-800 hover:border-slate-300 hover:bg-slate-50"
+                                        onClick={() =>
+                                          setEditingPlanetSignifierIndex(col.signifierIndex!)
+                                        }
+                                        aria-label={`${entry.card.name} 行星`}
+                                      >
+                                        {displayText}
+                                      </button>
+                                    )}
+                                  </div>
                                 ) : (
                                   getCellValue(col, row, matrixContext, groupSummaries ?? undefined)
                                 );

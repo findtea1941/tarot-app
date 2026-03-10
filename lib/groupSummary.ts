@@ -120,7 +120,7 @@ export function buildGroupSummary(cards: ResolvedCard[]): GroupSummary {
         ? "平衡"
         : nets.find((n) => n.v === maxNet)!.label;
 
-  // 2) 品质：干/湿/冷/热
+  // 2) 品质：干湿一组互相抵消，冷热一组互相抵消；原则上只返回数量最多的一个，仅当两组净胜相等时返回两个
   const q = countQualities(cards);
   const dry = q.干 ?? 0;
   const wet = q.湿 ?? 0;
@@ -132,10 +132,27 @@ export function buildGroupSummary(cards: ResolvedCard[]): GroupSummary {
   const netWet = Math.max(-dryWet, 0);
   const netCold = Math.max(coldHot, 0);
   const netHot = Math.max(-coldHot, 0);
-  const axis1 = netDry > 0 ? "干" : netWet > 0 ? "湿" : "";
-  const axis2 = netCold > 0 ? "冷" : netHot > 0 ? "热" : "";
-  const quality =
-    !axis1 && !axis2 ? "平衡" : axis1 && axis2 ? `${axis1}${axis2}` : axis1 || axis2;
+  const axis1Label = netDry > 0 ? "干" : netWet > 0 ? "湿" : "";
+  const axis2Label = netCold > 0 ? "冷" : netHot > 0 ? "热" : "";
+  const axis1Net = axis1Label ? (axis1Label === "干" ? netDry : netWet) : 0;
+  const axis2Net = axis2Label ? (axis2Label === "冷" ? netCold : netHot) : 0;
+  let quality: string;
+  if (!axis1Label && !axis2Label) {
+    quality = "平衡";
+  } else if (axis1Label && !axis2Label) {
+    quality = axis1Label;
+  } else if (!axis1Label && axis2Label) {
+    quality = axis2Label;
+  } else {
+    // 两组都有净胜：仅当净胜相等时返回两个，否则返回净胜更大的一个
+    if (axis1Net === axis2Net) {
+      quality = `${axis1Label}${axis2Label}`;
+    } else if (axis1Net > axis2Net) {
+      quality = axis1Label!;
+    } else {
+      quality = axis2Label!;
+    }
+  }
 
   // 3) 阴阳
   const yin = cards.filter(({ card }) => card.yinYang === "阴").length;
