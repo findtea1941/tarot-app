@@ -877,7 +877,7 @@ export default function ResultPageContent() {
                 </section>
               )}
           <section className="flex min-h-[420px] flex-1 flex-col">
-            <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">用户解读区</h2>
+            <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">牌阵解读</h2>
             <textarea
               ref={interpretationTextareaRef}
               id="result-user-interpretation-annual"
@@ -1127,14 +1127,14 @@ export default function ResultPageContent() {
                   value={manualNumberNote}
                   onChange={(e) => setManualNumberNote(e.target.value)}
                   onBlur={handleManualNumberNoteBlur}
-                  placeholder="例如：某些牌不计入数字、特殊换算说明等"
+                  placeholder="例如：相乘结果等"
                 />
               </div>
             </div>
           </section>
 
           <section className="flex min-h-[420px] flex-1 flex-col">
-            <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">案例解读</h2>
+            <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">牌阵解读</h2>
             <textarea
               ref={interpretationTextareaRef}
               id="result-user-interpretation"
