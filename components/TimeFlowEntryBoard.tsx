@@ -49,6 +49,7 @@ className={`rounded-2xl border-2 bg-white/95 p-2 transition-shadow ${
                 <input
                   id={getSlotInputId(slot.id)}
                   type="text"
+                  tabIndex={parseInt(slot.id, 10)}
                   className={`h-11 rounded-xl border px-4 text-center text-sm text-slate-700 outline-none transition ${
                     center ? "w-36" : "w-32"
                   } ${

@@ -15,12 +15,14 @@ type SlotStackProps = {
   onChange: (value: string) => void;
   /** 校验错误文案，显示在输入框下方 */
   error?: string;
+  /** Tab 切换顺序，按牌号 1→2→3… 设置 */
+  tabIndex?: number;
 };
 
 /**
  * 单个卡位垂直堆叠：上方牌背/牌框（圈号+位置名称徽标），下方输入框
  */
-export function SlotStack({ slot, value, onChange, error }: SlotStackProps) {
+export function SlotStack({ slot, value, onChange, error, tabIndex }: SlotStackProps) {
   const inputId = getSlotInputId(slot.id);
   return (
     <div className="flex min-h-[140px] min-w-[80px] flex-col gap-2">
@@ -34,6 +36,7 @@ export function SlotStack({ slot, value, onChange, error }: SlotStackProps) {
         <input
           id={inputId}
           type="text"
+          tabIndex={tabIndex}
           className={`w-full rounded-xl border px-3 py-2 text-xs text-slate-700 placeholder-slate-400 outline-none transition ${
             error
               ? "border-red-300 bg-red-50 focus:border-red-400"

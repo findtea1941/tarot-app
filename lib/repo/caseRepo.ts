@@ -344,21 +344,22 @@ export async function exportCasesByTypes(
   });
 }
 
-/** 导入案例数据（逐条写入，生成新 ID 避免冲突，无 schema 变更） */
+/** 导入案例数据（逐条写入，核查案例是否已存在，仅导入不重复的案例） */
 export async function importCases(
   raw: unknown,
   options?: { types?: ("tarot" | "lenormand")[] }
-): Promise<{ success: number; failed: number; errors: string[] }> {
+): Promise<{ success: number; failed: number; skipped: number; errors: string[] }> {
   const arr = Array.isArray(raw)
     ? raw
     : raw && typeof raw === "object" && "cases" in raw
       ? (raw as { cases: unknown }).cases
       : null;
   if (!Array.isArray(arr)) {
-    return { success: 0, failed: 0, errors: ["无效的导入数据格式"] };
+    return { success: 0, failed: 0, skipped: 0, errors: ["无效的导入数据格式"] };
   }
   const filterTypes = options?.types;
   let success = 0;
+  let skipped = 0;
   const errors: string[] = [];
 
   const toAdd: Case[] = [];
@@ -375,10 +376,10 @@ export async function importCases(
     const type = (c.type === "tarot" || c.type === "lenormand" ? c.type : "tarot") as "tarot" | "lenormand";
     if (filterTypes && filterTypes.length > 0 && !filterTypes.includes(type)) continue;
 
-    const newId = crypto.randomUUID();
+    const srcId = typeof c.id === "string" ? c.id : null;
     const merged: Case = {
       ...(c as unknown as Case),
-      id: newId,
+      id: srcId ?? crypto.randomUUID(),
       title,
       createdAt,
       updatedAt,
@@ -388,6 +389,11 @@ export async function importCases(
   }
 
   for (const c of toAdd) {
+    const existing = await db.cases.get(c.id);
+    if (existing) {
+      skipped++;
+      continue;
+    }
     try {
       await db.cases.add(c);
       success++;
@@ -395,5 +401,5 @@ export async function importCases(
       errors.push(`导入失败 "${c.title}": ${e instanceof Error ? e.message : String(e)}`);
     }
   }
-  return { success, failed: toAdd.length - success, errors };
+  return { success, failed: toAdd.length - success - skipped, skipped, errors };
 }

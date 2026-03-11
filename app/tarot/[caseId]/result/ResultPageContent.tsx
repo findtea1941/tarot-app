@@ -116,6 +116,8 @@ export default function ResultPageContent() {
   const [manualNumberNote, setManualNumberNote] = useState("");
   const [reviewFeedback, setReviewFeedback] = useState("");
   const [annualReviewDetailOpen, setAnnualReviewDetailOpen] = useState(false);
+  /** 牌阵详情弹窗（非年运/星运） */
+  const [spreadDetailModalOpen, setSpreadDetailModalOpen] = useState(false);
   const interpretationTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   /** 案例解读 textarea 随内容自动增高（初始最小高度 380px，与左侧底部平齐） */
@@ -681,20 +683,61 @@ export default function ResultPageContent() {
                   detailOpen={annualReviewDetailOpen}
                   onClose={() => setAnnualReviewDetailOpen(false)}
                 />
-              ) : layout.id === "hexagram-7" ? (
-                <HexagramReviewBoard layout={layout} slotStates={slotStates} />
+              ) :               layout.id === "hexagram-7" ? (
+                <>
+                  <HexagramReviewBoard layout={layout} slotStates={slotStates} />
+                  <div className="mt-3 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setSpreadDetailModalOpen(true)}
+                      className="text-sm text-tarot-green hover:underline"
+                    >
+                      牌阵详情
+                    </button>
+                  </div>
+                </>
               ) : layout.id === "choose-one-5" ? (
-                <ChooseOneReviewBoard layout={layout} slotStates={slotStates} />
+                <>
+                  <ChooseOneReviewBoard layout={layout} slotStates={slotStates} />
+                  <div className="mt-3 flex justify-center">
+                    <button type="button" onClick={() => setSpreadDetailModalOpen(true)} className="text-sm text-tarot-green hover:underline">牌阵详情</button>
+                  </div>
+                </>
               ) : layout.id === "four-elements-4" ? (
-                <FourElementsReviewBoard layout={layout} slotStates={slotStates} />
+                <>
+                  <FourElementsReviewBoard layout={layout} slotStates={slotStates} />
+                  <div className="mt-3 flex justify-center">
+                    <button type="button" onClick={() => setSpreadDetailModalOpen(true)} className="text-sm text-tarot-green hover:underline">牌阵详情</button>
+                  </div>
+                </>
               ) : layout.id === "body-mind-spirit-3" ? (
-                <BodyMindSpiritReviewBoard layout={layout} slotStates={slotStates} />
+                <>
+                  <BodyMindSpiritReviewBoard layout={layout} slotStates={slotStates} />
+                  <div className="mt-3 flex justify-center">
+                    <button type="button" onClick={() => setSpreadDetailModalOpen(true)} className="text-sm text-tarot-green hover:underline">牌阵详情</button>
+                  </div>
+                </>
               ) : layout.id === "holy-triangle-3" ? (
-                <HolyTriangleReviewBoard layout={layout} slotStates={slotStates} />
+                <>
+                  <HolyTriangleReviewBoard layout={layout} slotStates={slotStates} />
+                  <div className="mt-3 flex justify-center">
+                    <button type="button" onClick={() => setSpreadDetailModalOpen(true)} className="text-sm text-tarot-green hover:underline">牌阵详情</button>
+                  </div>
+                </>
               ) : layout.id === "no-spread-3" ? (
-                <NoSpreadReviewBoard layout={layout} slotStates={slotStates} />
+                <>
+                  <NoSpreadReviewBoard layout={layout} slotStates={slotStates} />
+                  <div className="mt-3 flex justify-center">
+                    <button type="button" onClick={() => setSpreadDetailModalOpen(true)} className="text-sm text-tarot-green hover:underline">牌阵详情</button>
+                  </div>
+                </>
               ) : layout.id === "timeflow-3" ? (
-                <TimeFlowReviewBoard layout={layout} slotStates={slotStates} />
+                <>
+                  <TimeFlowReviewBoard layout={layout} slotStates={slotStates} />
+                  <div className="mt-3 flex justify-center">
+                    <button type="button" onClick={() => setSpreadDetailModalOpen(true)} className="text-sm text-tarot-green hover:underline">牌阵详情</button>
+                  </div>
+                </>
               ) : layout.id === "annual-17" ? (
                 <AnnualReviewBoard
                   slotStates={slotStates}
@@ -705,19 +748,24 @@ export default function ResultPageContent() {
                   onClose={() => setAnnualReviewDetailOpen(false)}
                 />
               ) : (
-                <div className="mt-2 grid gap-2 text-sm">
-                  {layout.slots.map((slot) => {
-                    const state = slotStates[slot.id];
-                    const name = state?.cardName ? (state.reversed ? `${state.cardName}-` : state.cardName) : "—";
-                    return (
-                      <div key={slot.id} className="flex items-center gap-2 rounded-2xl border border-tarot-green-light bg-tarot-panel px-3 py-2.5">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tarot-green text-xs font-medium text-white">{slot.id}</span>
-                        <span className="text-tarot-green">{slot.name}</span>
-                        <span className="text-slate-700">{name}</span>
-                      </div>
-                    );
-                  })}
-                </div>
+                <>
+                  <div className="mt-2 grid gap-2 text-sm">
+                    {layout.slots.map((slot) => {
+                      const state = slotStates[slot.id];
+                      const name = state?.cardName ? (state.reversed ? `${state.cardName}-` : state.cardName) : "—";
+                      return (
+                        <div key={slot.id} className="flex items-center gap-2 rounded-2xl border border-tarot-green-light bg-tarot-panel px-3 py-2.5">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-tarot-green text-xs font-medium text-white">{slot.id}</span>
+                          <span className="text-tarot-green">{slot.name}</span>
+                          <span className="text-slate-700">{name}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-3 flex justify-center">
+                    <button type="button" onClick={() => setSpreadDetailModalOpen(true)} className="text-sm text-tarot-green hover:underline">牌阵详情</button>
+                  </div>
+                </>
               )
             ) : (
               <p className="mt-4 text-sm text-slate-500">该牌阵布局未接入</p>
@@ -867,7 +915,7 @@ export default function ResultPageContent() {
                 const tableWidthPx = totalCols * colWidthPx;
                 const colWidthPct = `${100 / totalCols}%`;
                 return (
-              <div className="mt-2 inline-block overflow-hidden rounded-lg border border-slate-200 bg-white">
+              <div className="mt-2 block w-fit overflow-hidden rounded-lg border border-slate-200 bg-white">
                 <table
                   className="border-collapse text-center text-sm table-fixed"
                   style={{ tableLayout: "fixed", width: tableWidthPx }}
@@ -886,17 +934,17 @@ export default function ResultPageContent() {
                       {matrixColumns.map((col) => (
                         <th
                           key={col.id}
-                          className={`border border-slate-200 bg-tarot-panel px-2 py-1.5 whitespace-nowrap text-center align-middle ${
+                          className={`border border-slate-200 px-2 py-1.5 text-center align-middle ${
                             col.kind === "summary"
-                              ? "text-slate-700 font-semibold"
-                              : "text-slate-700 font-medium"
-                          }`}
+                              ? "bg-slate-100 text-slate-700 font-semibold"
+                              : "bg-tarot-panel text-slate-700 font-medium"
+                          } ${col.kind === "signifier" ? "min-w-0 overflow-hidden" : "whitespace-nowrap"}`}
                         >
                           {col.kind === "signifier" && col.signifierIndex != null ? (
                             editingSignifierTitleIndex === col.signifierIndex ? (
                               <input
                                 type="text"
-                                className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-sm text-slate-800"
+                                className="w-full min-w-0 rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-sm text-slate-800"
                                 value={signifierTitleInputs[col.signifierIndex] ?? col.title}
                                 onChange={(e) => {
                                   const next = [...signifierTitleInputs];
@@ -935,7 +983,7 @@ export default function ResultPageContent() {
                         <td
                           key={col.id}
                           className={`border border-slate-200 px-2 py-1 whitespace-nowrap text-center align-middle ${
-                            col.kind === "summary" ? "font-semibold text-slate-800" : "text-slate-800"
+                            col.kind === "summary" ? "bg-slate-100 font-semibold text-slate-800" : "text-slate-800"
                           }`}
                         >
                           {getColumnCardText(col, matrixContext)}
@@ -950,11 +998,11 @@ export default function ResultPageContent() {
                         {matrixColumns.map((col) => (
                           <td
                             key={col.id}
-                            className={`border border-slate-200 px-2 py-1 whitespace-nowrap text-center align-middle text-sm ${
-                              col.kind === "summary" && row.id !== "planet"
-                                ? "font-semibold text-slate-800"
+                            className={`border border-slate-200 px-2 py-1 text-center align-middle text-sm ${
+                              col.kind === "summary"
+                                ? "bg-slate-100 font-semibold text-slate-800"
                                 : "font-normal text-slate-800"
-                            }`}
+                            } ${col.kind === "signifier" ? "min-w-0 overflow-hidden" : "whitespace-nowrap"}`}
                           >
                             {col.kind === "signifier" &&
                             col.signifierIndex != null &&
@@ -970,10 +1018,10 @@ export default function ResultPageContent() {
                                 const isEditing = editingPlanetSignifierIndex === col.signifierIndex;
                                 const displayText = currentPlanet || "请选择";
                                 return needsPlanet ? (
-                                  <div className="flex justify-center">
+                                  <div className="flex w-full min-w-0 justify-center">
                                     {isEditing ? (
                                       <select
-                                        className="min-w-[5.5rem] rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-sm font-normal text-slate-800"
+                                        className="w-full min-w-0 max-w-full rounded border border-slate-300 bg-white px-1 py-0.5 text-center text-sm font-normal text-slate-800"
                                         value={currentPlanet}
                                         onChange={(e) => {
                                           const v = e.target.value;
@@ -999,7 +1047,7 @@ export default function ResultPageContent() {
                                     ) : (
                                       <button
                                         type="button"
-                                        className="min-w-[5.5rem] rounded border border-transparent px-1 py-0.5 text-center text-sm font-normal text-slate-800 hover:border-slate-300 hover:bg-slate-50"
+                                        className="w-full min-w-0 max-w-full rounded border border-transparent px-1 py-0.5 text-center text-sm font-normal text-slate-800 hover:border-slate-300 hover:bg-slate-50"
                                         onClick={() =>
                                           setEditingPlanetSignifierIndex(col.signifierIndex!)
                                         }
@@ -1152,6 +1200,78 @@ export default function ResultPageContent() {
           </div>
         </div>
       </footer>
+
+      {/* 牌阵详情弹窗（非年运/星运的所有牌阵） */}
+      {spreadDetailModalOpen &&
+        layout &&
+        layout.id !== "annual-17" &&
+        layout.id !== "starfortune-23" &&
+        caseData &&
+        matrixContext &&
+        groupSummaries && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4 backdrop-blur-[2px]"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="spread-detail-title"
+            onClick={() => setSpreadDetailModalOpen(false)}
+          >
+            <div
+              className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-2xl border border-[#d7ebe2] bg-white p-5 shadow-xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-[#e7f3ee] pb-3">
+                <h2 id="spread-detail-title" className="text-lg font-semibold text-tarot-green">
+                  牌阵详情
+                </h2>
+                <button
+                  type="button"
+                  onClick={() => setSpreadDetailModalOpen(false)}
+                  className="rounded-full p-1 text-slate-400 transition hover:bg-[#edf7f3] hover:text-slate-700"
+                  aria-label="关闭"
+                >
+                  <span className="text-lg leading-none">×</span>
+                </button>
+              </div>
+              <div
+                className="mt-4 whitespace-pre-line text-sm text-slate-800"
+                style={{ fontFamily: "inherit" }}
+              >
+                {[
+                  `问题：${caseData.question || "—"}`,
+                  `问题背景：${caseData.background || "—"}`,
+                  `抽牌时间：${drawAtDisplay || "—"}`,
+                  `抽牌地点：${locationDisplay}`,
+                  `牌阵：${layout.name}`,
+                  "",
+                  ...matrixContext.signifierCards.map((entry, i) => {
+                    const title = signifierTitleInputs[i] ?? `指示牌${i + 1}`;
+                    const planet = entry?.card.planets?.join?.(" ") ?? "";
+                    return `${title}：${entry ? `${entry.reversed ? `${entry.card.name}-` : entry.card.name}${planet ? `（${planet}）` : ""}` : "—"}`;
+                  }),
+                  ...[...layout.slots]
+                    .sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10))
+                    .map((slot) => {
+                      const entry = matrixContext.slotCards.get(slot.id);
+                      const planet = entry?.card.planets?.join?.(" ") ?? "";
+                      return `${slot.name}：${entry ? `${entry.reversed ? `${entry.card.name}-` : entry.card.name}${planet ? `（${planet}）` : ""}` : "—"}`;
+                    }),
+                  "",
+                  `整体加和${groupSummaries.all.numbers.sumAbs % 22}/${((groupSummaries.all.numbers.sumSigned % 22) + 22) % 22}`,
+                  ...(layout.id === "hexagram-7" || layout.id === "timeflow-3"
+                    ? [`时间线加和${groupSummaries.time.numbers.sumAbs % 22}/${((groupSummaries.time.numbers.sumSigned % 22) + 22) % 22}`]
+                    : []),
+                  ...(layout.id === "choose-one-5" && chooseOneNumberSummary
+                    ? [
+                        `选项A加和${chooseOneNumberSummary.optionADirect}/${chooseOneNumberSummary.optionAObjective}`,
+                        `选项B加和${chooseOneNumberSummary.optionBDirect}/${chooseOneNumberSummary.optionBObjective}`,
+                      ]
+                    : []),
+                ].join("\n")}
+              </div>
+            </div>
+          </div>
+        )}
 
       {toast && (
         <div

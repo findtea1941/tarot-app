@@ -54,6 +54,7 @@ export function NoSpreadEntryBoard({
               <input
                 id={getSlotInputId(slot.id)}
                 type="text"
+                tabIndex={parseInt(slot.id, 10)}
                 className={`h-11 w-32 rounded-xl border px-4 text-center text-sm text-slate-700 outline-none transition ${
                   error
                     ? "border-red-300 bg-red-50 focus:border-red-400"

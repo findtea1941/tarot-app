@@ -108,6 +108,7 @@ export function SpreadBoard({
                 value={slotInputs[slot.id] ?? ""}
                 onChange={(value) => onSlotInputChange!(slot.id, value)}
                 error={slotErrors[slot.id]}
+                tabIndex={/^\d+$/.test(slot.id) ? parseInt(slot.id, 10) : undefined}
               />
             ) : (
               <SlotCard

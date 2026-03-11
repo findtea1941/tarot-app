@@ -65,6 +65,7 @@ export function HexagramEntryBoard({
               <input
                 id={getSlotInputId(slot.id)}
                 type="text"
+                tabIndex={parseInt(slot.id, 10)}
                 className={`h-11 rounded-xl border px-4 text-center text-sm text-slate-700 outline-none transition ${
                   isCenter ? "w-36" : "w-32"
                 } ${

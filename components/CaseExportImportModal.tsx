@@ -33,6 +33,7 @@ export function CaseExportImportModal({
   const [importResult, setImportResult] = useState<{
     success: number;
     failed: number;
+    skipped: number;
     errors: string[];
   } | null>(null);
   const [importing, setImporting] = useState(false);
@@ -93,6 +94,7 @@ export function CaseExportImportModal({
         setImportResult({
           success: 0,
           failed: 0,
+          skipped: 0,
           errors: [err instanceof Error ? err.message : "解析文件失败"],
         });
       } finally {
@@ -252,7 +254,9 @@ export function CaseExportImportModal({
                   }`}
                 >
                   <p>
-                    成功 {importResult.success} 条，失败 {importResult.failed} 条
+                    成功 {importResult.success} 条
+                    {importResult.skipped > 0 && `，跳过 ${importResult.skipped} 条（已存在）`}
+                    {importResult.failed > 0 && `，失败 ${importResult.failed} 条`}
                   </p>
                   {importResult.errors.length > 0 && (
                     <ul className="mt-1 list-inside list-disc text-xs">
