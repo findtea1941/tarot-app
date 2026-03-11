@@ -344,7 +344,20 @@ export async function exportCasesByTypes(
   });
 }
 
-/** 导入案例数据（逐条写入，核查案例是否已存在，仅导入不重复的案例） */
+/** 生成案例内容指纹（用于无 id 时的文件内查重） */
+function caseContentKey(c: Record<string, unknown>): string {
+  const title = String(c.title ?? "");
+  const question = String(c.question ?? "");
+  const drawTime = String(c.drawTime ?? c.lenormandDrawDate ?? "");
+  const type = c.type === "lenormand" ? "lenormand" : "tarot";
+  const cards = c.cards ?? c.slotCards ?? c.lenormandCards ?? [];
+  const slotInputs = c.slotInputs ?? {};
+  const optA = c.lenormandOptionACards ?? [];
+  const optB = c.lenormandOptionBCards ?? [];
+  return [title, question, drawTime, type, JSON.stringify(cards), JSON.stringify(slotInputs), JSON.stringify(optA), JSON.stringify(optB)].join("\0");
+}
+
+/** 导入案例数据（逐条写入，核查案例是否已存在，文件内重复条目也会被跳过） */
 export async function importCases(
   raw: unknown,
   options?: { types?: ("tarot" | "lenormand")[] }
@@ -363,6 +376,7 @@ export async function importCases(
   const errors: string[] = [];
 
   const toAdd: Case[] = [];
+  const seenInFile = new Set<string>();
   for (let i = 0; i < arr.length; i++) {
     const item = arr[i];
     if (!item || typeof item !== "object") {
@@ -377,6 +391,10 @@ export async function importCases(
     if (filterTypes && filterTypes.length > 0 && !filterTypes.includes(type)) continue;
 
     const srcId = typeof c.id === "string" ? c.id : null;
+    const dedupKey = srcId ? `id:${srcId}` : `content:${caseContentKey(c)}`;
+    if (seenInFile.has(dedupKey)) continue;
+    seenInFile.add(dedupKey);
+
     const merged: Case = {
       ...(c as unknown as Case),
       id: srcId ?? crypto.randomUUID(),
