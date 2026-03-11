@@ -591,16 +591,16 @@ export default function ResultPageContent() {
           <section className="shrink-0 bg-white p-4">
             <h2 className="text-[29px] font-semibold leading-tight text-slate-900">塔罗案例分析工作台</h2>
             <p className="mt-2 text-[20px] font-semibold text-tarot-green">案例基本信息</p>
-            <dl className="mt-3 space-y-3 text-sm">
+            <dl className="mt-3 space-y-3">
               <div>
-                <dt className="text-xs font-medium text-slate-500">当前问题</dt>
-                <dd className="mt-1 text-sm font-semibold leading-7 text-slate-900">
+                <dt className="text-sm font-medium text-slate-500">当前问题</dt>
+                <dd className="mt-1 text-sm leading-7 text-slate-900">
                   {caseData.question || "—"}
                 </dd>
               </div>
               <div>
-                <dt className="text-xs font-medium text-slate-500">问题描述</dt>
-                <dd className="mt-1 whitespace-pre-wrap leading-7 text-slate-700">
+                <dt className="text-sm font-medium text-slate-500">问题描述</dt>
+                <dd className="mt-1 text-sm whitespace-pre-wrap leading-7 text-slate-700">
                   {caseData.background || "—"}
                 </dd>
               </div>

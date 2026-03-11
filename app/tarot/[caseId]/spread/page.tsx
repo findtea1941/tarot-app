@@ -390,15 +390,15 @@ export default function SpreadPage() {
             <div className="mt-5 grid gap-6 sm:grid-cols-[minmax(0,1.4fr)_1px_minmax(0,0.9fr)] sm:items-stretch">
               <div className="flex flex-col gap-4">
                 <div className="shrink-0">
-                  <dt className="text-xs font-semibold text-tarot-green">问题</dt>
-                  <dd className="mt-1 text-base font-semibold leading-snug text-slate-900">
+                  <dt className="text-sm font-medium text-slate-500">问题</dt>
+                  <dd className="mt-1 text-sm leading-7 text-slate-900">
                     {caseData.question || "—"}
                   </dd>
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col">
-                  <dt className="shrink-0 text-xs font-semibold text-tarot-green">问题背景</dt>
+                  <dt className="shrink-0 text-sm font-medium text-slate-500">问题背景</dt>
                   <dd className="mt-1 min-h-0 flex-1">
-                    <div className="h-full min-h-[100px] rounded-xl bg-[#ecf8f2] px-4 py-3 text-sm leading-relaxed text-slate-800 whitespace-pre-wrap">
+                    <div className="h-full min-h-[100px] rounded-xl bg-[#ecf8f2] px-4 py-3 text-sm leading-7 text-slate-700 whitespace-pre-wrap">
                       {caseData.background || "—"}
                     </div>
                   </dd>
