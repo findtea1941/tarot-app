@@ -1,13 +1,59 @@
 {
   "name": "tarot-app",
   "version": "1.0.0",
+  "description": "塔罗案例助手",
+  "author": "findtea",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "verify:deck": "tsx scripts/verify_deck.ts"
+    "verify:deck": "tsx scripts/verify_deck.ts",
+    "electron:clean": "node scripts/clear-electron-cache.js",
+    "electron:prepare:wincodesign": "node scripts/prepare-wincodesign.js",
+    "electron:prepare:node": "node scripts/prepare-node-binary.js",
+    "electron:build": "npm run electron:clean && npm run electron:prepare:wincodesign && npm run electron:prepare:node && next build && node scripts/prepare-standalone.js && electron-builder --win --dir",
+    "electron:build:tarot": "npm run electron:clean && npm run electron:prepare:wincodesign && npm run electron:prepare:node && node scripts/build-tarot-only.js && node scripts/prepare-standalone.js && electron-builder --win --dir --config electron-builder-tarot.json",
+    "electron:build:dir": "npm run electron:prepare:node && next build && node scripts/prepare-standalone.js && electron-builder --win --dir"
+  },
+  "build": {
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    },
+    "appId": "com.tarot.app",
+    "productName": "TarotCaseAssistant",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": ".next/standalone",
+        "to": "standalone"
+      },
+      {
+        "from": ".next/standalone/node_modules",
+        "to": "standalone/node_modules"
+      },
+      {
+        "from": "resources/node",
+        "to": "node",
+        "filter": ["node.exe"]
+      }
+    ],
+    "win": {
+      "target": "dir",
+      "executableName": "electron",
+      "signAndEditExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
   },
   "dependencies": {
     "@xyflow/react": "^12.10.1",
@@ -22,6 +68,8 @@
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "autoprefixer": "^10.4.16",
+    "electron": "^41.0.0",
+    "electron-builder": "^26.8.1",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.3",
     "postcss": "^8.4.35",

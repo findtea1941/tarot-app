@@ -71,7 +71,7 @@ function AnnualFlyNode({
             : nodeData.isTurningPoint
               ? "1.5px solid #10b981"
               : "1px solid #cfe7dc",
-          background: nodeData.isRed
+          background: nodeData.isRed && !nodeData.isRoot
             ? "#ffffff"
             : nodeData.isTurningPoint
               ? "#b7f0d0"
@@ -131,12 +131,19 @@ function buildTree(
   const startDate = rawStart.length >= 7 ? `${rawStart.slice(2, 4)}-${rawStart.slice(5, 7)}` : rawStart;
   if (startDate) rootLabel += `\n${startDate}`;
   const getName = getSlotNameFn ?? getFlySlotName;
+  const startId = String(row.startSlotId ?? "");
+  const rootIsRed = row.branches.some((b) => {
+    const stopMatch = b.stopNode != null && String(b.stopNode) === startId;
+    const redMatch = b.redNodeNotInPath != null && String(b.redNodeNotInPath) === startId;
+    return stopMatch || redMatch;
+  });
   const root: TreeNode = {
     id: `${row.startSlotId}-root`,
     key: row.startSlotId,
     label: rootLabel,
     children: [],
     isRoot: true,
+    isRed: rootIsRed,
   };
 
   row.branches.forEach((branch, branchIndex) => {

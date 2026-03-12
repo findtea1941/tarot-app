@@ -7,6 +7,7 @@ import { Component, type ReactNode, useCallback, useEffect, useMemo, useRef, use
 import type { Case } from "@/lib/db";
 import { getCaseById, saveCaseStep5, updateCaseStep5Partial, updateCaseReviewFeedback, updateCaseUserInterpretation } from "@/lib/repo/caseRepo";
 import { getLayout, getLayoutWithTimeAxisVariant } from "@/layouts";
+import { FEATURE_LENORMAND } from "@/lib/featureFlags";
 import { getAnnualHouseDates, getReadingStartMonthHouse, getHouseLabel } from "@/layouts/annual";
 import { getDeck } from "@/lib/deck";
 import type { SpreadSlotState } from "@/lib/spreadTypes";
@@ -351,7 +352,7 @@ export default function ResultPageContent() {
     if (!groupSummaries || !matrixContext || layout?.id !== "choose-one-5") return null;
     const base = matrixContext.slotCards.get("1");
     const baseSigned = base?.card.number != null ? (base.reversed ? -base.card.number : base.card.number) : 0;
-    const mod22 = (value: number) => ((value % 22) + 22) % 22;
+    const mod22 = (value: number) => value % 22;
     return {
       optionADirect: mod22(groupSummaries.optionA.numbers.sumSigned),
       optionAObjective: mod22(groupSummaries.optionA.numbers.sumSigned - baseSigned),
@@ -549,7 +550,7 @@ export default function ResultPageContent() {
       userInterpretation,
       ...(fromLibrary && { reviewFeedback }),
     });
-    router.push("/cases");
+    router.push(FEATURE_LENORMAND ? "/cases" : "/tarot");
   }, [caseId, caseData, userInterpretation, manualNumberNote, reviewFeedback, fromLibrary, router, buildTitle, buildSlotCards, buildSupplements, buildAnalysis]);
 
   if (loading) {
@@ -845,13 +846,13 @@ export default function ResultPageContent() {
                   <p className="flex items-center gap-2 text-sm">
                     <span>
                       <span className="text-slate-500">绝对值 :</span>
-                      <span className="ml-1 font-semibold text-green-600">{((statsForDisplay.numberSumAbsolute % 22) + 22) % 22}</span>
+                      <span className="ml-1 font-semibold text-green-600">{statsForDisplay.numberSumAbsolute % 22}</span>
                     </span>
                     <span className="h-4 w-px shrink-0 bg-slate-300" />
                     <span>
                       <span className="text-slate-500">直接加和 :</span>
                       <span className="ml-1 font-semibold text-red-600">
-                        {((statsForDisplay.numberSumSigned % 22) + 22) % 22}
+                        {statsForDisplay.numberSumSigned % 22}
                       </span>
                     </span>
                   </p>
@@ -868,6 +869,7 @@ export default function ResultPageContent() {
                   <h2 className="mb-2 text-[20px] font-semibold text-tarot-green">飞宫链</h2>
                   <FlyChainGraphBoundary>
                     <AnnualFlyChainGraph
+                      key={caseId}
                       rows={flyChainTable.rows}
                       slotCards={matrixContext.slotCards}
                       houseDates={annualHouseDates}
@@ -1195,7 +1197,7 @@ export default function ResultPageContent() {
               onClick={handleSaveAndBack}
               className="rounded-xl bg-tarot-green px-5 py-2 text-white shadow-sm hover:bg-emerald-700"
             >
-              保存并返回案例库
+              {FEATURE_LENORMAND ? "保存并返回案例库" : "保存并返回"}
             </button>
           </div>
         </div>
@@ -1257,9 +1259,9 @@ export default function ResultPageContent() {
                       return `${slot.name}：${entry ? `${entry.reversed ? `${entry.card.name}-` : entry.card.name}${planet ? `（${planet}）` : ""}` : "—"}`;
                     }),
                   "",
-                  `整体加和${groupSummaries.all.numbers.sumAbs % 22}/${((groupSummaries.all.numbers.sumSigned % 22) + 22) % 22}`,
+                  `整体加和${groupSummaries.all.numbers.sumAbs % 22}/${groupSummaries.all.numbers.sumSigned % 22}`,
                   ...(layout.id === "hexagram-7" || layout.id === "timeflow-3"
-                    ? [`时间线加和${groupSummaries.time.numbers.sumAbs % 22}/${((groupSummaries.time.numbers.sumSigned % 22) + 22) % 22}`]
+                    ? [`时间线加和${groupSummaries.time.numbers.sumAbs % 22}/${groupSummaries.time.numbers.sumSigned % 22}`]
                     : []),
                   ...(layout.id === "choose-one-5" && chooseOneNumberSummary
                     ? [

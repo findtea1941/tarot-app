@@ -406,7 +406,6 @@ export function LenormandAnalysisClient() {
         ? "线性五张"
         : "九宫格";
   const displaySpreadLabel = isChoice ? `二择一-${spreadLabel}` : spreadLabel;
-  const isNineGrid = spreadType === "nine-grid";
   const leftColumnWidthPx = spreadType === "linear-5" ? 460 : 340;
   const layoutGridClass =
     spreadType === "linear-5"
@@ -416,8 +415,6 @@ export function LenormandAnalysisClient() {
     spreadType === "linear-5" ? "xl:grid-cols-[460px_1fr]" : "xl:grid-cols-[340px_1fr]";
   const spreadBoardWidthClass =
     spreadType === "linear-5" ? "w-[25.5rem]" : "w-[15rem]";
-  const spreadBoardOffsetClass =
-    isNineGrid || spreadType === "linear-3" ? "pl-7" : "pl-0";
 
   const spreadBoardContent = isChoice ? (
     <div className="flex w-full flex-col items-start space-y-6">
@@ -532,7 +529,7 @@ export function LenormandAnalysisClient() {
   return (
     <div className="min-h-[calc(100vh-96px)] bg-white pb-24">
       <div className={`mx-auto grid w-full max-w-[1400px] grid-cols-1 px-4 ${layoutGridClass}`}>
-        <div className="flex min-w-0 shrink-0 flex-col" style={{ width: leftColumnWidthPx }}>
+        <div className="flex min-w-0 shrink-0 flex-col pr-4" style={{ width: leftColumnWidthPx }}>
           <section className="shrink-0 border-b border-slate-50 bg-white px-0 pt-0 pb-4">
             <div className="space-y-3 text-left">
               <div>
@@ -577,8 +574,8 @@ export function LenormandAnalysisClient() {
             </div>
           </section>
 
-          <section className="flex flex-1 flex-col items-start border-t border-slate-50 bg-white px-0 py-4">
-            <div className={spreadBoardOffsetClass}>
+          <section className="flex flex-1 flex-col items-center border-t border-slate-50 bg-white px-0 py-4">
+            <div className="flex w-full flex-col items-center">
               <div className={`flex min-h-10 ${spreadBoardWidthClass} flex-col justify-center`}>
                 <p className="w-full text-center text-xs font-medium text-slate-500">牌型：{displaySpreadLabel}</p>
               </div>

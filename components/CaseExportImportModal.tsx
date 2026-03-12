@@ -5,6 +5,7 @@ import {
   exportCasesByTypes,
   importCases,
 } from "@/lib/repo/caseRepo";
+import { FEATURE_LENORMAND } from "@/lib/featureFlags";
 
 type ExportType = "tarot" | "lenormand";
 
@@ -28,7 +29,9 @@ export function CaseExportImportModal({
       setMode(initialMode);
     }
   }, [open, initialMode]);
-  const [exportTypes, setExportTypes] = useState<ExportType[]>(["tarot", "lenormand"]);
+  const [exportTypes, setExportTypes] = useState<ExportType[]>(
+    () => (FEATURE_LENORMAND ? ["tarot", "lenormand"] : ["tarot"])
+  );
   const [importTypes, setImportTypes] = useState<ExportType[] | null>(null);
   const [importResult, setImportResult] = useState<{
     success: number;
@@ -48,8 +51,9 @@ export function CaseExportImportModal({
 
   const toggleImportType = useCallback((t: ExportType) => {
     setImportTypes((prev) => {
-      const next = prev ?? ["tarot", "lenormand"];
-      return next.includes(t) ? next.filter((x) => x !== t) : [...next, t];
+      const defaultTypes: ExportType[] = FEATURE_LENORMAND ? ["tarot", "lenormand"] : ["tarot"];
+      const next: ExportType[] = prev ?? defaultTypes;
+      return next.includes(t) ? next.filter((x) => x !== t) : ([...next, t] as ExportType[]);
     });
   }, []);
 
@@ -84,7 +88,12 @@ export function CaseExportImportModal({
       try {
         const text = await file.text();
         const raw = JSON.parse(text) as unknown;
-        const types = importTypes && importTypes.length > 0 ? importTypes : undefined;
+        const types: ExportType[] | undefined =
+          importTypes && importTypes.length > 0
+            ? importTypes
+            : FEATURE_LENORMAND
+              ? undefined
+              : (["tarot"] as ExportType[]);
         const result = await importCases(raw, { types });
         setImportResult(result);
         if (result.success > 0) {
@@ -154,32 +163,36 @@ export function CaseExportImportModal({
         <div className="p-4">
           {mode === "export" ? (
             <div className="space-y-4">
-              <p className="text-sm text-slate-600">选择要导出的案例类型：</p>
-              <div className="flex gap-3">
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={exportTypes.includes("tarot")}
-                    onChange={() => toggleExportType("tarot")}
-                    className="h-4 w-4 rounded border-[#c8e9d8] text-tarot-green focus:ring-tarot-green"
-                  />
-                  <span className="text-sm text-slate-700">塔罗</span>
-                </label>
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={exportTypes.includes("lenormand")}
-                    onChange={() => toggleExportType("lenormand")}
-                    className="h-4 w-4 rounded border-[#c8e9d8] text-tarot-green focus:ring-tarot-green"
-                  />
-                  <span className="text-sm text-slate-700">雷诺曼</span>
-                </label>
-              </div>
+              <p className="text-sm text-slate-600">
+                {FEATURE_LENORMAND ? "选择要导出的案例类型：" : "导出塔罗案例到本地文件。"}
+              </p>
+              {FEATURE_LENORMAND && (
+                <div className="flex gap-3">
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={exportTypes.includes("tarot")}
+                      onChange={() => toggleExportType("tarot")}
+                      className="h-4 w-4 rounded border-[#c8e9d8] text-tarot-green focus:ring-tarot-green"
+                    />
+                    <span className="text-sm text-slate-700">塔罗</span>
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={exportTypes.includes("lenormand")}
+                      onChange={() => toggleExportType("lenormand")}
+                      className="h-4 w-4 rounded border-[#c8e9d8] text-tarot-green focus:ring-tarot-green"
+                    />
+                    <span className="text-sm text-slate-700">雷诺曼</span>
+                  </label>
+                </div>
+              )}
               <div className="flex gap-2 pt-2">
                 <button
                   type="button"
                   onClick={handleExport}
-                  disabled={exportTypes.length === 0 || exporting}
+                  disabled={(FEATURE_LENORMAND && exportTypes.length === 0) || exporting}
                   className="rounded-xl bg-tarot-green px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
                 >
                   {exporting ? "导出中…" : "导出"}
@@ -196,31 +209,37 @@ export function CaseExportImportModal({
           ) : (
             <div className="space-y-4">
               <p className="text-sm text-slate-600">
-                选择要导入的案例类型（不选则导入全部并自动分类）：
+                {FEATURE_LENORMAND
+                  ? "选择要导入的案例类型（不选则导入全部并自动分类）："
+                  : "从本地 JSON 文件导入塔罗案例。"}
               </p>
-              <div className="flex gap-3">
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={(importTypes ?? ["tarot", "lenormand"]).includes("tarot")}
-                    onChange={() => toggleImportType("tarot")}
-                    className="h-4 w-4 rounded border-[#c8e9d8] text-tarot-green focus:ring-tarot-green"
-                  />
-                  <span className="text-sm text-slate-700">塔罗</span>
-                </label>
-                <label className="flex cursor-pointer items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={(importTypes ?? ["tarot", "lenormand"]).includes("lenormand")}
-                    onChange={() => toggleImportType("lenormand")}
-                    className="h-4 w-4 rounded border-[#c8e9d8] text-tarot-green focus:ring-tarot-green"
-                  />
-                  <span className="text-sm text-slate-700">雷诺曼</span>
-                </label>
-              </div>
-              <p className="text-xs text-slate-500">
-                不勾选任何类型时，将导入全部数据并按类型自动分类到案例列表。
-              </p>
+              {FEATURE_LENORMAND && (
+                <>
+                  <div className="flex gap-3">
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={(importTypes ?? ["tarot", "lenormand"]).includes("tarot")}
+                        onChange={() => toggleImportType("tarot")}
+                        className="h-4 w-4 rounded border-[#c8e9d8] text-tarot-green focus:ring-tarot-green"
+                      />
+                      <span className="text-sm text-slate-700">塔罗</span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={(importTypes ?? ["tarot", "lenormand"]).includes("lenormand")}
+                        onChange={() => toggleImportType("lenormand")}
+                        className="h-4 w-4 rounded border-[#c8e9d8] text-tarot-green focus:ring-tarot-green"
+                      />
+                      <span className="text-sm text-slate-700">雷诺曼</span>
+                    </label>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    不勾选任何类型时，将导入全部数据并按类型自动分类到案例列表。
+                  </p>
+                </>
+              )}
               <input
                 ref={fileInputRef}
                 type="file"

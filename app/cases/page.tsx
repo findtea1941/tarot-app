@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { Case } from "@/lib/db";
 import { CaseExportImportModal } from "@/components/CaseExportImportModal";
+import { FEATURE_LENORMAND } from "@/lib/featureFlags";
 
 type CaseTab = "tarot" | "lenormand";
 
@@ -79,17 +80,19 @@ function CasesPageContent() {
     void (async () => {
       try {
         const { listCasesByType, listDrafts, searchCases } = await import("@/lib/repo/caseRepo");
+        const effectiveTab = FEATURE_LENORMAND ? tab : "tarot";
         const result = draftView
           ? await withTimeout(listDrafts(), LOAD_TIMEOUT_MS)
           : activeQuery
             ? await withTimeout(searchCases(activeQuery), LOAD_TIMEOUT_MS)
-            : await withTimeout(listCasesByType(tab), LOAD_TIMEOUT_MS);
+            : await withTimeout(listCasesByType(effectiveTab), LOAD_TIMEOUT_MS);
 
         if (requestId !== requestIdRef.current) return;
+        const filtered = FEATURE_LENORMAND ? result : result.filter((c) => (c.type ?? "tarot") === "tarot");
         if (draftView) {
-          setDrafts(result);
+          setDrafts(filtered);
         } else {
-          setItems(result);
+          setItems(filtered);
         }
       } catch (e) {
         if (requestId !== requestIdRef.current) return;
@@ -112,7 +115,7 @@ function CasesPageContent() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex flex-wrap items-end gap-4">
           <h1 className="text-3xl font-semibold">案例库</h1>
-          {(!showDrafts && !isSearchMode) || showDrafts ? (
+          {FEATURE_LENORMAND && ((!showDrafts && !isSearchMode) || showDrafts) ? (
             <div className="flex gap-0.5 rounded-full border border-[#e2ebe7] bg-white p-0.5">
               <button
                 type="button"
@@ -159,7 +162,7 @@ function CasesPageContent() {
         </div>
         <div className="flex items-center gap-4 pb-0.5">
           <Link
-            href={tab === "tarot" ? "/tarot?new=1" : "/lenormand"}
+            href={FEATURE_LENORMAND ? (tab === "tarot" ? "/tarot?new=1" : "/lenormand") : "/tarot?new=1"}
             className="text-sm font-normal text-slate-600 hover:text-slate-800 hover:underline"
           >
             新建案例
@@ -211,7 +214,7 @@ function CasesPageContent() {
         <p className="text-sm text-slate-500">加载中…</p>
       ) : displayItems.length === 0 ? (
         <p className="text-sm text-slate-500">
-          {showDrafts ? "草稿箱为空。" : isSearchMode ? "未找到匹配的案例。" : `还没有${tab === "tarot" ? "塔罗" : "雷诺曼"}案例。`}
+          {showDrafts ? "草稿箱为空。" : isSearchMode ? "未找到匹配的案例。" : `还没有${FEATURE_LENORMAND && tab === "lenormand" ? "雷诺曼" : "塔罗"}案例。`}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -222,7 +225,7 @@ function CasesPageContent() {
             >
               <Link
                 href={
-                  c.type === "lenormand"
+                  FEATURE_LENORMAND && c.type === "lenormand"
                     ? `/lenormand/${c.id}/analysis${showDrafts ? "?from=draft" : "?from=library"}`
                     : `/tarot/${c.id}/result${showDrafts ? "?from=draft" : "?from=library"}`
                 }

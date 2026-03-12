@@ -99,7 +99,7 @@ export const LINEAR_3_ENTRIES: LinearEntry[] = [
   { id: "core", label: "核心牌", getLabel: (c) => c[1] ?? "?" },
   { id: "ab", label: "", getLabel: (c) => joinCardsSep(c, [0, 1], "+") },
   { id: "bc", label: "", getLabel: (c) => joinCardsSep(c, [1, 2], "+") },
-  { id: "acMirror", label: "", getLabel: (c) => `${c[0] ?? "?"}-${c[2] ?? "?"}镜像` },
+  { id: "acMirror", label: "", getLabel: (c) => `${c[0] ?? "?"}-${c[2] ?? "?"} 镜像` },
   { id: "overall", label: "整体分析", getLabel: () => "" },
 ];
 
@@ -110,9 +110,9 @@ export const LINEAR_5_ENTRIES: LinearEntry[] = [
   { id: "axb", label: "", getLabel: (c) => joinCardsSep(c, [0, 1, 2], "+") },
   { id: "xby", label: "", getLabel: (c) => joinCardsSep(c, [1, 2, 3], "+") },
   { id: "byc", label: "", getLabel: (c) => joinCardsSep(c, [2, 3, 4], "+") },
-  { id: "acMirror", label: "", getLabel: (c) => `${c[0] ?? "?"}-${c[4] ?? "?"}镜像` },
-  { id: "abMirror", label: "", getLabel: (c) => `${c[0] ?? "?"}-${c[2] ?? "?"}镜像` },
-  { id: "xyMirror", label: "", getLabel: (c) => `${c[1] ?? "?"}-${c[3] ?? "?"}镜像` },
-  { id: "bcMirror", label: "", getLabel: (c) => `${c[2] ?? "?"}-${c[4] ?? "?"}镜像` },
+  { id: "acMirror", label: "", getLabel: (c) => `${c[0] ?? "?"}-${c[4] ?? "?"} 镜像` },
+  { id: "abMirror", label: "", getLabel: (c) => `${c[0] ?? "?"}-${c[2] ?? "?"} 镜像` },
+  { id: "xyMirror", label: "", getLabel: (c) => `${c[1] ?? "?"}-${c[3] ?? "?"} 镜像` },
+  { id: "bcMirror", label: "", getLabel: (c) => `${c[2] ?? "?"}-${c[4] ?? "?"} 镜像` },
   { id: "overall", label: "整体分析", getLabel: () => "" },
 ];

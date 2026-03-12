@@ -79,7 +79,7 @@ export function buildGroupSummary(cards: ResolvedCard[]): GroupSummary {
       numbers.sumAbs += Math.abs(signed);
     }
   });
-  numbers.mod22 = ((numbers.sumSigned % 22) + 22) % 22;
+  numbers.mod22 = numbers.sumSigned % 22;
 
   if (cards.length === 0) {
     return {

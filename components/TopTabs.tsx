@@ -3,12 +3,17 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
+import { FEATURE_LENORMAND } from "@/lib/featureFlags";
 
-const tabs = [
+const allTabs = [
   { href: "/tarot?new=1", label: "塔罗" },
   { href: "/lenormand", label: "雷诺曼" },
   { href: "/cases", label: "案例库" },
 ] as const;
+
+// 塔罗版：保留塔罗 + 案例库（去掉雷诺曼）
+const tarotOnlyTabs = [allTabs[0], allTabs[2]];
+const tabs = FEATURE_LENORMAND ? allTabs : tarotOnlyTabs;
 
 export function TopTabs({ children }: { children: ReactNode }) {
   const pathname = usePathname();

@@ -48,6 +48,8 @@ export interface FlyBranchResult {
   path: PathStep[];
   stopNode: FlyNode | null;
   branchCount: number;
+  /** 触停点不在 path 中时（如循环回起点），记录该触停点 */
+  redNodeNotInPath?: FlyNode;
 }
 
 export interface FlyChainRow {
@@ -156,7 +158,8 @@ export function buildFlyChainForStart(
       const firstIdx = pathCopy.findIndex((p) => p.node === current);
       if (firstIdx >= 0) pathCopy[firstIdx] = { ...pathCopy[firstIdx], isRed: true };
       const stopNode = pathCopy.length > 0 ? pathCopy[pathCopy.length - 1].node : current;
-      branches.push({ path: pathCopy, stopNode, branchCount: 1 });
+      const redNodeNotInPath = firstIdx < 0 ? current : undefined;
+      branches.push({ path: pathCopy, stopNode, branchCount: 1, redNodeNotInPath });
       continue;
     }
     visited.add(current);
@@ -184,7 +187,8 @@ export function buildFlyChainForStart(
       if (visited.has(next)) {
         const firstIdx = newPath.findIndex((p) => p.node === next);
         if (firstIdx >= 0) newPath[firstIdx] = { ...newPath[firstIdx], isRed: true };
-        branches.push({ path: newPath, stopNode: current, branchCount: 1 });
+        const redNodeNotInPath = firstIdx < 0 ? next : undefined;
+        branches.push({ path: newPath, stopNode: current, branchCount: 1, redNodeNotInPath });
         continue;
       }
       queue.push({ path: newPath, visited: new Set(visited), current: next });
@@ -204,7 +208,8 @@ export function buildFlyChainForStart(
         const branchPath = [...path, { node: current, isTurningPoint: isElementFlight(current, next) }];
         const firstIdx = branchPath.findIndex((p) => p.node === next);
         if (firstIdx >= 0) branchPath[firstIdx] = { ...branchPath[firstIdx], isRed: true };
-        branches.push({ path: branchPath, stopNode: current, branchCount: 1 });
+        const redNodeNotInPath = firstIdx < 0 ? next : undefined;
+        branches.push({ path: branchPath, stopNode: current, branchCount: 1, redNodeNotInPath });
         continue;
       }
       const branchPath = [...path, { node: current, isTurningPoint: isElementFlight(current, next) }];
@@ -295,6 +300,11 @@ export function flyChainStats(rows: FlyChainRow[]): {
       for (const step of b.path) {
         if (step.isRed) redCount[step.node] = (redCount[step.node] ?? 0) + 1;
         if (step.isTurningPoint) turningCount[step.node] = (turningCount[step.node] ?? 0) + 1;
+      }
+      // 触停点不在 path 中时（如循环回起点），计入触停点统计
+      if (b.redNodeNotInPath != null) {
+        const key = String(b.redNodeNotInPath);
+        redCount[key] = (redCount[key] ?? 0) + 1;
       }
     }
   }
