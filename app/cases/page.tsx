@@ -231,11 +231,16 @@ function CasesPageContent() {
                 }
                 className="min-w-0 flex-1 transition hover:text-tarot-green"
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-medium">{c.title}</span>
                   {(isSearchMode || showDrafts) && (
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
                       {c.type === "tarot" ? "塔罗" : "雷诺曼"}
+                    </span>
+                  )}
+                  {c.reviewFeedback?.trim() && (
+                    <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
+                      有反馈
                     </span>
                   )}
                 </div>
