@@ -50,16 +50,16 @@ function clockPosition(slotId: string): SlotPlace | null {
   return null;
 }
 
-/** 星运中心七张行星盘：水/火向中轴横移2；日/月、木/土背离中轴横移2 */
+/** 星运中心七张行星盘：每张牌宽足够 4 字+正负号，牌与牌之间保持空隙，且不重叠十二宫 */
 const SEVEN_PLANET_IDS = ["jupiter", "saturn", "mercury", "venus", "mars", "sun", "moon"] as const;
 const SEVEN_CENTER_PLACES: SlotPlace[] = [
-  { id: "jupiter", leftPct: 41, topPct: 44 },
-  { id: "saturn", leftPct: 59, topPct: 44 },
-  { id: "mercury", leftPct: 35, topPct: 58 },
+  { id: "jupiter", leftPct: 40.8, topPct: 44 },
+  { id: "saturn", leftPct: 59.2, topPct: 44 },
+  { id: "mercury", leftPct: 31.8, topPct: 58 },
   { id: "venus", leftPct: 50, topPct: 58 },
-  { id: "mars", leftPct: 65, topPct: 58 },
-  { id: "sun", leftPct: 41, topPct: 72 },
-  { id: "moon", leftPct: 59, topPct: 72 },
+  { id: "mars", leftPct: 68.2, topPct: 58 },
+  { id: "sun", leftPct: 40.8, topPct: 72 },
+  { id: "moon", leftPct: 59.2, topPct: 72 },
 ];
 
 const ORDERED_SLOTS: SlotPlace[] = [
@@ -137,12 +137,12 @@ export function StarFortuneReviewBoard({
     const dateStr = rawDate.length >= 10 ? `${rawDate.slice(2, 4)}-${rawDate.slice(5, 10)}` : rawDate;
     const isCenterSeven = IS_SEVEN_CENTER.has(slotId as (typeof SEVEN_PLANET_IDS)[number]);
     const boxClass = isCenterSeven
-      ? "flex flex-col items-center justify-center rounded-xl border-2 border-[#a8d9c8] bg-white px-1.5 py-1 shadow-[0_4px_10px_rgba(5,150,105,0.10)]"
+      ? "flex flex-col items-center justify-center rounded-xl border-2 border-[#a8d9c8] bg-white px-2 py-1 shadow-[0_4px_10px_rgba(5,150,105,0.10)]"
       : "flex flex-col items-center justify-center rounded-xl border-2 border-[#a8d9c8] bg-white px-2.5 py-2 shadow-[0_4px_10px_rgba(5,150,105,0.10)]";
     const sizeClass = isModal
       ? "h-[78px] w-[98px]"
       : isCenterSeven
-        ? "h-[52px] w-[64px]"
+        ? "h-[56px] min-w-[72px] w-[72px]"
         : "h-[78px] w-[98px]";
     const textClass = isModal ? "text-xs" : isCenterSeven ? "text-[10px]" : "text-xs";
 
@@ -161,7 +161,7 @@ export function StarFortuneReviewBoard({
     return (
       <>
         <span className={`font-semibold leading-tight text-tarot-green ${textClass}`}>{position}</span>
-        <span className={`mt-0.5 w-full text-center leading-tight text-slate-700 break-words line-clamp-2 ${textClass}`}>{cardName}</span>
+        <span className={`mt-0.5 w-full text-center leading-tight text-slate-700 ${isCenterSeven ? "whitespace-nowrap" : "break-words line-clamp-2"} ${textClass}`}>{cardName}</span>
         {dateStr && <span className="mt-1 text-[8px] leading-tight text-slate-500">{dateStr}</span>}
       </>
     );
@@ -169,7 +169,7 @@ export function StarFortuneReviewBoard({
 
   const cardSizeClass = (slotId: string) =>
     IS_SEVEN_CENTER.has(slotId as (typeof SEVEN_PLANET_IDS)[number])
-      ? "h-[52px] w-[64px]"
+      ? "h-[56px] min-w-[72px] w-[72px]"
       : "h-[68px] w-[84px]";
 
   return (
