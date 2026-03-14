@@ -581,7 +581,7 @@ function TarotNewPageContent() {
                     </div>
                     <div className="w-1/2 min-w-0 space-y-2">
                       <label className="block text-sm font-medium text-slate-700">
-                        {spreadType === "年运" ? "年运起始月" : "看盘起始月"} <span className="text-red-400">*</span>
+                        看盘起始月 <span className="text-red-400">*</span>
                       </label>
                       <input
                         type="text"

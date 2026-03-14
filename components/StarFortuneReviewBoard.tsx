@@ -25,7 +25,7 @@ const CENTER_X_PCT = 50;
 const CENTER_Y_PCT = 58;
 
 const VERT_OFFSET_PCT: Record<string, number> = {
-  "2": -1.5, "3": 1.5, "5": 1.5, "6": -1.5, "7": 1.5, "8": 1.5, "11": 1.5, "12": 2.5,
+  "2": -1.5, "3": 1.5, "5": 1.5, "6": -1.5, "7": 0.5, "8": 1.5, "11": 1.5, "12": 2.5,
 };
 const HORZ_OFFSET_PCT: Record<string, number> = { "11": 1 };
 
