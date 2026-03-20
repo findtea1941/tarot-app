@@ -5,11 +5,11 @@ import { getSlotInputId } from "./SlotStack";
 
 const FOUR_ELEMENTS_NODE_ORDER = ["1", "2", "3", "4"] as const;
 
-/** 四元素：火上、风左、土右、水下 */
+/** 四元素：火上、土右(2)、风左(3)、水下（坐标按物理位，与 layout.at 一致） */
 const NODE_COORDS: Record<string, [number, number]> = {
   "1": [0.5, 0.18],
-  "2": [0.38, 0.46],
-  "3": [0.62, 0.46],
+  "2": [0.62, 0.46],
+  "3": [0.38, 0.46],
   "4": [0.5, 0.74],
 };
 

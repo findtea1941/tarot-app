@@ -6,6 +6,10 @@ import {
   type SpreadType,
 } from "@/lib/db";
 import type { SpreadSlotState } from "@/lib/spreadTypes";
+import {
+  migrateFourElementsCaseIfNeeded,
+  withFourElementsV2Extra,
+} from "@/lib/fourElementsSlotMigration";
 
 export async function createCase(input: { title: string; question?: string }) {
   const now = Date.now();
@@ -55,7 +59,12 @@ export async function createTarotDraft(input: {
     location: input.location,
     locationLabel: input.location.label,
     cards: [],
-    extra: input.annual ? { annual: input.annual } : undefined,
+    extra:
+      input.spreadType === "四元素"
+        ? withFourElementsV2Extra(input.annual ? { annual: input.annual } : undefined)
+        : input.annual
+          ? { annual: input.annual }
+          : undefined,
     analysis: undefined,
     userInterpretation: "",
     createdAt: now,
@@ -100,7 +109,12 @@ export async function restoreTarotDraft(
     location: input.location,
     locationLabel: input.location.label,
     cards: [],
-    extra: input.annual ? { annual: input.annual } : undefined,
+    extra:
+      input.spreadType === "四元素"
+        ? withFourElementsV2Extra(input.annual ? { annual: input.annual } : undefined)
+        : input.annual
+          ? { annual: input.annual }
+          : undefined,
     analysis: undefined,
     userInterpretation: "",
     createdAt: now,
@@ -151,7 +165,11 @@ export async function updateTarotDraft(
 }
 
 export async function getCaseById(id: string): Promise<Case | undefined> {
-  return db.cases.get(id);
+  const c = await db.cases.get(id);
+  if (!c) return undefined;
+  const { case: next, changed } = migrateFourElementsCaseIfNeeded(c);
+  if (changed) await db.cases.put(next);
+  return next;
 }
 
 /** 更新案例牌阵卡位状态（保存/读取各 slot 的 card 与 interpretation） */

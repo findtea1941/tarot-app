@@ -67,6 +67,31 @@ function mode(values: (string | number)[]): string {
 }
 
 /**
+ * 性状统筹：先按「角+续=果」配对消耗（每对产生 1 果），再在角/续/果/蛋四种剩余计数中取唯一众数；全 0 或并列第一则返回 ""。
+ */
+export function summarizeTraitFromCounts(
+  horn: number,
+  link: number,
+  fruit: number,
+  egg: number
+): string {
+  const pairs = Math.min(horn, link);
+  const hornAfter = horn - pairs;
+  const linkAfter = link - pairs;
+  const fruitAfter = fruit + pairs;
+  const traitVals = [
+    { v: hornAfter, label: "角" },
+    { v: linkAfter, label: "续" },
+    { v: fruitAfter, label: "果" },
+    { v: egg, label: "蛋" },
+  ];
+  const maxTrait = Math.max(hornAfter, linkAfter, fruitAfter, egg);
+  if (maxTrait === 0) return "";
+  const tops = traitVals.filter((t) => t.v === maxTrait);
+  return tops.length > 1 ? "" : tops[0]!.label;
+}
+
+/**
  * 对一组牌计算统筹结果（纯函数）
  */
 export function buildGroupSummary(cards: ResolvedCard[]): GroupSummary {
@@ -176,25 +201,12 @@ export function buildGroupSummary(cards: ResolvedCard[]): GroupSummary {
       ? "无"
       : topStages[0];
 
-  // 5) 性状：角/续/果/蛋，fruit2 = fruit + horn + link
+  // 5) 性状：角+续 配对为果后，在角/续/果/蛋中取众数（见 summarizeTraitFromCounts）
   const horn = cards.filter(({ card }) => card.trait === "角").length;
   const link = cards.filter(({ card }) => card.trait === "续").length;
   const fruit = cards.filter(({ card }) => card.trait === "果").length;
   const egg = cards.filter(({ card }) => card.trait === "蛋").length;
-  const fruit2 = fruit + horn + link;
-  const traitVals = [
-    { v: horn, label: "角" },
-    { v: link, label: "续" },
-    { v: fruit2, label: "果" },
-    { v: egg, label: "蛋" },
-  ];
-  const maxTrait = Math.max(horn, link, fruit2, egg);
-  const trait =
-    maxTrait === 0
-      ? ""
-      : traitVals.filter((t) => t.v === maxTrait).length > 1
-        ? ""
-        : traitVals.find((t) => t.v === maxTrait)!.label;
+  const trait = summarizeTraitFromCounts(horn, link, fruit, egg);
 
   // 6) 星座/宫位/行星：展平后众数，并列 ""
   const zodiacFlat: string[] = [];

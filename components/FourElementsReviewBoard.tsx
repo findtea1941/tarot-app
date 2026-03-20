@@ -5,11 +5,11 @@ import type { SpreadSlotState } from "@/lib/spreadTypes";
 
 const FOUR_ELEMENTS_NODE_ORDER = ["1", "2", "3", "4"] as const;
 
-/** 四元素：火上、风左、土右、水下 */
+/** 四元素：火上、土右(2)、风左(3)、水下 */
 const NODE_COORDS: Record<string, [number, number]> = {
   "1": [50, 16],
-  "2": [26, 50],
-  "3": [74, 50],
+  "2": [74, 50],
+  "3": [26, 50],
   "4": [50, 84],
 };
 
