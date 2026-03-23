@@ -68,6 +68,7 @@ function mode(values: (string | number)[]): string {
 
 /**
  * 性状统筹：先按「角+续=果」配对消耗（每对产生 1 果），再在角/续/果/蛋四种剩余计数中取唯一众数；全 0 或并列第一则返回 ""。
+ * 若配对后的果数与剩余角数或续数相等（如 2 角 1 续 → 配对后为 1 角 0 续 1 果），则按未配对前的原始角/续/果/蛋计数取众数，避免与「角续角」类情形误判为并列。
  */
 export function summarizeTraitFromCounts(
   horn: number,
@@ -79,13 +80,18 @@ export function summarizeTraitFromCounts(
   const hornAfter = horn - pairs;
   const linkAfter = link - pairs;
   const fruitAfter = fruit + pairs;
+  const useRaw =
+    fruitAfter === hornAfter || fruitAfter === linkAfter;
+  const h = useRaw ? horn : hornAfter;
+  const l = useRaw ? link : linkAfter;
+  const f = useRaw ? fruit : fruitAfter;
   const traitVals = [
-    { v: hornAfter, label: "角" },
-    { v: linkAfter, label: "续" },
-    { v: fruitAfter, label: "果" },
+    { v: h, label: "角" },
+    { v: l, label: "续" },
+    { v: f, label: "果" },
     { v: egg, label: "蛋" },
   ];
-  const maxTrait = Math.max(hornAfter, linkAfter, fruitAfter, egg);
+  const maxTrait = Math.max(h, l, f, egg);
   if (maxTrait === 0) return "";
   const tops = traitVals.filter((t) => t.v === maxTrait);
   return tops.length > 1 ? "" : tops[0]!.label;
